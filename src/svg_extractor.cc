@@ -1,6 +1,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <stdexcept>
+#include <algorithm>
 #include "svg_extractor.hh"
 
 static
@@ -153,7 +154,59 @@ std::vector<staff> get_staves(const pugi::xml_document& svg_file)
 	  .y2 = y_tr_value });
   }
 
+  std::sort(lines.begin(), lines.end(), [] (const auto& a, const auto& b) {
+      return (a.y1 < b.y1) or ((a.y1 == b.y1) and (a.x1 < b.x1));
+    });
 
+  struct rect
+  {
+      uint32_t top;
+      uint32_t bottom;
+      uint32_t left;
+      uint32_t right;
+  };
+
+  std::vector<rect> staves;
+
+  unsigned int i = 0;
+  const auto nb_elt = lines.size();
+  while (i + 4 < nb_elt)
+  {
+    const auto dist_01 = (lines[i + 1].y1 - lines[  i  ].y1);
+    const auto dist_12 = (lines[i + 2].y1 - lines[i + 1].y1);
+    const auto dist_23 = (lines[i + 3].y1 - lines[i + 2].y1);
+    const auto dist_34 = (lines[i + 4].y1 - lines[i + 3].y1);
+
+    if ((lines[i].x1     == lines[i + 1].x1) and
+	(lines[i].x2     == lines[i + 1].x2) and
+
+	(lines[i + 1].x1 == lines[i + 2].x1) and
+	(lines[i + 1].x2 == lines[i + 2].x2) and
+
+	(lines[i + 2].x1 == lines[i + 3].x1) and
+	(lines[i + 2].x2 == lines[i + 3].x2) and
+
+	(lines[i + 3].x1 == lines[i + 4].x1) and
+	(lines[i + 3].x2 == lines[i + 4].x2) and
+
+	(dist_01 == dist_12) and
+	(dist_12 == dist_23) and
+	(dist_23 == dist_34) and
+	(dist_01 != 0))
+    {
+      staves.emplace_back(rect{
+	  .top    = lines[i].y1,
+	  .bottom = lines[i + 4].y1,
+	  .left   = lines[i + 4].x1,
+	  .right  = lines[i + 4].x2 });
+
+      i += 5;
+    }
+    else
+    {
+      i++;
+    }
+  }
 
 
   // g nodes contains the skylines
