@@ -1,11 +1,13 @@
 TARGET_DIR := ../bin
 TARGET := ${TARGET_DIR}/lilyplayer
 
-SRC :=  main.cc
+SRC :=  main.cc \
+	svg_extractor.cc \
+
 
 OBJS := ${SRC:.cc=.o}
 
-LIBS=
+LIBS= -lpugixml
 
 ifeq ($(findstring clang,$(CXX)), clang)
   CXX_WARN_FLAGS ?= -Weverything \
