@@ -16,12 +16,6 @@ bool begins_by(const char* s1, const char* s2)
   return std::strncmp(s1, s2, std::strlen(s2)) == 0;
 }
 
-static inline
-bool str_equal(const char* s1, const char* s2)
-{
-  return std::strcmp(s1, s2) == 0;
-}
-
 // str must be of format "-?[[:digit:]]+\.[[:digit:]]{4}"
 static bool is_valid_number(const char* str)
 {
@@ -87,38 +81,27 @@ static T to_int_decimal_shift(const char* str)
   return is_neg ? -num : num;
 }
 
-// precondition svg_file is already parsed
-std::vector<staff> get_staves(const pugi::xml_document& svg_file)
+struct line
 {
-  std::vector<staff> res;
+    uint32_t x1;
+    uint32_t y1;
+    uint32_t x2;
+    uint32_t y2;
+};
 
-  struct line
-  {
-      uint32_t x1;
-      uint32_t y1;
-      uint32_t x2;
-      uint32_t y2;
-  };
+static
+std::vector<line> get_lines_by_xpath(const pugi::xml_document& svg_file,
+				     const char* xpath_query)
+{
+  std::vector<line> res;
 
-  std::vector<line> lines;
-
-  // staves are composed by 5 equaly distanced lines,
-  // these lines are not part of a <g color=...>...</g> node
-  // Xpath -> '//*[not(self::g)]/line'
-  for (const auto& xpath_node : svg_file.select_nodes("//*[not(self::g)]/line"))
+  for (const auto& xpath_node : svg_file.select_nodes(xpath_query))
   {
     const std::string transform { xpath_node.node().attribute("transform").value() };
     const auto x1 = xpath_node.node().attribute("x1").value();
     const auto x2 = xpath_node.node().attribute("x2").value();
     const auto y1 = xpath_node.node().attribute("y1").value();
     const auto y2 = xpath_node.node().attribute("y2").value();
-
-    // the lines composing the staves all have y1 == y2 (of course as
-    // they are horizontal). also, they have y1 == "-0.0000".
-    if ((not str_equal(y1, "-0.0000")) or (not str_equal(y2, "-0.0000")))
-    {
-      throw std::runtime_error("Error: invalid input file. Unexpected value for y coordinate");
-    }
 
     const auto translate_str = "translate(";
     if (not begins_by(transform.c_str(), translate_str))
@@ -147,26 +130,49 @@ std::vector<staff> get_staves(const pugi::xml_document& svg_file)
     const auto x_tr_value = to_int_decimal_shift<decltype(line::x1)>(x_tr.c_str());
     const auto y_tr_value = to_int_decimal_shift<decltype(line::y1)>(y_tr.c_str());
 
-    lines.emplace_back(line{
+    res.emplace_back(line{
 	  .x1 = (to_int_decimal_shift<decltype(line::x1)>(x1) + x_tr_value),
-	  .y1 = y_tr_value,
+	  .y1 = (to_int_decimal_shift<decltype(line::y1)>(y1) + y_tr_value),
 	  .x2 = (to_int_decimal_shift<decltype(line::x2)>(x2) + x_tr_value),
-	  .y2 = y_tr_value });
+	  .y2 = (to_int_decimal_shift<decltype(line::y2)>(y2) + y_tr_value) });
   }
 
+  return res;
+}
+
+
+struct rect
+{
+    uint32_t top;
+    uint32_t bottom;
+    uint32_t left;
+    uint32_t right;
+};
+
+static
+std::vector<rect> get_staves_surface(const pugi::xml_document& svg_file)
+{
+  std::vector<rect> staves;
+
+  // staves are composed by 5 equaly distanced lines,
+  // these lines are not part of a <g color=...>...</g> node
+  // Xpath -> '//*[not(self::g)]/line'
+  // also, since they must be horizontal, one can select restrain to
+  // nodes with attribute [@y1 == @y2]
+  std::vector<line> lines = get_lines_by_xpath(svg_file, "//*[not(self::g)]/line");
+
+  // sanity check: lines should all be horizontal => y1 == y2
+  if (std::any_of(lines.begin(), lines.end(), [] (const auto& a) {
+	return a.y1 != a.y2;
+      }))
+  {
+    throw std::runtime_error("Error: a line was expected to be horizontal");
+  }
+
+  // sort from top to bottom
   std::sort(lines.begin(), lines.end(), [] (const auto& a, const auto& b) {
       return (a.y1 < b.y1) or ((a.y1 == b.y1) and (a.x1 < b.x1));
     });
-
-  struct rect
-  {
-      uint32_t top;
-      uint32_t bottom;
-      uint32_t left;
-      uint32_t right;
-  };
-
-  std::vector<rect> staves;
 
   unsigned int i = 0;
   const auto nb_elt = lines.size();
@@ -208,10 +214,19 @@ std::vector<staff> get_staves(const pugi::xml_document& svg_file)
     }
   }
 
+  return staves;
+}
+
+// precondition svg_file is already parsed
+std::vector<staff> get_staves(const pugi::xml_document& svg_file)
+{
+  const std::vector<rect> staves { get_staves_surface(svg_file) };
+
+
 
   // g nodes contains the skylines
   // Xpath -> '//g/line'
-
+  std::vector<staff> res;
 
   return res;
 }
