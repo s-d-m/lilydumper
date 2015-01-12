@@ -7,46 +7,19 @@
 #include <pugixml.hpp> // definition of xml document (the svg files to read from)
 
 
-// segments are either horizontal or vertical lines.
-// Therefore x1 == x2, or y1 == y2
-struct segment
+// segments are used only to provide a full skyline.  Since a skyline
+// is a contiguous line composed only of horizontal and vertical
+// segments, let's just store the horizontal ones (y1 == y2) since
+//
+// 1/ I can find the vertical ones from there
+// 2/ I'm not interested in the vertical part. The segments are only useful
+//    to find out the top/bottom of a system
+
+struct h_segment
 {
-    uint64_t x1;
-    uint64_t y1;
-    uint64_t x2;
-    uint64_t y2;
-
-    // initialize with invalid values by default to make bugs easier
-    // to triggers, thus also to fix.
-    segment()
-      : x1 (std::numeric_limits<decltype(segment::x1)>::max())
-      , y1 (std::numeric_limits<decltype(segment::y1)>::max())
-      , x2 (std::numeric_limits<decltype(segment::x2)>::max())
-      , y2 (std::numeric_limits<decltype(segment::y2)>::max())
-    {
-    }
-
-    segment(decltype(segment::x1) _x1,
-	    decltype(segment::y1) _y1,
-	    decltype(segment::x2) _x2,
-	    decltype(segment::y2) _y2)
-      : x1 (_x1)
-      , y1 (_y1)
-      , x2 (_x2)
-      , y2 (_y2)
-    {
-      // sanity check:
-      if ((x1 != x2) and (y1 != y2))
-      {
-	throw std::runtime_error(std::string{
-	    "Error: a segment should be either horizontal or vertical.\n"
-	    "       in this case we found a segment with the following coordinates:\n      "
-	    " (x1: " } + std::to_string(x1)
-	  + ", y1: "   + std::to_string(y1) + "),"
-	  + " (x2: "   + std::to_string(x2)
-	  + ", y2: "   + std::to_string(y2) + ")");
-      }
-    }
+    uint32_t x1;
+    uint32_t x2;
+    uint32_t y;
 };
 
 struct staff
@@ -57,8 +30,8 @@ struct staff
     uint32_t height;
     uint32_t top_skyline;
     uint32_t bottom_skyline;
-    std::vector<segment> full_top_skyline;
-    std::vector<segment> full_bottom_skyline;
+    std::vector<h_segment> full_top_skyline;
+    std::vector<h_segment> full_bottom_skyline;
 };
 
 
