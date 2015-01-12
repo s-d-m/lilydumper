@@ -59,16 +59,13 @@ static bool is_valid_number(const char* str)
   return (str[pos] == '\0');
 }
 
-#define JOIN(a,b) a#b
-#define JOIN2(a,b) JOIN(a,b)
-
 template <typename T>
 static T to_int_decimal_shift(const char* str)
 {
   // sanity check:
   if (not is_valid_number(str))
   {
-    throw std::runtime_error(JOIN2("Error: invalid param in function ", __func__ ));
+    throw std::runtime_error("Error: invalid param in function to_int_decimal_shift");
   }
 
   const bool is_neg = (str[0] == '-');
