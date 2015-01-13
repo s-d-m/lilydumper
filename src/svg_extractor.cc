@@ -273,6 +273,22 @@ std::vector<skyline> get_skylines(const pugi::xml_document& svg_file,
 			 .right = right },
 	.full_line = std::move(full_line) });
   }
+
+  // sanity check: (top left corner is (0, 0), so top lines have lower y values
+  if (std::any_of(res.begin(), res.end(), [] (const auto& l) {
+	return l.surface.top > l.surface.bottom;
+      }))
+  {
+    throw std::runtime_error("Error: inconsistent value found.");
+  }
+
+
+  // sort skyline from top to bottom
+  std::sort(res.begin(), res.end(), [] (const auto& a, const auto& b) {
+      return (a.surface.top < b.surface.top) or
+	((a.surface.top == b.surface.top) and (a.surface.left < b.surface.left));
+    });
+
   return res;
 }
 
@@ -292,10 +308,22 @@ std::vector<skyline> get_bottom_systems_skyline(const pugi::xml_document& svg_fi
 // precondition svg_file is already parsed
 std::vector<staff> get_staves(const pugi::xml_document& svg_file)
 {
-  const auto __attribute__((unused)) staves ( get_staves_surface(svg_file) );
-  const auto __attribute__((unused)) top_systems ( get_top_systems_skyline(svg_file) );
-  const auto __attribute__((unused)) bottom_systems ( get_bottom_systems_skyline(svg_file) );
+  const auto staves ( get_staves_surface(svg_file) );
+  const auto top_systems ( get_top_systems_skyline(svg_file) );
+  const auto bottom_systems ( get_bottom_systems_skyline(svg_file) );
 
+  // sanity check: there must be as many top systems skylines as bottom
+  if (top_systems.size() != bottom_systems.size())
+  {
+    throw std::runtime_error("Error: mismatch between the top and bottom skylines of systems");
+  }
+
+  // sanity check: each staff must appear in a system. Several staves
+  // can be part of the same system. So nb_of_staff >= nb_of_systems
+  if (top_systems.size() > staves.size())
+  {
+    throw std::runtime_error("Error: mismatch between the top and bottom skylines of systems");
+  }
 
   // g nodes contains the skylines
   // Xpath -> '//g/line'
