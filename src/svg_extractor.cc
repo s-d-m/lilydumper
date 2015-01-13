@@ -235,7 +235,7 @@ std::vector<skyline> get_skylines(const pugi::xml_document& svg_file,
   for (const auto& xpath_node : svg_file.select_nodes(xpath_query))
   {
     std::vector<h_segment> full_line;
-    for (const auto& line_node : xpath_node.node().select_nodes("//line[(@y1 = @y2) and (@x1 != @x2)]"))
+    for (const auto& line_node : xpath_node.node().select_nodes("./line[(@y1 = @y2) and (@x1 != @x2)]"))
     {
       const auto this_line = get_line(line_node.node());
       full_line.emplace_back(h_segment{
