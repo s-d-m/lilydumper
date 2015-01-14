@@ -256,7 +256,7 @@ std::vector<skyline> get_skylines(const pugi::xml_document& svg_file,
 
     for (const auto& current_segment : full_line)
     {
-      // the svg file always keep x1 <= x2. If not previous would
+      // the svg file always keep x1 <= x2. If not previous check would
       // throw. Obvisously this code would need to be updated. the
       // change would be to: left <- min(left, x1, x2) (and similarly
       // for right)
@@ -292,6 +292,7 @@ std::vector<skyline> get_skylines(const pugi::xml_document& svg_file,
   return res;
 }
 
+#if 0
 static inline
 std::vector<skyline> get_top_systems_skyline(const pugi::xml_document& svg_file)
 {
@@ -303,31 +304,99 @@ std::vector<skyline> get_bottom_systems_skyline(const pugi::xml_document& svg_fi
 {
   return get_skylines(svg_file, "//g[@color=\"rgb(0.0000%, 25500.0000%, 0.0000%)\"]");
 }
+#endif
 
+static inline
+std::vector<skyline> get_top_staves_skyline(const pugi::xml_document& svg_file)
+{
+  return get_skylines(svg_file, "//g[@color=\"rgb(25500.0000%, 0.0000%, 25500.0000%)\"]");
+}
+
+static inline
+std::vector<skyline> get_bottom_staves_skyline(const pugi::xml_document& svg_file)
+{
+  return get_skylines(svg_file, "//g[@color=\"rgb(0.0000%, 25500.0000%, 25500.0000%)\"]");
+}
+
+static
+std::vector<h_segment> filter_segments(const std::vector<h_segment>& vec,
+				       uint32_t min_left,
+				       uint32_t max_right)
+{
+  std::vector<h_segment> res;
+  res.reserve(vec.size());
+
+  for (const auto& s : vec)
+  {
+    if ((s.x1 >= min_left) and (s.x2 <= max_right))
+    {
+      res.emplace_back(s);
+    }
+  }
+  res.shrink_to_fit();
+  return res;
+}
 
 // precondition svg_file is already parsed
 std::vector<staff> get_staves(const pugi::xml_document& svg_file)
 {
   const auto staves ( get_staves_surface(svg_file) );
-  const auto top_systems ( get_top_systems_skyline(svg_file) );
-  const auto bottom_systems ( get_bottom_systems_skyline(svg_file) );
+  const auto top_staves ( get_top_staves_skyline(svg_file) );
+  const auto bottom_staves ( get_bottom_staves_skyline(svg_file) );
 
-  // sanity check: there must be as many top systems skylines as bottom
-  if (top_systems.size() != bottom_systems.size())
+  const auto nb_staves = staves.size();
+
+  // sanity check: each staff must have a bottom skyline.
+  if (bottom_staves.size() != nb_staves)
   {
-    throw std::runtime_error("Error: mismatch between the top and bottom skylines of systems");
+    throw std::runtime_error("Error: mismatch between the top and bottom skylines of staves");
   }
 
-  // sanity check: each staff must appear in a system. Several staves
-  // can be part of the same system. So nb_of_staff >= nb_of_systems
-  if (top_systems.size() > staves.size())
+  // sanity check: each staff must have a top skyline.
+  if (top_staves.size() != nb_staves)
   {
-    throw std::runtime_error("Error: mismatch between the top and bottom skylines of systems");
+    throw std::runtime_error("Error: mismatch between the top skylines and staves");
   }
 
-  // g nodes contains the skylines
-  // Xpath -> '//g/line'
   std::vector<staff> res;
+  // since staves, top_skylines, bottom_skylines are all sorted the
+  // same way (top to bottom), therefore each skyline in the vector
+  // belongs to the staff at the same position
+  for (auto i = decltype(nb_staves){0}; i < nb_staves; ++i)
+  {
+    auto top_line = filter_segments(top_staves[i].full_line,
+				    staves[i].left,
+				    staves[i].right);
+
+    auto bottom_line = filter_segments(bottom_staves[i].full_line,
+				       staves[i].left,
+				       staves[i].right);
+
+    const auto max_top_point =  std::min_element(top_line.begin(), top_line.end(), [] (const auto& a, const auto& b) {
+	return a.y < b.y;
+      });
+
+    const auto min_bottom_point =  std::max_element(bottom_line.begin(), bottom_line.end(), [] (const auto& a, const auto& b) {
+	return a.y < b.y;
+      });
+
+    if ((max_top_point == top_line.end()) or (min_bottom_point == bottom_line.end()))
+    {
+      throw std::runtime_error("Error: one skyline is outside the vertical space delimited by the left and right edge of a staff");
+    }
+
+    res.emplace_back(staff{
+	.x = staves[i].left,
+	.y = staves[i].top,
+	.width = staves[i].right- staves[i].left,
+	.height = staves[i].bottom - staves[i].top,
+	.top_skyline = max_top_point->y,
+	.bottom_skyline = min_bottom_point->y,
+	.full_top_skyline = std::move(top_line),
+	.full_bottom_skyline = std::move(bottom_line) });
+  }
+
+
 
   return res;
 }
