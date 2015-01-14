@@ -135,10 +135,15 @@ std::vector<line> get_lines_by_xpath(const pugi::xml_document& svg_file,
 {
   std::vector<line> res;
 
-  for (const auto& xpath_node : svg_file.select_nodes(xpath_query))
+  const auto& node_set = svg_file.select_nodes(xpath_query);
+  res.reserve(node_set.size());
+
+  for (const auto& xpath_node : node_set)
   {
     res.emplace_back( get_line(xpath_node.node()) );
   }
+
+  res.shrink_to_fit();
   return res;
 }
 
@@ -399,8 +404,8 @@ std::vector<staff> get_staves(const pugi::xml_document& svg_file)
   // sanity check: the top skyline must be on top of the staff
   // and similarly for the bottom.
   if (std::any_of(res.begin(), res.end(), [] (auto& staff) {
-	return (staff.top_skyline > staff.y) or
-	  (staff.bottom_skyline < staff.y + staff.height);
+	return (staff.top_skyline > staff.y) or (staff.bottom_skyline < staff.y + staff.height);
+	  }))
   {
     throw std::runtime_error("Error: the skylines doesn't cover a staff");
   }
