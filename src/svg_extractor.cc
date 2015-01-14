@@ -396,6 +396,14 @@ std::vector<staff> get_staves(const pugi::xml_document& svg_file)
 	.full_bottom_skyline = std::move(bottom_line) });
   }
 
+  // sanity check: the top skyline must be on top of the staff
+  // and similarly for the bottom.
+  if (std::any_of(res.begin(), res.end(), [] (auto& staff) {
+	return (staff.top_skyline > staff.y) or
+	  (staff.bottom_skyline < staff.y + staff.height);
+  {
+    throw std::runtime_error("Error: the skylines doesn't cover a staff");
+  }
 
 
   return res;
