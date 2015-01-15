@@ -231,6 +231,22 @@ struct skyline
     std::vector<h_segment> full_line;
 };
 
+static inline
+auto get_top_most_point(const std::vector<h_segment>& vec)
+{
+  return std::min_element(vec.begin(), vec.end(), [] (const auto& a, const auto& b) {
+      return a.y < b.y;
+    });
+}
+
+static inline
+auto get_bottom_most_point(const std::vector<h_segment>& vec)
+{
+  return std::max_element(vec.begin(), vec.end(), [] (const auto& a, const auto& b) {
+      return a.y < b.y;
+    });
+}
+
 
 static
 std::vector<skyline> get_skylines(const pugi::xml_document& svg_file,
@@ -297,7 +313,6 @@ std::vector<skyline> get_skylines(const pugi::xml_document& svg_file,
   return res;
 }
 
-#if 0
 static inline
 std::vector<skyline> get_top_systems_skyline(const pugi::xml_document& svg_file)
 {
@@ -309,7 +324,6 @@ std::vector<skyline> get_bottom_systems_skyline(const pugi::xml_document& svg_fi
 {
   return get_skylines(svg_file, "//g[@color=\"rgb(0.0000%, 25500.0000%, 0.0000%)\"]");
 }
-#endif
 
 static inline
 std::vector<skyline> get_top_staves_skyline(const pugi::xml_document& svg_file)
@@ -377,13 +391,8 @@ std::vector<staff> get_staves(const pugi::xml_document& svg_file)
 				       staves[i].left,
 				       staves[i].right);
 
-    const auto max_top_point =  std::min_element(top_line.begin(), top_line.end(), [] (const auto& a, const auto& b) {
-	return a.y < b.y;
-      });
-
-    const auto min_bottom_point =  std::max_element(bottom_line.begin(), bottom_line.end(), [] (const auto& a, const auto& b) {
-	return a.y < b.y;
-      });
+    const auto max_top_point = get_top_most_point(top_line);
+    const auto min_bottom_point = get_bottom_most_point(bottom_line);
 
     if ((max_top_point == top_line.end()) or (min_bottom_point == bottom_line.end()))
     {
@@ -412,6 +421,113 @@ std::vector<staff> get_staves(const pugi::xml_document& svg_file)
     throw std::runtime_error("Error: the skylines doesn't cover a staff");
   }
 
+
+  return res;
+}
+
+
+
+std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
+				  const std::vector<staff>& staves)
+{
+  // sanity check: precondition staves must be sorted
+  if (not std::is_sorted(staves.begin(), staves.end(), [] (const auto& a, const auto& b) {
+	return a.top_skyline < b.top_skyline;
+      }))
+  {
+    throw std::runtime_error("Error: precondition failed. Staves should be sorted");
+  }
+
+  auto top_systems_skyline = get_top_systems_skyline(svg_file);
+  auto bottom_systems_skyline = get_bottom_systems_skyline(svg_file);
+
+  const auto nb_systems = top_systems_skyline.size();
+  const auto nb_staves = staves.size();
+
+  // following check is necessary because a system store the index of
+  // the first and last staff. Thus, the index can't be bigger than
+  // the maximum value that can be stored.
+  if ((nb_staves > std::numeric_limits<decltype(system_t::first)>::max()) or
+      (nb_staves > std::numeric_limits<decltype(system_t::last)>::max()))
+  {
+    throw std::runtime_error(std::string{"Error: this program can't handle more than "} +
+			     std::to_string(static_cast<int>(
+					      std::min(std::numeric_limits<decltype(system_t::first)>::max(),
+						       std::numeric_limits<decltype(system_t::last)>::max()))) +
+			     " staves per page.");
+  }
+
+  // sanity check: there must be as many top skylines as bottom ones.
+  if (nb_systems != bottom_systems_skyline.size())
+  {
+    throw std::runtime_error("Error: mismatch between the top and bottom skylines of systems");
+  }
+
+  std::vector<system_t> res (nb_systems, system_t{
+      .first = std::numeric_limits<decltype(system_t::first)>::max(),
+      .last =  std::numeric_limits<decltype(system_t::last)>::min() } );
+
+  for (auto i = decltype(nb_systems){0}; i < nb_systems; ++i)
+  {
+    const auto top_system = get_top_most_point(top_systems_skyline[i].full_line);
+    const auto bottom_system = get_bottom_most_point(bottom_systems_skyline[i].full_line);
+
+    if ((top_system == top_systems_skyline[i].full_line.end()) or
+	(bottom_system == bottom_systems_skyline[i].full_line.end()))
+    {
+      throw std::runtime_error("Error: a system skyline is empty (no segment in there)");
+    }
+
+    for (auto j = decltype(nb_staves){0}; j < nb_staves; ++j)
+    {
+      // It has been noticed that a staff bottom skyline could be sometimes
+      // below a system bottom skyline by a very short value. For example a
+      // staff bottom skyline having a value of 410730, whereas the system
+      // bottom skyline had a value of 410729. Let's add a short error margin to
+      // avoid these problems. The value 1000 was chosen arbitrarily. It had to
+      // be big enough to cover the small possible difference, but small enough
+      // to avoid including a nearby staff.
+      const auto error_margin = decltype(staves[j].top_skyline){1000};
+
+      if (((staves[j].top_skyline + error_margin) >= top_system->y) and
+	  (staves[j].bottom_skyline <= (bottom_system->y + error_margin)))
+      {
+	res[i].first = std::min(res[i].first, static_cast<decltype(res[i].first)>(j));
+	res[i].last = std::max(res[i].last, static_cast<decltype(res[i].last)>(j));
+      }
+    }
+  }
+
+  // sanity check: all staves must belong to a system
+  for (auto i = decltype(nb_staves){0}; i < nb_staves; ++i)
+  {
+    if (std::none_of(res.begin(), res.end(), [i] (const auto& system) {
+	  return (system.first <= i) and (i <= system.last); }))
+    {
+      throw std::runtime_error("Error: a staff doesn't belong to any system");
+    }
+  }
+
+  // sanity check: the output should normally be sorted in ascending
+  // order.  and for each system, the first staff must imediately
+  // succeed the last staff of the former system
+  for (auto i = decltype(nb_systems){0}; i < nb_systems - 1; ++i)
+  {
+    if (res[i + 1].first != (res[i].last + 1))
+    {
+      throw std::runtime_error("Error: incoherent system.");
+    }
+  }
+
+  // sanity check: for all system, first must be <= last
+  for (auto i = decltype(nb_systems){0}; i < nb_systems; ++i)
+  {
+    if (std::any_of(res.begin(), res.end(), [] (const auto& system) {
+	  return (system.first > system.last); }))
+    {
+      throw std::runtime_error("Error: a system does not contain any staff in it.");
+    }
+  }
 
   return res;
 }
