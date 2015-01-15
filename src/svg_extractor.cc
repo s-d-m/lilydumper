@@ -387,6 +387,8 @@ std::vector<staff> get_staves(const pugi::xml_document& svg_file)
 
     if ((max_top_point == top_line.end()) or (min_bottom_point == bottom_line.end()))
     {
+      // we can only get here if top_line or bottom_line is empty. Since these lines are made
+      // of the segments appearing on the vertical space on top/bottom of the space ...
       throw std::runtime_error("Error: one skyline is outside the vertical space delimited by the left and right edge of a staff");
     }
 
