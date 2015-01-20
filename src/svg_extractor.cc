@@ -113,7 +113,8 @@ line get_line(const pugi::xml_node& node)
   const std::string x_tr (std::begin(transform) + static_cast<int>(std::strlen(translate_str)),
 			  std::begin(transform) + static_cast<int>(separation_pos));
   const std::string y_tr (std::begin(transform) + static_cast<int>(separation_pos + 2) /* 2 for COMMA SPACE */,
-			  std::end(transform) - 1 /* -1 to remove the ')' */);
+			  std::begin(transform) + static_cast<int>(parenthesis_pos));
+
 
   // one could see a potential problem in case of invalid in translate
   // e.g. with "translate(14.2264, ", or "translate(14.2264, 33.0230[dd" y_tr
