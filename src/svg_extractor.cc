@@ -207,8 +207,8 @@ std::vector<rect> get_staves_surface(const pugi::xml_document& svg_file)
   // these lines are not part of a <g color=...>...</g> node
   // Xpath -> '//*[not(self::g)]/line'
   // also, since they must be horizontal, one can select restrain to
-  // nodes with attribute [@y1 == @y2]
-  std::vector<line> lines = get_lines_by_xpath(svg_file, "//*[not(self::g)]/line");
+  // nodes with attribute [@y1 = @y2]
+  std::vector<line> lines = get_lines_by_xpath(svg_file, "//*[not(self::g)]/line[@y1 = @y2]");
 
   // sanity check: lines should all be horizontal => y1 == y2
   if (std::any_of(lines.begin(), lines.end(), [] (const auto& a) {
