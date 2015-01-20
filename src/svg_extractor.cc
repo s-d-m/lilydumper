@@ -59,6 +59,7 @@ static bool is_valid_number(const char* str)
   return (str[pos] == '\0');
 }
 
+
 template <typename T>
 static T to_int_decimal_shift(const char* str)
 {
@@ -86,15 +87,11 @@ struct line
     uint32_t y2;
 };
 
-static
-line get_line(const pugi::xml_node& node)
-{
-  const std::string transform { node.attribute("transform").value() };
-  const auto x1 = node.attribute("x1").value();
-  const auto x2 = node.attribute("x2").value();
-  const auto y1 = node.attribute("y1").value();
-  const auto y2 = node.attribute("y2").value();
 
+// str must be of the form "translate(X_value, Y_value)"
+// both X_value and Y_value must conforms to is_valid_number
+static auto get_x_from_translate_str(const std::string& transform)
+{
   const auto translate_str = "translate(";
   if (not begins_by(transform.c_str(), translate_str))
   {
@@ -112,22 +109,66 @@ line get_line(const pugi::xml_node& node)
 
   const std::string x_tr (std::begin(transform) + static_cast<int>(std::strlen(translate_str)),
 			  std::begin(transform) + static_cast<int>(separation_pos));
+  const auto x_tr_value = to_int_decimal_shift<decltype(line::x1)>(x_tr.c_str());
+  return x_tr_value;
+}
+
+
+// str must be of the form "translate(X_value, Y_value)"
+// both X_value and Y_value must conforms to is_valid_number
+static auto get_y_from_translate_str(const std::string& transform)
+{
+  const auto translate_str = "translate(";
+  if (not begins_by(transform.c_str(), translate_str))
+  {
+    throw std::runtime_error("Error: lines must have a translate transformation");
+  }
+
+  // x_tr and y_tr are initialised with the part inside translate=(...)
+  // e.g. if transform == "translate(14.2264, 33.0230)"
+  // x_tr will be "14.2264" and y_tr "33.0230"
+  const auto separation_pos = transform.find(", ");
+  if (separation_pos == std::string::npos)
+  {
+    throw std::runtime_error("Error: coordinates in translate must be separated by ', '");
+  }
+
+  const auto parenthesis_pos = transform.find(')', separation_pos);
+  if (parenthesis_pos == std::string::npos)
+  {
+    throw std::runtime_error("Error: coordinates in translate must end by ')'");
+  }
+
   const std::string y_tr (std::begin(transform) + static_cast<int>(separation_pos + 2) /* 2 for COMMA SPACE */,
 			  std::begin(transform) + static_cast<int>(parenthesis_pos));
+
+  const auto y_tr_value = to_int_decimal_shift<decltype(line::y1)>(y_tr.c_str());
+  return y_tr_value;
+}
+
+
+static
+line get_line(const pugi::xml_node& node)
+{
+  const std::string transform { node.attribute("transform").value() };
+  const auto x1 = node.attribute("x1").value();
+  const auto x2 = node.attribute("x2").value();
+  const auto y1 = node.attribute("y1").value();
+  const auto y2 = node.attribute("y2").value();
 
 
   // one could see a potential problem in case of invalid in translate
   // e.g. with "translate(14.2264, ", or "translate(14.2264, 33.0230[dd" y_tr
   // would have a wrong value. But this will be checked by the
   // to_int_decimal_shift function
-  const auto x_tr_value = to_int_decimal_shift<decltype(line::x1)>(x_tr.c_str());
-  const auto y_tr_value = to_int_decimal_shift<decltype(line::y1)>(y_tr.c_str());
+  const auto translate_x = get_x_from_translate_str(transform);
+  const auto translate_y = get_y_from_translate_str(transform);
 
   return line{
-    .x1 = (to_int_decimal_shift<decltype(line::x1)>(x1) + x_tr_value),
-      .y1 = (to_int_decimal_shift<decltype(line::y1)>(y1) + y_tr_value),
-      .x2 = (to_int_decimal_shift<decltype(line::x2)>(x2) + x_tr_value),
-      .y2 = (to_int_decimal_shift<decltype(line::y2)>(y2) + y_tr_value) };
+      .x1 = (to_int_decimal_shift<decltype(line::x1)>(x1) + translate_x),
+      .y1 = (to_int_decimal_shift<decltype(line::y1)>(y1) + translate_y),
+      .x2 = (to_int_decimal_shift<decltype(line::x2)>(x2) + translate_x),
+      .y2 = (to_int_decimal_shift<decltype(line::y2)>(y2) + translate_y) };
 }
 
 static
@@ -528,6 +569,94 @@ std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
     {
       throw std::runtime_error("Error: a system does not contain any staff in it.");
     }
+  }
+
+  return res;
+}
+
+// this function takes an id string, and return the value for the requested field
+// throw in the field could not be found.
+// an id string is a string made of field=value separated by the '#' symbol.
+// hence field and values can't contain '#' or '='.
+// important to note is that the string must starts and end by a '#'. This makes
+// it easier to look into it, as there is no corner case.
+// an example of an id field is: "#x-width=1.389984#y-height=1.100012#origin=././foo.ly:17:25:27#pitch=83#has-tie-attached=no#staff-number=0#duration-string=2#duration=50000000#is-grace-note=no#"
+static std::string get_value_from_field(const std::string& id_str, const char* const field)
+{
+  const auto field_pos = id_str.find(field);
+  if (field_pos == std::string::npos)
+  {
+    throw std::runtime_error(std::string{"Error: couldn't find field "} + field + " in string [" + id_str + "]");
+  }
+
+  const auto eq_pos = id_str.find("=", field_pos);
+  if (eq_pos == std::string::npos)
+  {
+    throw std::runtime_error(std::string{"Error: invalid is string. Field "} + field + " is not followed by '=' character");
+  }
+
+  const auto hash_pos = id_str.find("#", eq_pos);
+  if (hash_pos == std::string::npos)
+  {
+    throw std::runtime_error(std::string{"Error: invalid is string. Field "} + field + " is not followed by '#' character");
+  }
+
+  const auto start_value = eq_pos + 1;
+  return id_str.substr(start_value, hash_pos - start_value);
+}
+
+static note_head_t get_note_head(const pugi::xml_node& node)
+{
+  // on the svg file, the id field contains the x-width, y-height and then the
+  // real id that will be found in the note file too.
+
+  const auto& id_attribute = node.attribute("id");
+  const auto attr_value = id_attribute.value();
+
+  if (not begins_by(attr_value, "#x-width="))
+  {
+    throw std::runtime_error("Error: invalid id found for the note head (should starts by #x-width). Did you runned with the event listener?");
+  }
+
+  const auto x_width_str = get_value_from_field(attr_value, "#x-width");
+  const auto y_height_str = get_value_from_field(attr_value, "#y-height");
+
+  const auto x_width = to_int_decimal_shift<decltype(note_head_t::left)>(x_width_str.c_str());
+  const auto y_height = to_int_decimal_shift<decltype(note_head_t::top)>(y_height_str.c_str());
+
+  auto id = std::string{attr_value};
+
+  const auto real_id_pos = id.find("#origin=");
+  if (real_id_pos == std::string::npos)
+  {
+    throw std::runtime_error("Error: invalid id found for the note head (missing #origin). Did you runned with the event listener?");
+  }
+
+  const auto& path_node = node.first_child();
+  const auto transform = std::string{ path_node.attribute("transform").value() };
+  const auto x_center = get_x_from_translate_str(transform);
+  const auto y_center = get_y_from_translate_str(transform);
+
+  return note_head_t{
+      .id = id.substr(real_id_pos),
+      .left = x_center - (x_width / 2),
+      .right = x_center + (x_width / 2),
+      .top =  y_center - (y_height / 2),
+      .bottom = y_center + (y_height / 2) };
+
+}
+
+std::vector<note_head_t> get_note_heads(const pugi::xml_document& svg_file)
+{
+  // on the svg file, note heads are covered by a 'g' node with an id field.
+  // these nodes contain a single child, which is a path node
+  const auto& node_set = svg_file.select_nodes("//g[@id]");
+  std::vector<note_head_t> res;
+  res.reserve(node_set.size());
+
+  for (const auto& xpath_node : node_set)
+  {
+    res.emplace_back( get_note_head(xpath_node.node()) );
   }
 
   return res;
