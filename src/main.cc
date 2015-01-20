@@ -27,6 +27,7 @@ int main(int argc, const char * const * argv)
     {
       const auto staves = get_staves(doc);
       const auto systems = get_systems(doc, staves);
+      const auto note_heads = get_note_heads(doc);
     }
   }
 

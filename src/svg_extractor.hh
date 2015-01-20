@@ -49,7 +49,19 @@ std::vector<staff> get_staves(const pugi::xml_document& svg_file);
 
 // group staves into system
 std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
-				const std::vector<staff>& staves);
+				  const std::vector<staff>& staves);
 
+struct note_head_t
+{
+    // bounding box of the note in the svg file
+    std::string id; // each note have an id (location in the source file)
+    uint32_t left;
+    uint32_t right;
+    uint32_t top;
+    uint32_t bottom;
+};
+
+// returns the bounding boxes + note ids found in the svg file.
+std::vector<note_head_t> get_note_heads(const pugi::xml_document& svg_file);
 
 #endif /* SVG_EXTRACTOR_HH_ */
