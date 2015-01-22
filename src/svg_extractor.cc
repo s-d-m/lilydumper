@@ -16,7 +16,7 @@ bool begins_by(const char* s1, const char* s2)
   return std::strncmp(s1, s2, std::strlen(s2)) == 0;
 }
 
-// str must be of format "-?[[:digit:]]+\.[[:digit:]]{4}"
+// str must be of format "-?[[:digit:]]*\.[[:digit:]]{4}"
 static bool is_valid_number(const char* str)
 {
   if (str == nullptr)
@@ -30,33 +30,25 @@ static bool is_valid_number(const char* str)
     pos++;
   }
 
-  do
+  // must contains only digits (possibly 0) until finding a '.'
+  while (is_digit(str[pos]))
   {
-    // must start with at least one digit
-    if (not is_digit(str[pos]))
-    {
-      return false;
-    }
-
     pos++;
-  } while (str[pos] != '.');
+  }
+
+  if (str[pos] != '.')
+  {
+    return false; // after skipping the digits, it must have a '.'
+  }
 
   pos++;
 
   // must have 4 digits, and then finish
-  for (unsigned int i = 0; i < 4; i++)
-  {
-    // must start with at least one digit
-    if (not is_digit(str[pos]))
-    {
-      return false;
-    }
-
-    pos++;
-  }
-
-  // must be finished now
-  return (str[pos] == '\0');
+  return     is_digit(str[pos])
+         and is_digit(str[pos + 1])
+         and is_digit(str[pos + 2])
+         and is_digit(str[pos + 3])
+         and (str[pos + 4] == '\0');
 }
 
 
@@ -71,6 +63,9 @@ static T to_int_decimal_shift(const char* str)
 
   const bool is_neg = (str[0] == '-');
   const uint8_t pos = (is_neg ? 1 : 0);
+  // no need to add a special case for values "without" integer part (like
+  // .9865) as strtoul returns 0 (= the right value in our case) when it can't
+  // perform any conversion.
   char* point_pos;
   const T int_part = static_cast<T>( std::strtoul(&(str[pos]), &point_pos, 10) );
   const T dec_part = static_cast<T>( std::strtoul(&(point_pos[1]), nullptr, 10) );
