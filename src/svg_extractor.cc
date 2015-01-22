@@ -627,8 +627,8 @@ static note_head_t get_note_head(const pugi::xml_node& node)
     throw std::runtime_error("Error: invalid id found for the note head (missing #origin). Did you runned with the event listener?");
   }
 
-  const auto& path_node = node.first_child();
-  const auto transform = std::string{ path_node.attribute("transform").value() };
+  const auto& path_node = node.select_single_node(".//path[1]"); // the first path node in current context
+  const auto transform = std::string{ path_node.node().attribute("transform").value() };
   const auto x_center = get_x_from_translate_str(transform);
   const auto y_center = get_y_from_translate_str(transform);
 
@@ -644,8 +644,10 @@ static note_head_t get_note_head(const pugi::xml_node& node)
 std::vector<note_head_t> get_note_heads(const pugi::xml_document& svg_file)
 {
   // on the svg file, note heads are covered by a 'g' node with an id field.
-  // these nodes contain a single child, which is a path node
-  const auto& node_set = svg_file.select_nodes("//g[@id]");
+  // these nodes contain a (grand-)child, which is a path node. When the notes
+  // are colored, the first child is a g note with a color property. This node
+  // will have the path node has child
+  const auto& node_set = svg_file.select_nodes("//g[@id and .//path]");
   std::vector<note_head_t> res;
   res.reserve(node_set.size());
 
