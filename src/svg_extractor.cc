@@ -393,25 +393,87 @@ std::vector<h_segment> filter_segments(const std::vector<h_segment>& vec,
   return res;
 }
 
+static
+unsigned int find_top_skyline_pos_of_staff(const rect_t& surface,
+					   const std::vector<skyline_t>& top_skylines)
+{
+  // precond: top_skylines must be sorted by ascending order
+  if (not std::is_sorted(top_skylines.cbegin(), top_skylines.cend(), [](const auto& a, const auto&b) {
+	return a.surface.top < b.surface.top;
+      }))
+  {
+    throw std::runtime_error("Error: skylines should be ordered from top to bottom");
+  }
+
+  const auto top_surface = surface.top;
+  const auto res = std::find_if(top_skylines.crbegin(), top_skylines.crend(), [=] (const auto& elt) {
+      return elt.surface.top <= top_surface;
+    });
+
+  if (res == top_skylines.crend())
+  {
+    throw std::runtime_error("Error: a staff is missing a top skyline");
+  }
+
+  // sanity check: distance can't be bigger than size, so the difference must be
+  // > 0
+  if (top_skylines.size() < static_cast<unsigned>(std::distance(top_skylines.crbegin(), res)))
+  {
+    throw std::logic_error("Error: distance is bigger than maximum logically possible");
+  }
+
+  return top_skylines.size() - 1 - static_cast<unsigned>(std::distance(top_skylines.crbegin(), res));
+}
+
+
+static
+unsigned int find_bottom_skyline_pos_of_staff(const rect_t& surface,
+					      const std::vector<skyline_t>& bottom_skylines)
+{
+  // precond: bottom_skylines must be sorted by ascending order
+  if (not std::is_sorted(bottom_skylines.cbegin(), bottom_skylines.cend(), [](const auto& a, const auto&b) {
+	return a.surface.top < b.surface.top;
+      }))
+  {
+    throw std::runtime_error("Error: skylines should be ordered from bottom to bottom");
+  }
+
+  const auto bottom_surface = surface.bottom;
+  const auto res = std::find_if(bottom_skylines.cbegin(), bottom_skylines.cend(), [=] (const auto& elt) {
+      return elt.surface.bottom >= bottom_surface;
+    });
+
+  if (res == bottom_skylines.cend())
+  {
+    throw std::runtime_error("Error: a staff is missing a bottom skyline");
+  }
+
+  return static_cast<unsigned>(std::distance(bottom_skylines.cbegin(), res));
+}
+
+
+
 // precondition svg_file is already parsed
 std::vector<staff_t> get_staves(const pugi::xml_document& svg_file)
 {
   const auto staves ( get_staves_surface(svg_file) );
-  const auto top_staves ( get_top_staves_skyline(svg_file) );
-  const auto bottom_staves ( get_bottom_staves_skyline(svg_file) );
+  const auto top_skylines ( get_top_staves_skyline(svg_file) );
+  const auto bottom_skylines ( get_bottom_staves_skyline(svg_file) );
 
   const auto nb_staves = staves.size();
 
-  // sanity check: each staff must have a bottom skyline.
-  if (bottom_staves.size() != nb_staves)
+  // sanity check: each staff must have a bottom skyline, hence there must at
+  // least as many skylines, as there are staves. (Note, lyrics have skylines
+  // too, so there can be more skylines than staves)
+  if (bottom_skylines.size() < nb_staves)
   {
-    throw std::runtime_error("Error: mismatch between the top and bottom skylines of staves");
+    throw std::runtime_error("Error: there should be at least as many bottom skylines as staves");
   }
 
-  // sanity check: each staff must have a top skyline.
-  if (top_staves.size() != nb_staves)
+  // sanity check, there must be the same number of top and bottom skyline.
+  if (top_skylines.size() not_eq bottom_skylines.size())
   {
-    throw std::runtime_error("Error: mismatch between the top skylines and staves");
+    throw std::runtime_error("Error: mismatch between the number of top and bottom skylines");
   }
 
   std::vector<staff_t> res;
@@ -420,11 +482,22 @@ std::vector<staff_t> get_staves(const pugi::xml_document& svg_file)
   // belongs to the staff at the same position
   for (auto i = decltype(nb_staves){0}; i < nb_staves; ++i)
   {
-    auto top_line = filter_segments(top_staves[i].full_line,
+    const auto top_pos = find_top_skyline_pos_of_staff(staves[i], top_skylines);
+    const auto bottom_pos = find_bottom_skyline_pos_of_staff(staves[i], bottom_skylines);
+
+    // since top and bottom skylines are sorted, the same way, and for each top
+    // skyline, there is a corresponding bottom skyline, the position of the top
+    // and and bottom skyline of the current must match.
+    if (top_pos not_eq bottom_pos)
+    {
+      throw std::runtime_error("Error: the top and bottom skyline for a staff doesn't match");
+    }
+
+    auto top_line = filter_segments(top_skylines[top_pos].full_line,
 				    staves[i].left,
 				    staves[i].right);
 
-    auto bottom_line = filter_segments(bottom_staves[i].full_line,
+    auto bottom_line = filter_segments(bottom_skylines[bottom_pos].full_line,
 				       staves[i].left,
 				       staves[i].right);
 
