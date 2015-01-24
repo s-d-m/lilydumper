@@ -74,7 +74,7 @@ static T to_int_decimal_shift(const char* str)
   return is_neg ? -num : num;
 }
 
-struct line
+struct line_t
 {
     uint32_t x1;
     uint32_t y1;
@@ -104,7 +104,7 @@ static auto get_x_from_translate_str(const std::string& transform)
 
   const std::string x_tr (std::begin(transform) + static_cast<int>(std::strlen(translate_str)),
 			  std::begin(transform) + static_cast<int>(separation_pos));
-  const auto x_tr_value = to_int_decimal_shift<decltype(line::x1)>(x_tr.c_str());
+  const auto x_tr_value = to_int_decimal_shift<decltype(line_t::x1)>(x_tr.c_str());
   return x_tr_value;
 }
 
@@ -137,13 +137,13 @@ static auto get_y_from_translate_str(const std::string& transform)
   const std::string y_tr (std::begin(transform) + static_cast<int>(separation_pos + 2) /* 2 for COMMA SPACE */,
 			  std::begin(transform) + static_cast<int>(parenthesis_pos));
 
-  const auto y_tr_value = to_int_decimal_shift<decltype(line::y1)>(y_tr.c_str());
+  const auto y_tr_value = to_int_decimal_shift<decltype(line_t::y1)>(y_tr.c_str());
   return y_tr_value;
 }
 
 
 static
-line get_line(const pugi::xml_node& node)
+line_t get_line(const pugi::xml_node& node)
 {
   const std::string transform { node.attribute("transform").value() };
   const auto x1 = node.attribute("x1").value();
@@ -159,18 +159,18 @@ line get_line(const pugi::xml_node& node)
   const auto translate_x = get_x_from_translate_str(transform);
   const auto translate_y = get_y_from_translate_str(transform);
 
-  return line{
-      .x1 = (to_int_decimal_shift<decltype(line::x1)>(x1) + translate_x),
-      .y1 = (to_int_decimal_shift<decltype(line::y1)>(y1) + translate_y),
-      .x2 = (to_int_decimal_shift<decltype(line::x2)>(x2) + translate_x),
-      .y2 = (to_int_decimal_shift<decltype(line::y2)>(y2) + translate_y) };
+  return line_t{
+      .x1 = (to_int_decimal_shift<decltype(line_t::x1)>(x1) + translate_x),
+      .y1 = (to_int_decimal_shift<decltype(line_t::y1)>(y1) + translate_y),
+      .x2 = (to_int_decimal_shift<decltype(line_t::x2)>(x2) + translate_x),
+      .y2 = (to_int_decimal_shift<decltype(line_t::y2)>(y2) + translate_y) };
 }
 
 static
-std::vector<line> get_lines_by_xpath(const pugi::xml_document& svg_file,
+std::vector<line_t> get_lines_by_xpath(const pugi::xml_document& svg_file,
 				     const char* xpath_query)
 {
-  std::vector<line> res;
+  std::vector<line_t> res;
 
   const auto& node_set = svg_file.select_nodes(xpath_query);
   res.reserve(node_set.size());
@@ -185,7 +185,7 @@ std::vector<line> get_lines_by_xpath(const pugi::xml_document& svg_file,
 }
 
 
-struct rect
+struct rect_t
 {
     uint32_t top;
     uint32_t bottom;
@@ -194,16 +194,16 @@ struct rect
 };
 
 static
-std::vector<rect> get_staves_surface(const pugi::xml_document& svg_file)
+std::vector<rect_t> get_staves_surface(const pugi::xml_document& svg_file)
 {
-  std::vector<rect> staves;
+  std::vector<rect_t> staves;
 
   // staves are composed by 5 equaly distanced lines,
   // these lines are not part of a <g color=...>...</g> node
   // Xpath -> '//*[not(self::g)]/line'
   // also, since they must be horizontal, one can select restrain to
   // nodes with attribute [@y1 = @y2]
-  std::vector<line> lines = get_lines_by_xpath(svg_file, "//*[not(self::g)]/line[@y1 = @y2]");
+  std::vector<line_t> lines = get_lines_by_xpath(svg_file, "//*[not(self::g)]/line[@y1 = @y2]");
 
   // sanity check: lines should all be horizontal => y1 == y2
   if (std::any_of(lines.begin(), lines.end(), [] (const auto& a) {
@@ -244,7 +244,7 @@ std::vector<rect> get_staves_surface(const pugi::xml_document& svg_file)
 	(dist_23 == dist_34) and
 	(dist_01 != 0))
     {
-      staves.emplace_back(rect{
+      staves.emplace_back(rect_t{
 	  .top    = lines[i].y1,
 	  .bottom = lines[i + 4].y1,
 	  .left   = lines[i + 4].x1,
@@ -262,9 +262,9 @@ std::vector<rect> get_staves_surface(const pugi::xml_document& svg_file)
 }
 
 
-struct skyline
+struct skyline_t
 {
-    rect surface;
+    rect_t surface;
     std::vector<h_segment> full_line;
 };
 
@@ -286,10 +286,10 @@ auto get_bottom_most_point(const std::vector<h_segment>& vec)
 
 
 static
-std::vector<skyline> get_skylines(const pugi::xml_document& svg_file,
+std::vector<skyline_t> get_skylines(const pugi::xml_document& svg_file,
 				  const char* xpath_query)
 {
-  std::vector<skyline> res;
+  std::vector<skyline_t> res;
   for (const auto& xpath_node : svg_file.select_nodes(xpath_query))
   {
     std::vector<h_segment> full_line;
@@ -307,10 +307,10 @@ std::vector<skyline> get_skylines(const pugi::xml_document& svg_file,
       }
     }
 
-    auto left   = std::numeric_limits<decltype(rect::left)>::max();
-    auto right  = std::numeric_limits<decltype(rect::right)>::min();
-    auto top    = std::numeric_limits<decltype(rect::top)>::max();
-    auto bottom = std::numeric_limits<decltype(rect::bottom)>::min();
+    auto left   = std::numeric_limits<decltype(rect_t::left)>::max();
+    auto right  = std::numeric_limits<decltype(rect_t::right)>::min();
+    auto top    = std::numeric_limits<decltype(rect_t::top)>::max();
+    auto bottom = std::numeric_limits<decltype(rect_t::bottom)>::min();
 
     for (const auto& current_segment : full_line)
     {
@@ -324,8 +324,8 @@ std::vector<skyline> get_skylines(const pugi::xml_document& svg_file,
       bottom = std::max(bottom, current_segment.y);
     }
 
-    res.emplace_back(skyline{
-	.surface = rect{ .top = top,
+    res.emplace_back(skyline_t{
+	.surface = rect_t{ .top = top,
 			 .bottom = bottom,
 			 .left = left,
 			 .right = right },
@@ -351,25 +351,25 @@ std::vector<skyline> get_skylines(const pugi::xml_document& svg_file,
 }
 
 static inline
-std::vector<skyline> get_top_systems_skyline(const pugi::xml_document& svg_file)
+std::vector<skyline_t> get_top_systems_skyline(const pugi::xml_document& svg_file)
 {
   return get_skylines(svg_file, "//g[(@color=\"rgb(25500.0000%, 0.0000%, 0.0000%)\") or (@color=\"rgb(25500.0%, 0.0%, 0.0%)\")]");
 }
 
 static inline
-std::vector<skyline> get_bottom_systems_skyline(const pugi::xml_document& svg_file)
+std::vector<skyline_t> get_bottom_systems_skyline(const pugi::xml_document& svg_file)
 {
   return get_skylines(svg_file, "//g[(@color=\"rgb(0.0000%, 25500.0000%, 0.0000%)\") or (@color=\"rgb(0.0%, 25500.0%, 0.0%)\")]");
 }
 
 static inline
-std::vector<skyline> get_top_staves_skyline(const pugi::xml_document& svg_file)
+std::vector<skyline_t> get_top_staves_skyline(const pugi::xml_document& svg_file)
 {
   return get_skylines(svg_file, "//g[(@color=\"rgb(25500.0000%, 0.0000%, 25500.0000%)\") or (@color=\"rgb(25500.0%, 0.0%, 25500.0%)\")]");
 }
 
 static inline
-std::vector<skyline> get_bottom_staves_skyline(const pugi::xml_document& svg_file)
+std::vector<skyline_t> get_bottom_staves_skyline(const pugi::xml_document& svg_file)
 {
   return get_skylines(svg_file, "//g[(@color=\"rgb(0.0000%, 25500.0000%, 25500.0000%)\") or (@color=\"rgb(0.0%, 25500.0%, 25500.0%)\")]");
 }
@@ -394,7 +394,7 @@ std::vector<h_segment> filter_segments(const std::vector<h_segment>& vec,
 }
 
 // precondition svg_file is already parsed
-std::vector<staff> get_staves(const pugi::xml_document& svg_file)
+std::vector<staff_t> get_staves(const pugi::xml_document& svg_file)
 {
   const auto staves ( get_staves_surface(svg_file) );
   const auto top_staves ( get_top_staves_skyline(svg_file) );
@@ -414,7 +414,7 @@ std::vector<staff> get_staves(const pugi::xml_document& svg_file)
     throw std::runtime_error("Error: mismatch between the top skylines and staves");
   }
 
-  std::vector<staff> res;
+  std::vector<staff_t> res;
   // since staves, top_skylines, bottom_skylines are all sorted the
   // same way (top to bottom), therefore each skyline in the vector
   // belongs to the staff at the same position
@@ -438,7 +438,7 @@ std::vector<staff> get_staves(const pugi::xml_document& svg_file)
       throw std::runtime_error("Error: one skyline is outside the vertical space delimited by the left and right edge of a staff");
     }
 
-    res.emplace_back(staff{
+    res.emplace_back(staff_t{
 	.x = staves[i].left,
 	.y = staves[i].top,
 	.width = staves[i].right- staves[i].left,
@@ -465,7 +465,7 @@ std::vector<staff> get_staves(const pugi::xml_document& svg_file)
 
 
 std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
-				  const std::vector<staff>& staves)
+				  const std::vector<staff_t>& staves)
 {
   // sanity check: precondition staves must be sorted
   if (not std::is_sorted(staves.begin(), staves.end(), [] (const auto& a, const auto& b) {

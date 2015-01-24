@@ -21,7 +21,7 @@ struct h_segment
     uint32_t y;
 };
 
-struct staff
+struct staff_t
 {
     uint32_t x; // top left point. point (0,0) represents the top left corner of the paper
     uint32_t y;
@@ -44,12 +44,12 @@ struct system_t
 
 // a staff represents the surface of a staff on the music sheet.
 // it is represented by the coordinates on the music sheet.
-std::vector<staff> get_staves(const pugi::xml_document& svg_file);
+std::vector<staff_t> get_staves(const pugi::xml_document& svg_file);
 
 
 // group staves into system
 std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
-				  const std::vector<staff>& staves);
+				  const std::vector<staff_t>& staves);
 
 struct note_head_t
 {
