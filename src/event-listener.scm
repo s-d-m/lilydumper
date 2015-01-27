@@ -1,6 +1,7 @@
 \version "2.16.0"
 
 \pointAndClickOff
+#(ly:set-option 'backend 'null)
 
 %%%% Helper functions
 
@@ -110,6 +111,17 @@
 	  res)))))
 
 
+#(define (is-grace-note-moment moment)
+  (not (zero? (ly:moment-grace-numerator moment))))
+
+#(define (get-start-moment moment)
+  (if (is-grace-note-moment moment)
+      (ly:make-moment (+ (/ (ly:moment-grace-numerator moment)
+			    (ly:moment-grace-denominator moment))
+			 (moment->frac moment)))
+      ;; else not a grace note, so moment is start moment
+      moment))
+
 #(define (on-note-head engraver grob source-engraver)
    (let* ((context  (ly:translator-context source-engraver))
 	  (event (event-cause grob))
@@ -127,8 +139,9 @@
 	  (staff-number (get-staff-number root-context))
 	  (current-bar-number (ly:context-property context 'currentBarNumber))
 	  (moment (ly:context-current-moment context))
+	  (start-moment (get-start-moment moment))
 	  (stop-moment (ly:make-moment
-			(+ (moment->frac moment)
+			(+ (moment->frac start-moment)
 			   (moment->frac (ly:duration-length event-duration)))))
 	  (formated-origin (ly:format "~a:~a:~a:~a"
 			     ;; origin is of the form:  (file-name first-line first-column last-line last-column).
@@ -137,10 +150,7 @@
 			    (caddr origin) ;; first column
 			    (car (cddddr origin))))
 	  ; grace notes have a negative numerator
-	  (is-grace-note (not (zero? (ly:moment-grace-numerator moment))))
-	  (is-grace-note-text (if is-grace-note
-				  "yes"
-				  "no"))
+	  (is-grace-note (is-grace-note-moment moment))
 	  (id (ly:format "#origin=~a#pitch=~a#has-tie-attached=~a#staff-number=~a#duration-string=~a#duration=~a#is-grace-note=~a#"
 			 formated-origin
 			 pitch
@@ -150,20 +160,16 @@
 			 staff-number
 			 duration-string
 			 duration
-			 is-grace-note-text)))
+			 (if is-grace-note
+			     "yes"
+			     "no"))))
 
 	(simple-print-line
-		    (if is-grace-note
-			(format "grace-note shift: ~a stop-time: ~a bar-number: ~a id: ~a"
-				(exact->inexact (ly:moment-grace moment))
-				(moment->real-time-nanoseconds moment)
-				current-bar-number
-				id)
-			(format "note start-time: ~a stop-time: ~a bar-number: ~a id: ~a"
-				(moment->real-time-nanoseconds moment)
-				(moment->real-time-nanoseconds stop-moment)
-				current-bar-number
-				id)))
+	 (format "note start-time: ~d stop-time: ~d bar-number: ~a id: ~a"
+		 (round (moment->real-time-nanoseconds start-moment))
+		 (round (moment->real-time-nanoseconds stop-moment))
+		 current-bar-number
+		 id))
 
 
 	(ly:grob-set-property! grob 'id id)
