@@ -3,6 +3,8 @@ TARGET := ${TARGET_DIR}/lilyplayer
 
 SRC :=  main.cc \
 	svg_extractor.cc \
+	notes_file_extractor.cc \
+	utils.cc\
 
 
 OBJS := ${SRC:.cc=.o}
