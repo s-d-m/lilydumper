@@ -33,14 +33,18 @@ static void set_played_notes(std::vector<note_t>& notes)
     else
     {
       // find the next note with the same pitch and the same staff-number
+      // and starting when this note stops.
       const auto pitch = std::string{"#pitch="}
 			+ get_value_from_field(with_tie_note->id, "pitch") + "#";
       const auto staff_number = std::string{"#staff-number="}
 				+ get_value_from_field(with_tie_note->id, "staff-number") + "#";
 
+      const auto stop_time = with_tie_note->stop_time;
+
       const auto silent_note = std::find_if(std::next(with_tie_note), end, [&] (const auto& note) {
 	  return (note.id.find(pitch) != std::string::npos) and
-	         (note.id.find(staff_number) != std::string::npos);
+	         (note.id.find(staff_number) != std::string::npos) and
+	         (note.start_time == stop_time);
 	});
 
       // lilypond doesn't complain if a music sheet contains a note with a tie,
