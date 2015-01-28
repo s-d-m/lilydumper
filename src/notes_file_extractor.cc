@@ -7,58 +7,6 @@
 #include "notes_file_extractor.hh"
 #include "utils.hh"
 
-static void set_played_notes(std::vector<note_t>& notes)
-{
-  // precondition, notes are sorted by time
-  if (not std::is_sorted(std::begin(notes), std::end(notes), [] (const auto& a, const auto& b) {
-	return a.start_time < b.start_time;
-      }))
-  {
-    throw std::logic_error("Error: notes are not sorted by time");
-  }
-
-  auto it = notes.begin();
-  const auto end = notes.end();
-  while (it not_eq end)
-  {
-    const auto with_tie_note = std::find_if(it, end, [] (const auto& note) {
-	return note.id.find("#has-tie-attached=yes#") != std::string::npos;
-      });
-
-    if (with_tie_note == end)
-    {
-      // no more notes with ties, finished
-      it = end;
-    }
-    else
-    {
-      // find the next note with the same pitch and the same staff-number
-      // and starting when this note stops.
-      const auto pitch = std::string{"#pitch="}
-			+ get_value_from_field(with_tie_note->id, "pitch") + "#";
-      const auto staff_number = std::string{"#staff-number="}
-				+ get_value_from_field(with_tie_note->id, "staff-number") + "#";
-
-      const auto stop_time = with_tie_note->stop_time;
-
-      const auto silent_note = std::find_if(std::next(with_tie_note), end, [&] (const auto& note) {
-	  return (note.id.find(pitch) != std::string::npos) and
-	         (note.id.find(staff_number) != std::string::npos) and
-	         (note.start_time == stop_time);
-	});
-
-      // lilypond doesn't complain if a music sheet contains a note with a tie,
-      // not followed by another note of the same pitch
-      if (silent_note != end)
-      {
-	silent_note->is_played = false;
-      }
-
-      it = std::next(with_tie_note);
-    }
-  }
-}
-
 static void extend_tied_notes(std::vector<note_t>& notes)
 {
   // precondition, notes are sorted by time
@@ -100,7 +48,7 @@ static void extend_tied_notes(std::vector<note_t>& notes)
 	const auto when_tie_finish = with_tie_note->stop_time;
 	const auto next_note = std::find_if(std::next(with_tie_note), end, [&] (const auto& note) {
 	    return (note.pitch == pitch) and (note.id.find(staff_number) != std::string::npos)
-	            and (note.start_time == when_tie_finish) and (not note.is_played);
+	            and (note.start_time == when_tie_finish);
 	  });
 
 	if (next_note != end)
@@ -113,6 +61,7 @@ static void extend_tied_notes(std::vector<note_t>& notes)
 	    throw std::logic_error("Error: a not has a duration of 0ns");
 	  }
 
+	  next_note->is_played = false;
 	  with_tie_note->stop_time = next_note->stop_time;
 	}
 
@@ -208,7 +157,6 @@ std::vector<note_t> get_notes(const std::string& filename)
       return a.start_time < b.start_time;
     });
 
-  set_played_notes(res);
   extend_tied_notes(res);
 
   return res;
