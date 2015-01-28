@@ -14,7 +14,7 @@ static void set_played_notes(std::vector<note_t>& notes)
 	return a.start_time < b.start_time;
       }))
   {
-    throw std::runtime_error("Error: notes are not sorted by time");
+    throw std::logic_error("Error: notes are not sorted by time");
   }
 
   auto it = notes.begin();
@@ -55,6 +55,69 @@ static void set_played_notes(std::vector<note_t>& notes)
       }
 
       it = std::next(with_tie_note);
+    }
+  }
+}
+
+static void extend_tied_notes(std::vector<note_t>& notes)
+{
+  // precondition, notes are sorted by time
+  if (not std::is_sorted(std::begin(notes), std::end(notes), [] (const auto& a, const auto& b) {
+	return a.start_time < b.start_time;
+      }))
+  {
+    throw std::logic_error("Error: notes are not sorted by time");
+  }
+
+  auto it = notes.begin();
+  const auto end = notes.end();
+  while (it not_eq end)
+  {
+    const auto with_tie_note = std::find_if(it, end, [] (const auto& note) {
+	return (note.id.find("#has-tie-attached=yes#") != std::string::npos) and note.is_played;
+      });
+
+    if (with_tie_note == end)
+    {
+      // no more notes with ties, finished
+      it = end;
+    }
+    else
+    {
+      it = std::next(with_tie_note);
+
+      // need to extend the duration time of this note.  Find the following
+      // note_S_ having the same pitch/staff-number and starts when this one
+      // finishes. Since several notes can be "chained" by ties, e.g. like
+      // do4~do~do, the extension time must find the latest one of the chain.
+      const auto pitch = with_tie_note->pitch;
+      const auto staff_number = std::string{"#staff-number="}
+				+ get_value_from_field(with_tie_note->id, "staff-number") + "#";
+
+      bool chain_finished;
+      do
+      {
+	const auto when_tie_finish = with_tie_note->stop_time;
+	const auto next_note = std::find_if(std::next(with_tie_note), end, [&] (const auto& note) {
+	    return (note.pitch == pitch) and (note.id.find(staff_number) != std::string::npos)
+	            and (note.start_time == when_tie_finish) and (not note.is_played);
+	  });
+
+	if (next_note != end)
+	{
+	  // important check has the loop is based on the assumption that no
+	  // notes ends at the same time they starts. A note with a duration
+	  // time of 0 would cause an infinite loop here.
+	  if (next_note->stop_time == next_note->start_time)
+	  {
+	    throw std::logic_error("Error: a not has a duration of 0ns");
+	  }
+
+	  with_tie_note->stop_time = next_note->stop_time;
+	}
+
+	chain_finished = ((next_note == end) or (next_note->id.find("#has-tie-attached=no#")));
+      } while (not chain_finished);
     }
   }
 }
@@ -146,6 +209,7 @@ std::vector<note_t> get_notes(const std::string& filename)
     });
 
   set_played_notes(res);
+  extend_tied_notes(res);
 
   return res;
 }
