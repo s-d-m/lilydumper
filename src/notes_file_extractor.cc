@@ -3,8 +3,57 @@
 #include <sstream>
 #include <fstream>
 #include <stdexcept>
+#include <iterator>
 #include "notes_file_extractor.hh"
 #include "utils.hh"
+
+static void set_played_notes(std::vector<note_t>& notes)
+{
+  // precondition, notes are sorted by time
+  if (not std::is_sorted(std::begin(notes), std::end(notes), [] (const auto& a, const auto& b) {
+	return a.start_time < b.start_time;
+      }))
+  {
+    throw std::runtime_error("Error: notes are not sorted by time");
+  }
+
+  auto it = notes.begin();
+  const auto end = notes.end();
+  while (it not_eq end)
+  {
+    const auto with_tie_note = std::find_if(it, end, [] (const auto& note) {
+	return note.id.find("#has-tie-attached=yes#") != std::string::npos;
+      });
+
+    if (with_tie_note == end)
+    {
+      // no more notes with ties, finished
+      it = end;
+    }
+    else
+    {
+      // find the next note with the same pitch and the same staff-number
+      const auto pitch = std::string{"#pitch="}
+			+ get_value_from_field(with_tie_note->id, "pitch") + "#";
+      const auto staff_number = std::string{"#staff-number="}
+				+ get_value_from_field(with_tie_note->id, "staff-number") + "#";
+
+      const auto silent_note = std::find_if(std::next(with_tie_note), end, [&] (const auto& note) {
+	  return (note.id.find(pitch) != std::string::npos) and
+	         (note.id.find(staff_number) != std::string::npos);
+	});
+
+      // lilypond doesn't complain if a music sheet contains a note with a tie,
+      // not followed by another note of the same pitch
+      if (silent_note != end)
+      {
+	silent_note->is_played = false;
+      }
+
+      it = std::next(with_tie_note);
+    }
+  }
+}
 
 std::vector<note_t> get_notes(const std::string& filename)
 {
@@ -91,6 +140,8 @@ std::vector<note_t> get_notes(const std::string& filename)
   std::stable_sort(std::begin(res), std::end(res), [] (const auto& a, const auto& b) {
       return a.start_time < b.start_time;
     });
+
+  set_played_notes(res);
 
   return res;
 }
