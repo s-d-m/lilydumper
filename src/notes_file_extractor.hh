@@ -42,7 +42,7 @@ struct note_t
 {
     uint64_t start_time;
     uint64_t stop_time;
-    uint8_t bar_number;
+    uint16_t bar_number;
     pitch_t pitch;
     bool is_played;
     std::string id;
