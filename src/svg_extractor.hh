@@ -64,4 +64,14 @@ struct note_head_t
 // returns the bounding boxes + note ids found in the svg file.
 std::vector<note_head_t> get_note_heads(const pugi::xml_document& svg_file);
 
+struct svg_file_t
+{
+    const std::string filename;
+    std::vector<note_head_t> note_heads;
+    std::vector<system_t> systems;
+    std::vector<staff_t> staves;
+};
+
+svg_file_t get_svg_data(const std::string& filename);
+
 #endif /* SVG_EXTRACTOR_HH_ */

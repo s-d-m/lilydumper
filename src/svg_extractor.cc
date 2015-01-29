@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <algorithm>
+#include <pugixml.hpp>
 #include "svg_extractor.hh"
 #include "utils.hh"
 
@@ -701,4 +702,28 @@ std::vector<note_head_t> get_note_heads(const pugi::xml_document& svg_file)
   }
 
   return res;
+}
+
+
+svg_file_t get_svg_data(const std::string& filename)
+{
+  pugi::xml_document doc;
+  // the parse_eol option replaces \r\n and single \r by \n
+  const auto parse_result = doc.load_file(filename.c_str(), pugi::parse_minimal | pugi::parse_eol);
+  if (parse_result.status not_eq pugi::status_ok)
+  {
+    throw std::runtime_error(std::string{"Error: Failed to parse file `"} +
+			     filename + "' ("
+			     + parse_result.description() + ")\n");
+  }
+
+  auto staves = get_staves(doc);
+  auto systems = get_systems(doc, staves);
+
+  return svg_file_t{
+      .filename = filename,
+      .note_heads = get_note_heads(doc),
+      .systems = std::move(systems),
+      .staves = std::move(staves),
+    };
 }
