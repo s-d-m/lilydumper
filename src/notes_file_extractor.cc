@@ -142,13 +142,19 @@ std::vector<note_t> get_notes(const std::string& filename)
 
     }
 
+    const auto pitch = std::stoul(get_value_from_field(id_str, "pitch"));
+    if ((pitch < pitch_t::la_0) or (pitch > pitch_t::do_8))
+    {
+      throw std::logic_error("Error: note is not valid for keyboard");
+    }
+
     res.emplace_back(note_t{
 	.start_time = start_time,
 	.stop_time = stop_time,
 	// initialise bar numbers to invalid value as they don't match the one
 	// from svg file
 	.bar_number = std::numeric_limits<decltype(note_t::bar_number)>::max(),
-	.pitch = static_cast<decltype(note_t::pitch)>(std::stoul(get_value_from_field(id_str, "pitch"))),
+	.pitch = static_cast<decltype(note_t::pitch)>(pitch),
 	.is_played = true, // set to true for now. second pass will set this value based on ties
 	.id = std::move(id_str) }
       );
