@@ -32,7 +32,7 @@ enum pitch_t : uint8_t
   octave(6),
   octave(7),
 
-  /* nineth scale */
+  /* ninth scale */
   do_8,
 };
 

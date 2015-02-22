@@ -53,12 +53,12 @@ static void extend_tied_notes(std::vector<note_t>& notes)
 
 	if (next_note != end)
 	{
-	  // important check has the loop is based on the assumption that no
-	  // notes ends at the same time they starts. A note with a duration
-	  // time of 0 would cause an infinite loop here.
+	  // important check:  the loop is based on the assumption that no
+	  // notes end at the same time as they start. A note with a duration
+	  // time of 0 would cause an infinite loop here otherwise.
 	  if (next_note->stop_time == next_note->start_time)
 	  {
-	    throw std::logic_error("Error: a not has a duration of 0ns");
+	    throw std::logic_error("Error: a note has a duration of 0ns");
 	  }
 
 	  next_note->is_played = false;
@@ -108,14 +108,14 @@ std::vector<note_t> get_notes(const std::string& filename)
     {
       throw std::runtime_error(std::string{"Error: invalid line found in '"}
 			       + filename + "'. Starts by '" + field1
-			       + "' instead of either 'note'");
+			       + "' instead of 'note'");
     }
 
     if (field1 != "start-time:")
     {
       throw std::runtime_error(std::string{"Error: invalid fieldname found in '"}
 			       + filename + "'. found '" + field1
-			       + "' instead of either 'start-time:'");
+			       + "' instead of 'start-time:'");
     }
 
     if (field2 != "stop-time:")

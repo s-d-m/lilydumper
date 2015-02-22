@@ -203,8 +203,8 @@ std::vector<rect_t> get_staves_surface(const pugi::xml_document& svg_file)
   // staves are composed by 5 equaly distanced lines,
   // these lines are not part of a <g color=...>...</g> node
   // Xpath -> '//*[not(self::g)]/line'
-  // also, since they must be horizontal, one can select restrain to
-  // nodes with attribute [@y1 = @y2]
+  // also, since they must be horizontal, one can restrain the
+  // selection to nodes with attribute [@y1 = @y2]
   std::vector<line_t> lines = get_lines_by_xpath(svg_file, "//*[not(self::g)]/line[@y1 = @y2]");
 
   // sanity check: lines should all be horizontal => y1 == y2
@@ -621,7 +621,7 @@ std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
   }
 
   // sanity check: the output should normally be sorted in ascending
-  // order.  and for each system, the first staff must imediately
+  // order.  and for each system, the first staff must immediately
   // succeed the last staff of the former system
   for (auto i = decltype(nb_systems){0}; i < nb_systems - 1; ++i)
   {
@@ -690,7 +690,7 @@ std::vector<note_head_t> get_note_heads(const pugi::xml_document& svg_file)
 {
   // on the svg file, note heads are covered by a 'g' node with an id field.
   // these nodes contain a (grand-)child, which is a path node. When the notes
-  // are colored, the first child is a g note with a color property. This node
+  // are colored, the first child is a g node with a color property. This node
   // will have the path node has child
   const auto& node_set = svg_file.select_nodes("//g[@id and .//path]");
   std::vector<note_head_t> res;
