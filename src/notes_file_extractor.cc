@@ -156,6 +156,7 @@ std::vector<note_t> get_notes(const std::string& filename)
 	.bar_number = std::numeric_limits<decltype(note_t::bar_number)>::max(),
 	.pitch = static_cast<decltype(note_t::pitch)>(pitch),
 	.is_played = true, // set to true for now. second pass will set this value based on ties
+	.staff_number = static_cast<decltype(note_t::staff_number)>(std::stoul(get_value_from_field(id_str, "staff-number"))),
 	.id = std::move(id_str) }
       );
   }

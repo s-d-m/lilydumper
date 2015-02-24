@@ -45,6 +45,7 @@ struct note_t
     uint16_t bar_number;
     pitch_t pitch;
     bool is_played;
+    uint8_t staff_number;
     std::string id;
 };
 
