@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#define octave(X) \
+#define OCTAVE(X) \
   do_##X,	  \
   do_diese##X,	  \
   re_##X,	  \
@@ -24,19 +24,19 @@ enum pitch_t : uint8_t
   la_diese_0,
   si_0,
 
-  octave(1),
-  octave(2),
-  octave(3),
-  octave(4),
-  octave(5),
-  octave(6),
-  octave(7),
+  OCTAVE(1),
+  OCTAVE(2),
+  OCTAVE(3),
+  OCTAVE(4),
+  OCTAVE(5),
+  OCTAVE(6),
+  OCTAVE(7),
 
   /* ninth scale */
   do_8,
 };
 
-#undef octave
+#undef OCTAVE
 
 struct note_t
 {
