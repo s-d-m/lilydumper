@@ -65,7 +65,7 @@ static void extend_tied_notes(std::vector<note_t>& notes)
 	  with_tie_note->stop_time = next_note->stop_time;
 	}
 
-	chain_finished = ((next_note == end) or (next_note->id.find("#has-tie-attached=no#")));
+	chain_finished = ((next_note == end) or (next_note->id.find("#has-tie-attached=no#") != std::string::npos));
       } while (not chain_finished);
     }
   }
