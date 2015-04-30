@@ -2,6 +2,8 @@
 #define NOTES_FILE_EXTRACTOR_HH_
 
 #include <vector>
+#include <cstdint>
+#include <string>
 
 #define OCTAVE(X) \
   do_##X,	  \
