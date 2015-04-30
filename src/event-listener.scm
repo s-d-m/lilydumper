@@ -31,7 +31,7 @@
 #(define (moment->frac-nanoseconds moment)
    (exact->inexact
     ;; lilypond moments are stored in tenth of seconds unit
-    ;; so multiplay by 10^8 to go to nanoseconds
+    ;; so multiply by 10^8 to go to nanoseconds
     (* 1000 1000 100
        (moment->frac moment))))
 
