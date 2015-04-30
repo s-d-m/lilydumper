@@ -1,7 +1,6 @@
 \version "2.16.0"
 
 \pointAndClickOff
-#(ly:set-option 'backend 'null)
 
 %%%% Helper functions
 
