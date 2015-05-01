@@ -5,6 +5,7 @@ SRC :=  main.cc \
 	svg_extractor.cc \
 	notes_file_extractor.cc \
 	utils.cc\
+	chords_extractor.cc \
 
 
 OBJS := ${SRC:.cc=.o}
