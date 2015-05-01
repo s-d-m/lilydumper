@@ -1,6 +1,7 @@
 \version "2.16.0"
 
 \pointAndClickOff
+#(ly:set-option 'debug-skylines #t)
 
 %%%% Helper functions
 
