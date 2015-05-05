@@ -6,6 +6,7 @@ SRC :=  main.cc \
 	notes_file_extractor.cc \
 	utils.cc\
 	chords_extractor.cc \
+	cursor_boxes_extractor.cc \
 
 
 OBJS := ${SRC:.cc=.o}
