@@ -3,6 +3,7 @@
 
 #include "svg_extractor.hh"
 #include "notes_file_extractor.hh"
+#include "chords_extractor.hh"
 
 int main(int argc, const char * const * argv)
 {
@@ -31,5 +32,6 @@ int main(int argc, const char * const * argv)
     }
   }
 
+  const auto chords = get_chords(notes);
   return 0;
 }
