@@ -71,6 +71,139 @@ static void extend_tied_notes(std::vector<note_t>& notes)
   }
 }
 
+// set the correct timing of grace notes in  place
+static void fix_grace_notes(std::vector<note_t>& notes)
+{
+  // there are three different possible case for grace notes:
+  // - the music sheet starts with grace notes    (corner case, but can really happen)
+  // - grace notes are "wrapped" by normal ones   (expected normal case)
+  // - the music sheet ends with grace notes      (corner case, unsure if it makes sense "musically" speaking. Let's handle them anyway)
+
+
+  const auto nb_notes = notes.size();
+
+  // let's treat corner case one: music sheet starting by grace notes
+  decltype(notes.size()) first_normal_note = 0;
+  while ((first_normal_note < nb_notes) and
+	 (notes[first_normal_note].id.find("#is-grace-note=yes#") != std::string::npos))
+  {
+    first_normal_note++;
+  }
+
+  // let's say all grace note from the very beginning will last 1/8 of a second.
+  // totally arbitrary value!
+  constexpr auto grace_note_length = decltype(note_t::start_time){ 125000000 }; // unit is nanoseconds
+
+  // first_normal_note is either out of range (extreme case of a music
+  // sheet containing only grace notes), or points to the first normal note.
+  //
+  // in case it only has grace notes, first_normal_note will equal to
+  // nb_notes, thus the following code will be correct as it will
+  // treat all notes.
+  //
+  // in case it doesn't start by grace notes, first_normal_note will
+  // be 0 and the following loop won't be entered, so still correct.
+  //
+  // in case there are some grace note at the start, and eventually a
+  // normal note, this is exactly what it is supposed to do.
+  for (decltype(first_normal_note) i = 0; i < first_normal_note; ++i)
+  {
+    notes[i].start_time = i * grace_note_length;
+    notes[i].stop_time = (i + 1) * grace_note_length;
+  }
+
+  // for all notes from first_normal_note, up to the end, delays them
+  // by the time used by the first grace notes
+  const auto delay_timing = grace_note_length * first_normal_note;
+
+  // following if is uncessary. in the case there is no delay (no
+  // grace notes at start of music sheet which is a very common case),
+  // the for loop would just add 0 so not modifying the values.  The
+  // goal of the if is thus to avoid spending a lot of CPU time in the
+  // very common case by avoiding going through the vector.
+  if (delay_timing != 0)
+  {
+    for (auto i = first_normal_note; i < nb_notes; ++i)
+    {
+      notes[i].start_time += delay_timing;
+      notes[i].stop_time += delay_timing;
+    }
+  }
+
+  // following is to treat the normal case (grace notes embraced by normal ones)
+  decltype(notes.size()) current_normal_note = first_normal_note;
+  while (current_normal_note < nb_notes)
+  {
+    // find the next grace note
+    auto grace_pos = current_normal_note + 1;
+    while ((grace_pos < nb_notes) and
+	   (notes[grace_pos].id.find("#is-grace-note=yes#") == std::string::npos))
+    {
+      grace_pos++;
+    }
+
+    // at this point we are either on a grace note, or we finished processing.
+
+    // if grace_pos "points" to a grace note, the following will look at the next
+    // normal note.
+    //
+    // if we already finished processing, next_normal will be out-of-bounds.
+    auto next_normal = grace_pos + 1; // normal mean non-grace note here
+    while ((next_normal < nb_notes) and
+	   (notes[next_normal].id.find("#is-grace-note=yes#") != std::string::npos))
+    {
+      next_normal++;
+    }
+
+    // at this point if we are still in the range, do some work.
+    // There is one corner case here: a music sheet can finish with
+    // grace notes. Therefore it is possible that grace_pos is in the
+    // range but not next_normal. Therefore use next_normal instead of
+    // grace_pos in the comparison.
+    //
+    if (next_normal < nb_notes)
+    {
+      // find the previous normal note.  the fix for grace notes
+      // embraced by two normal ones is simple. Find the duration
+      // between the two normal ones. Each grace note will last the
+      // same amount of time and while all start after previous_normal
+      // and last before next_normal
+
+      const auto previous_normal = grace_pos - 1; // we are sure this is valid as we started grace_pos at current_normal_note + 1
+      const auto nb_grace_notes = next_normal - grace_pos;
+      const auto nb_slots = nb_grace_notes + 1;
+      const auto diff_time = notes[next_normal].start_time - notes[previous_normal].start_time;
+
+      for (auto i = decltype(nb_grace_notes){ 0 }; i < nb_grace_notes; ++i)
+      {
+	notes[grace_pos + i].start_time = notes[previous_normal].start_time + ((diff_time * (i + 1)) / nb_slots);
+	notes[grace_pos + i].stop_time = notes[previous_normal].start_time + ((diff_time * (i + 2)) / nb_slots);
+      }
+    }
+
+    current_normal_note = next_normal;
+  }
+
+  // let's fix the last corner case, grace notes at the end of the
+  // music sheet with at least one normal note before (otherwise it
+  // would mean music sheet made only of grace notes)
+  auto last_normal = nb_notes;
+  bool finished = false;
+  while ((last_normal > 0) and (not finished))
+  {
+    last_normal--; // we started at nb_notes (so off by one to avoid
+		   // problems when comparing with unsigned). In case
+		   // the vector were empty ...
+    finished = (notes[last_normal].id.find("#is-grace-note=yes#") != std::string::npos);
+  }
+
+  for (auto i = last_normal + 1; i < nb_notes; ++i)
+  {
+    notes[i].start_time = notes[last_normal].stop_time + grace_note_length * (i - last_normal);
+    notes[i].stop_time = notes[last_normal].stop_time + grace_note_length * (i + 1 - last_normal);
+  }
+}
+
 std::vector<note_t> get_notes(const std::string& filename)
 {
   std::ifstream file (filename, std::ios::in);
@@ -161,12 +294,17 @@ std::vector<note_t> get_notes(const std::string& filename)
       );
   }
 
-  // res is not sorted now due to the current handling of grace notes.
-  std::stable_sort(std::begin(res), std::end(res), [] (const auto& a, const auto& b) {
-      return a.start_time < b.start_time;
-    });
-
+  fix_grace_notes(res);
   extend_tied_notes(res);
+
+  // sanity check: post condition the array must be sorted by time
+    // res is not sorted now due to the current handling of grace notes.
+  if (not std::is_sorted(std::begin(res), std::end(res), [] (const auto& a, const auto& b) {
+	return a.start_time < b.start_time;
+      }))
+  {
+    throw std::logic_error("The notes should be sorted by time now.");
+  }
 
   return res;
 }
