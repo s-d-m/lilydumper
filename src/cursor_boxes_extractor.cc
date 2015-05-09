@@ -168,7 +168,68 @@ static note_head_t get_note_head(const std::string& id,
 		       [&] (const auto& elt) { return elt.id == id; });
 }
 
+
+// return the subset of candidate_systems that really contains x, y
+static std::vector<uint8_t> find_system_with_point(const svg_file_t& svg_file,
+						   const std::vector<uint8_t>& candidate_systems,
+						   uint32_t x,
+						   uint32_t y)
+{
+  // sanity check: pre-condition y must be in the top/bottom skyline range of all candidate_systems
+  for (const auto candidate : candidate_systems)
+  {
+    const auto top_staff = svg_file.systems[ candidate ].first;
+    const auto bottom_staff = svg_file.systems[ candidate ].last;
+
+    const auto top_skyline = svg_file.staves[ top_staff ].top_skyline;
+    const auto bottom_skyline = svg_file.staves[ bottom_staff ].bottom_skyline;
+
+    if (not ((top_skyline <= y) and (y <= bottom_skyline)))
+    {
+      throw std::runtime_error("precondition failed: candidate system is wrong");
+    }
+  }
+
+
+  std::vector<uint8_t> res;
+  for (const auto candidate : candidate_systems)
+  {
+    const auto top_staff = svg_file.systems[ candidate ].first;
+    const auto bottom_staff = svg_file.systems[ candidate ].last;
+
+    const auto& full_top_skyline = svg_file.staves[ top_staff ].full_top_skyline;
+    const auto& full_bottom_skyline = svg_file.staves[ bottom_staff ].full_bottom_skyline;
+
+    // find the first (normally only) segment on top on x, y
+    const auto top_segment = std::find_if(full_top_skyline.cbegin(), full_top_skyline.cend(), [=] (const auto& elt) {
+	return (elt.x1 <= x) and (x <= elt.x2) and (elt.y <= y);
+      });
+
+    // find the first (normally only) segment below x, y
+    const auto bottom_segment = std::find_if(full_bottom_skyline.cbegin(), full_bottom_skyline.cend(), [=] (const auto& elt) {
+	return (elt.x1 <= x) and (x <= elt.x2) and (y <= elt.y);
+      });
+
+    if ((top_segment != full_top_skyline.cend()) and (bottom_segment != full_bottom_skyline.cend()))
+    {
+      res.push_back(candidate);
+    }
+  }
+
+
+  // sanity check: post-condition, there can't be more candidate at
+  // the end of this function than there was at the beginning.
+  if (res.size() > candidate_systems.size())
+  {
+    throw std::logic_error("postcondition failed: there can't be more possibilities after filtering");
+  }
+
+  return res;
+}
+
+
 static uint8_t find_system_with_point(const svg_file_t& svg_file,
+				      uint32_t x,
 				      uint32_t y)
 {
   if (svg_file.systems.empty())
@@ -191,9 +252,22 @@ static uint8_t find_system_with_point(const svg_file_t& svg_file,
     }
   }
 
-  if (res.size() != 1)
+  auto nb_candidates = res.size();
+  if (nb_candidates > 1)
   {
-    if (res.size() == 0)
+    // it is possible that two systems overlap when considering the
+    // top skyline and bottom skyline only as their limits.  In such
+    // a case, one has to look in more details using the full
+    // top/bottom skyline.
+
+    auto tmp = find_system_with_point(svg_file, std::move(res), x, y);
+    res = std::move(tmp);
+    nb_candidates = res.size();
+  }
+
+  if (nb_candidates != 1)
+  {
+    if (nb_candidates == 0)
     {
       throw std::runtime_error("Error, unable to find a system containing a cursor box");
     }
@@ -245,6 +319,7 @@ static cursor_box_t get_cursor_box(const chord_t& chord,
   }
 
   const auto system = find_system_with_point(svg_file,
+					     (min_left + max_right) / 2,
 					     (min_top + max_bottom) / 2);
 
   const auto first_staff = svg_file.systems[ system ].first;
