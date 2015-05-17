@@ -5,6 +5,7 @@
 #include "notes_file_extractor.hh"
 #include "chords_extractor.hh"
 #include "cursor_boxes_extractor.hh"
+#include "keyboard_events_extractor.hh"
 
 int main(int argc, const char * const * argv)
 {
@@ -33,8 +34,11 @@ int main(int argc, const char * const * argv)
     }
   }
 
+  const auto keyboard_events = get_key_events(notes);
   const auto chords = get_chords(notes);
   const auto cursor_boxes = get_cursor_boxes(chords, sheets);
+
+
 
   return 0;
 }
