@@ -309,6 +309,9 @@ static cursor_box_t get_cursor_box(const chord_t& chord,
   auto min_top = std::numeric_limits<decltype(cursor_box_t::left)>::max();
   auto max_bottom = std::numeric_limits<decltype(cursor_box_t::right)>::min();
 
+  const auto first_note_head = get_note_head(notes[0].id, svg_file);
+  const auto first_bar_number = first_note_head.bar_number;
+
   for (const auto& note : notes)
   {
     const auto head = get_note_head(note.id, svg_file);
@@ -316,6 +319,13 @@ static cursor_box_t get_cursor_box(const chord_t& chord,
     max_right = std::max(max_right, head.right);
     min_top = std::min(min_top, head.top);
     max_bottom = std::max(max_bottom, head.bottom);
+
+    // sanity check, since all notes in a chord starts at the same time,
+    // they must all share the same bar number
+    if (head.bar_number != first_bar_number)
+    {
+      throw std::runtime_error("Error: all notes in a chord must have the same bar number");
+    }
   }
 
   const auto system = find_system_with_point(svg_file,
