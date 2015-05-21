@@ -1,4 +1,5 @@
 #include <cstring>
+#include <string>
 #include <cstdlib>
 #include <stdexcept>
 #include <algorithm>
@@ -660,9 +661,11 @@ static note_head_t get_note_head(const pugi::xml_node& node)
 
   const auto x_width_str = get_value_from_field(attr_value, "#x-width");
   const auto y_height_str = get_value_from_field(attr_value, "#y-height");
+  const auto bar_number_str = get_value_from_field(attr_value, "#bar-number");
 
   const auto x_width = to_int_decimal_shift<decltype(note_head_t::left)>(x_width_str.c_str());
   const auto y_height = to_int_decimal_shift<decltype(note_head_t::top)>(y_height_str.c_str());
+  const auto bar_number = static_cast<decltype(note_head_t::bar_number)>( std::stoul(bar_number_str) );
 
   auto id = std::string{attr_value};
 
@@ -682,7 +685,8 @@ static note_head_t get_note_head(const pugi::xml_node& node)
       .left = x_center - (x_width / 2),
       .right = x_center + (x_width / 2),
       .top =  y_center - (y_height / 2),
-      .bottom = y_center + (y_height / 2) };
+      .bottom = y_center + (y_height / 2),
+      .bar_number = bar_number};
 
 }
 
