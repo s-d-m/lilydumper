@@ -14,7 +14,7 @@ struct cursor_box_t
     uint32_t top;
     uint32_t bottom;
     uint64_t start_time; // at which point this cursor must appear
-    uint32_t svg_file_pos; // the position of the svg file this cursor_box relates to
+    uint16_t svg_file_pos; // the position of the svg file this cursor_box relates to
     uint8_t  system_number; // the system in the svg file this cursor covers.
 };
 
