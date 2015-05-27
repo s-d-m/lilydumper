@@ -8,6 +8,7 @@
 #include "keyboard_events_extractor.hh"
 #include "bar_number_events_extractor.hh"
 #include "staff_num_to_instr_extractor.hh"
+#include "file_exporter.hh"
 
 int main(int argc, const char * const * argv)
 {
@@ -47,6 +48,7 @@ int main(int argc, const char * const * argv)
   const auto cursor_boxes = get_cursor_boxes(chords, sheets);
   const auto bar_num_events = get_bar_num_events(cursor_boxes);
 
+  save_events_to_file("/tmp/dummy", keyboard_events, cursor_boxes);
 
   return 0;
 }
