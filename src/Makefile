@@ -90,6 +90,11 @@ ifeq ($(GPROF),1)
   CXXFLAGS += -pg
 endif
 
+ifeq ($(DEBUG_INFO),1)
+  CXXFLAGS += -ggdb3
+endif
+
+
 SCAN_BUILD = scan-build
 
 all: ${TARGET}
