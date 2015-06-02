@@ -162,17 +162,25 @@
 			 duration
 			 (if is-grace-note
 			     "yes"
-			     "no"))))
+			     "no")))
+	; add the bar number for the id that will go into the svg file
+	; the notes file gets its repeats unfolded. as a consequence,
+	; the bar numbers won't match those in the svg files (for
+	; which the repeats are not unfolded) the end-user will
+	; normally trust the bar numbers displayed on the music sheet
+	; to be correct. Therefore the svg's bar numbers "take
+	; precedence" over the one from the note file.
+	(id-with-bar-number (ly:format "#bar-number=~a~a"
+				       current-bar-number
+				       id)))
 
 	(simple-print-line
-	 (format "note start-time: ~d stop-time: ~d bar-number: ~a id: ~a"
+	 (format "note start-time: ~d stop-time: ~d id: ~a"
 		 (round (moment->real-time-nanoseconds start-moment))
 		 (round (moment->real-time-nanoseconds stop-moment))
-		 current-bar-number
 		 id))
 
-
-	(ly:grob-set-property! grob 'id id)
+	(ly:grob-set-property! grob 'id id-with-bar-number)
 ))
 
 

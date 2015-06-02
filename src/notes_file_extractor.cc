@@ -223,8 +223,6 @@ std::vector<note_t> get_notes(const std::string& filename)
     std::string field2;
     uint64_t stop_time;
     std::string field3;
-    unsigned int bar_number;
-    std::string field4;
     std::string id_str;
 
     str >> line_type
@@ -233,8 +231,6 @@ std::vector<note_t> get_notes(const std::string& filename)
 	>> field2
 	>> stop_time
 	>> field3
-	>> bar_number
-	>> field4
 	>> id_str;
 
     if (line_type != "note")
@@ -259,18 +255,10 @@ std::vector<note_t> get_notes(const std::string& filename)
 
     }
 
-    if (field3 != "bar-number:")
+    if (field3 != "id:")
     {
       throw std::runtime_error(std::string{"Error: invalid fieldname found in '"}
 			       + filename + "'. found '" + field3
-			       + "' instead of 'bar-number:'");
-
-    }
-
-    if (field4 != "id:")
-    {
-      throw std::runtime_error(std::string{"Error: invalid fieldname found in '"}
-			       + filename + "'. found '" + field4
 			       + "' instead of 'id:'");
 
     }
@@ -284,9 +272,6 @@ std::vector<note_t> get_notes(const std::string& filename)
     res.emplace_back(note_t{
 	.start_time = start_time,
 	.stop_time = stop_time,
-	// initialise bar numbers to invalid value as they don't match the one
-	// from svg file
-	.bar_number = std::numeric_limits<decltype(note_t::bar_number)>::max(),
 	.pitch = static_cast<decltype(note_t::pitch)>(pitch),
 	.is_played = true, // set to true for now. second pass will set this value based on ties
 	.staff_number = static_cast<decltype(note_t::staff_number)>(std::stoul(get_value_from_field(id_str, "staff-number"))),

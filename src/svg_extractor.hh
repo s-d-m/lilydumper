@@ -59,6 +59,7 @@ struct note_head_t
     uint32_t right;
     uint32_t top;
     uint32_t bottom;
+    uint16_t bar_number;
 };
 
 // returns the bounding boxes + note ids found in the svg file.

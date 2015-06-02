@@ -16,6 +16,7 @@ struct cursor_box_t
     uint64_t start_time; // at which point this cursor must appear
     uint16_t svg_file_pos; // the position of the svg file this cursor_box relates to
     uint8_t  system_number; // the system in the svg file this cursor covers.
+    uint16_t bar_number; // the measure number in the music sheets
 };
 
 std::vector<cursor_box_t> get_cursor_boxes(const std::vector<chord_t>& chords,
