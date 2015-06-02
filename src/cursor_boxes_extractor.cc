@@ -345,7 +345,8 @@ static cursor_box_t get_cursor_box(const chord_t& chord,
       .bottom = system_bottom,
       .start_time = notes[0].start_time,
       .svg_file_pos = svg_pos,
-      .system_number = system };
+      .system_number = system,
+      .bar_number = first_bar_number };
 }
 
 // returns a cursor for each chord. chords[ x ] -> res[ x ]
