@@ -8,6 +8,7 @@ SRC :=  main.cc \
 	chords_extractor.cc \
 	cursor_boxes_extractor.cc \
 	keyboard_events_extractor.cc \
+	bar_number_events_extractor.cc \
 
 
 OBJS := ${SRC:.cc=.o}
