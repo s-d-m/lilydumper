@@ -24,6 +24,26 @@
 		     ".notes"))))))
    global-variable-filename)
 
+%% The filename for the staff number to instrument name table can be controlled by command line using the following syntax:
+%% lilypond -e"(ly:add-option 'instrument-name-file-output #f  \"Output for the staff-number-to-instrument-name-table file. Default is filename with .sn2in extension instead of .ly\")" -e"(ly:set-option 'instrument-name-file-output \"/path/to/output/note/file\")"
+
+#(define instr-name-table-filename #f)
+#(define (table-filename-to-output-to)
+   (if (not instr-name-table-filename)
+       (let ((option-name (ly:get-option 'instrument-name-file-output)))
+	 (set! instr-name-table-filename
+	       (if option-name
+		   option-name
+		   (string-concatenate
+		    (list
+		     (substring (object->string (command-line))
+				;; filename without .ly part
+				(+ (string-rindex (object->string (command-line)) #\sp) 2)
+				(- (string-length (object->string (command-line))) 5))
+		     ".sn2in"))))))
+   instr-name-table-filename)
+
+
 #(define (moment->frac moment)
     (/ (ly:moment-main-numerator moment)
        (ly:moment-main-denominator moment)))
@@ -78,6 +98,20 @@
       (display (string-append text "\n") p)
       (close p))))
 
+
+#(define was-table-file-removed? #f)
+#(define (output-to-table-file text)
+  (let ((filename (table-filename-to-output-to)))
+    (if (not was-table-file-removed?)
+	(begin
+	  (if (access? filename F_OK)
+	      (delete-file filename))
+	  (set! was-table-file-removed? #t)))
+
+    (let* ((p (open-file filename "a")))
+      ;; for regtest comparison
+      (display (string-append text "\n") p)
+      (close p))))
 
 %%% main functions
 
