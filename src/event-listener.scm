@@ -169,10 +169,14 @@
 	     (get-instrument-name (ly:context-parent context))))))
 
 
+#(define seen-staff-numbers '())
 #(define (save-staff-number-instrument-name staff-number context)
-   (output-to-table-file (ly:format "~a ~a"
-				    staff-number
-				    (get-instrument-name context))))
+   (if (not (member staff-number seen-staff-numbers))
+       (begin
+	 (output-to-table-file (ly:format "~a ~a"
+					  staff-number
+					  (get-instrument-name context)))
+	 (set! seen-staff-numbers (cons staff-number seen-staff-numbers)))))
 
 
 #(define (on-note-head engraver grob source-engraver)
