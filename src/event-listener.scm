@@ -24,6 +24,7 @@
 		     ".notes"))))))
    global-variable-filename)
 
+
 %% The filename for the staff number to instrument name table can be controlled by command line using the following syntax:
 %% lilypond -e"(ly:add-option 'instrument-name-file-output #f  \"Output for the staff-number-to-instrument-name-table file. Default is filename with .sn2in extension instead of .ly\")" -e"(ly:set-option 'instrument-name-file-output \"/path/to/output/note/file\")"
 
@@ -42,6 +43,8 @@
 				(- (string-length (object->string (command-line))) 5))
 		     ".sn2in"))))))
    instr-name-table-filename)
+
+
 
 
 #(define (moment->frac moment)
@@ -113,6 +116,7 @@
       (display (string-append text "\n") p)
       (close p))))
 
+
 %%% main functions
 
 #(define (format-tempo engraver event)
@@ -163,6 +167,13 @@
 	 (if instrument-property
 	     (ly:format "~a" instrument-property)
 	     (get-instrument-name (ly:context-parent context))))))
+
+
+#(define (save-staff-number-instrument-name staff-number context)
+   (output-to-table-file (ly:format "~a ~a"
+				    staff-number
+				    (get-instrument-name context))))
+
 
 #(define (on-note-head engraver grob source-engraver)
    (let* ((context  (ly:translator-context source-engraver))
@@ -221,7 +232,7 @@
 		 (round (moment->real-time-nanoseconds start-moment))
 		 (round (moment->real-time-nanoseconds stop-moment))
 		 id))
-
+	(save-staff-number-instrument-name staff-number context)
 	(ly:grob-set-property! grob 'id id-with-bar-number)
 ))
 
