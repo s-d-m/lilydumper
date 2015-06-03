@@ -122,6 +122,14 @@
       ;; else not a grace note, so moment is start moment
       moment))
 
+#(define (get-instrument-name context)
+   (if (not context)
+       ""
+       (let ((instrument-property (ly:context-property context 'instrumentName #f)))
+	 (if instrument-property
+	     (ly:format "~a" instrument-property)
+	     (get-instrument-name (ly:context-parent context))))))
+
 #(define (on-note-head engraver grob source-engraver)
    (let* ((context  (ly:translator-context source-engraver))
 	  (event (event-cause grob))
