@@ -147,12 +147,6 @@ void output_cursor_move_event(std::ofstream& out,
 static
 void output_key_event(std::ofstream& out, const key_data& key)
 {
-  if ((key.ev_type != key_data::type::pressed) and
-      (key.ev_type != key_data::type::released))
-  {
-    throw std::runtime_error("key event type could only be pressed or released");
-  }
-
   if (key.ev_type == key_data::type::pressed)
   {
     static_assert(sizeof(event_type::press_key) == 1, "an event type should be one byte");
