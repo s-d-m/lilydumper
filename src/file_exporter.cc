@@ -14,8 +14,10 @@ enum event_type : uint8_t
 static
 uint8_t get_nb_events_at_time(const std::vector<key_event>::const_iterator& key_event_it,
 			      const std::vector<cursor_box_t>::const_iterator& cursor_event_it,
+			      const std::vector<bar_num_event_t>::const_iterator& bar_num_event_it,
 			      const std::vector<key_event>::const_iterator& end_key,
 			      const std::vector<cursor_box_t>::const_iterator& end_cursor,
+			      const std::vector<bar_num_event_t>::const_iterator& end_bar_num,
 			      const uint64_t current_timing_event)
 {
   unsigned int nb_key_events = 0;
@@ -29,7 +31,7 @@ uint8_t get_nb_events_at_time(const std::vector<key_event>::const_iterator& key_
     if (nb_key_events == std::numeric_limits<uint8_t>::max())
     {
       throw std::logic_error(std::string{"Error: can't handle more than "} +
-			     std::to_string(std::numeric_limits<uint8_t>::max()) +
+			     std::to_string(static_cast<unsigned>(std::numeric_limits<uint8_t>::max())) +
 			     "events occuring at the same time");
     }
 
@@ -53,15 +55,34 @@ uint8_t get_nb_events_at_time(const std::vector<key_event>::const_iterator& key_
     }
   }
 
+  unsigned int nb_bar_num_events = 0;
+  static_assert(std::numeric_limits<decltype(nb_bar_num_events)>::max() >= std::numeric_limits<uint8_t>::max(),
+		"nb_events can constain nb_bar_num_events. Therefore the maximum number of bar_num_events must be at least as big as the number of all events so avoid wrapping when uncessary");
+
+  for (auto it = bar_num_event_it;
+       (it != end_bar_num) and (it->time == current_timing_event);
+       ++it)
+  {
+    ++nb_bar_num_events;
+
+    // sanity check
+    if (nb_bar_num_events > 1)
+    {
+      throw std::logic_error("Error: can't change the bar number twice (or more) at the same.");
+    }
+  }
+
+  const auto res = nb_cursor_events + nb_key_events + nb_bar_num_events;
+
   // sanity check
-  if ((nb_cursor_events + nb_key_events) > std::numeric_limits<uint8_t>::max())
+  if (res > std::numeric_limits<uint8_t>::max())
   {
     throw std::logic_error(std::string{"Error: can't handle more than "} +
-			   std::to_string(std::numeric_limits<uint8_t>::max()) +
+			   std::to_string(static_cast<unsigned>(std::numeric_limits<uint8_t>::max())) +
 			   "events occuring at the same time");
   }
 
-  return static_cast<uint8_t>(nb_cursor_events + nb_key_events);
+  return static_cast<uint8_t>(res);
 }
 
 
@@ -79,8 +100,10 @@ void output_as_big_endian(std::ofstream& out, const T value)
 static
 decltype(key_event::time) get_current_event_timing(const std::vector<key_event>::const_iterator& key_event_it,
 						   const std::vector<cursor_box_t>::const_iterator& cursor_event_it,
+						   const std::vector<bar_num_event_t>::const_iterator& bar_num_event_it,
 						   const std::vector<key_event>::const_iterator& end_key,
-						   const std::vector<cursor_box_t>::const_iterator& end_cursor)
+						   const std::vector<cursor_box_t>::const_iterator& end_cursor,
+						   const std::vector<bar_num_event_t>::const_iterator& end_bar_num)
 {
   constexpr auto invalid_value = std::numeric_limits<decltype(key_event::time)>::max();
   auto res = invalid_value;
@@ -92,6 +115,11 @@ decltype(key_event::time) get_current_event_timing(const std::vector<key_event>:
   if (cursor_event_it != end_cursor)
   {
     res = std::min(res, cursor_event_it->start_time);
+  }
+
+  if (bar_num_event_it != end_bar_num)
+  {
+    res = std::min(res, bar_num_event_it->time);
   }
 
   // sanity check
@@ -169,31 +197,55 @@ void output_key_event(std::ofstream& out, const key_data& key)
 }
 
 
+static
+void output_bar_num_event(std::ofstream& out,
+			  const bar_num_event_t& bar_num_ev)
+{
+  static_assert(sizeof(event_type::set_bar_number) == 1, "an event type should be one byte");
+  output_as_big_endian(out, event_type::set_bar_number);
+
+  static_assert(sizeof(bar_num_ev.bar_number) == 2, "bar number should be two bytes");
+  output_as_big_endian(out, bar_num_ev.bar_number);
+}
 
 static
 void output_events_data(std::ofstream& out,
 			const std::vector<key_event>& keyboard_events,
-			const std::vector<cursor_box_t>& cursor_boxes)
+			const std::vector<cursor_box_t>& cursor_boxes,
+			const std::vector<bar_num_event_t>& bar_num_events)
 {
   auto key_event_it = keyboard_events.cbegin();
   auto cursor_event_it = cursor_boxes.cbegin();
+  auto bar_num_event_it = bar_num_events.cbegin();
 
   const auto end_key = keyboard_events.cend();
   const auto end_cursor = cursor_boxes.cend();
+  const auto end_bar_num = bar_num_events.cend();
 
   auto current_svg_file = std::numeric_limits<decltype(cursor_box_t::svg_file_pos)>::max();
 
-  while ((key_event_it != end_key) and (cursor_event_it != end_cursor))
+  // while there still is at least one event to process
+  while ((key_event_it != end_key) and
+	 (cursor_event_it != end_cursor) and
+	 (bar_num_event_it != end_bar_num))
   {
     // output timing
-    const auto current_timing = get_current_event_timing(key_event_it, cursor_event_it,
-							  end_key, end_cursor);
+    const auto current_timing = get_current_event_timing(key_event_it,
+							 cursor_event_it,
+							 bar_num_event_it,
+							 end_key,
+							 end_cursor,
+							 end_bar_num);
     static_assert(sizeof(current_timing) == sizeof(uint64_t), "value must be saved as 64bits BE");
     output_as_big_endian(out, current_timing);
 
     // output number of events occuring at this timing
-    const auto nb_events = get_nb_events_at_time(key_event_it, cursor_event_it,
-						 end_key, end_cursor,
+    const auto nb_events = get_nb_events_at_time(key_event_it,
+						 cursor_event_it,
+						 bar_num_event_it,
+						 end_key,
+						 end_cursor,
+						 end_bar_num,
 						 current_timing);
 
     static_assert(sizeof(nb_events) == 1, "value must be saved as 8bits BE");
@@ -205,6 +257,14 @@ void output_events_data(std::ofstream& out,
     {
       output_cursor_move_event(out, *cursor_event_it, current_svg_file);
       cursor_event_it++;
+    }
+
+    // output the bar num event changes
+    while ((bar_num_event_it != end_bar_num) and
+	   (bar_num_event_it->time == current_timing))
+    {
+      output_bar_num_event(out, *bar_num_event_it);
+      bar_num_event_it++;
     }
 
     // output the key presses / key releases events
@@ -220,7 +280,8 @@ void output_events_data(std::ofstream& out,
 
 void save_events_to_file(const std::string& output_filename,
 			 const std::vector<key_event>& keyboard_events,
-			 const std::vector<cursor_box_t>& cursor_boxes)
+			 const std::vector<cursor_box_t>& cursor_boxes,
+  			 const std::vector<bar_num_event_t>& bar_num_events)
 {
   std::ofstream file(output_filename,
 		     std::ios::binary | std::ios::trunc | std::ios::out);
@@ -230,6 +291,6 @@ void save_events_to_file(const std::string& output_filename,
     throw std::runtime_error(std::string{"Error: failed to open "} + output_filename);
   }
 
-  output_events_data(file, keyboard_events, cursor_boxes);
+  output_events_data(file, keyboard_events, cursor_boxes, bar_num_events);
   file.close();
 }
