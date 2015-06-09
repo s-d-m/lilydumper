@@ -7,6 +7,7 @@
 #include "cursor_boxes_extractor.hh"
 #include "keyboard_events_extractor.hh"
 #include "bar_number_events_extractor.hh"
+#include "staff_num_to_instr_extractor.hh"
 
 int main(int argc, const char * const * argv)
 {
@@ -18,6 +19,7 @@ int main(int argc, const char * const * argv)
 
   std::vector<note_t> notes;
   std::vector<svg_file_t> sheets;
+  std::vector<staff_to_instr_t> staffs_to_instrument;
 
   for (unsigned int i = 1; i < static_cast<decltype(i)>(argc); ++i)
   {
@@ -27,6 +29,11 @@ int main(int argc, const char * const * argv)
     {
       // notes file
       notes = get_notes(filename);
+    }
+    else if (filename.find(".sn2in") != std::string::npos)
+    {
+      // staff number to instrument mapping
+      staffs_to_instrument = get_staff_instr_mapping(filename);
     }
     else
     {

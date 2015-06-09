@@ -9,6 +9,7 @@ SRC :=  main.cc \
 	cursor_boxes_extractor.cc \
 	keyboard_events_extractor.cc \
 	bar_number_events_extractor.cc \
+	staff_num_to_instr_extractor.cc \
 
 
 OBJS := ${SRC:.cc=.o}
