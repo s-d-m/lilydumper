@@ -19,11 +19,16 @@ std::vector<staff_to_instr_t> get_staff_instr_mapping(const std::string& filenam
   for (std::string line; std::getline(file, line); )
   {
     std::istringstream str (line);
-    uint8_t instr_num;
+    unsigned int instr_num;
     std::string instr_name;
 
     str >> instr_num
 	>> instr_name;
+
+    if (instr_num > std::numeric_limits<uint8_t>::max())
+    {
+      throw std::runtime_error("Error: staff number too big");
+    }
 
     if (std::any_of(res.cbegin(), res.cend(), [=] (const auto& elt) {
 	  return elt.staff_number == instr_num;
@@ -40,7 +45,7 @@ std::vector<staff_to_instr_t> get_staff_instr_mapping(const std::string& filenam
     }
 
     res.emplace_back(staff_to_instr_t{
-	.staff_number = instr_num,
+	.staff_number = static_cast<decltype(staff_to_instr_t::staff_number)>(instr_num),
 	.instr_name = std::move(instr_name) }
       );
   }
