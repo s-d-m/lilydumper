@@ -278,6 +278,7 @@ void output_events_data(std::ofstream& out,
 }
 
 
+
 void save_events_to_file(const std::string& output_filename,
 			 const std::vector<key_event>& keyboard_events,
 			 const std::vector<cursor_box_t>& cursor_boxes,
@@ -290,6 +291,14 @@ void save_events_to_file(const std::string& output_filename,
   {
     throw std::runtime_error(std::string{"Error: failed to open "} + output_filename);
   }
+
+  // magic number: LPYP
+  file << static_cast<uint8_t>( 'L' )
+       << static_cast<uint8_t>( 'P' )
+       << static_cast<uint8_t>( 'Y' )
+       << static_cast<uint8_t>( 'P' )
+    // version number
+       << static_cast<uint8_t>( 0 );
 
   output_events_data(file, keyboard_events, cursor_boxes, bar_num_events);
   file.close();
