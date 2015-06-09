@@ -48,7 +48,7 @@ int main(int argc, const char * const * argv)
   const auto cursor_boxes = get_cursor_boxes(chords, sheets);
   const auto bar_num_events = get_bar_num_events(cursor_boxes);
 
-  save_events_to_file("/tmp/dummy", keyboard_events, cursor_boxes, bar_num_events);
+  save_events_to_file("/tmp/dummy", keyboard_events, cursor_boxes, bar_num_events, staffs_to_instrument);
 
   return 0;
 }
