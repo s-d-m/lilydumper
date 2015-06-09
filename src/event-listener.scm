@@ -26,7 +26,7 @@
 
 
 %% The filename for the staff number to instrument name table can be controlled by command line using the following syntax:
-%% lilypond -e"(ly:add-option 'instrument-name-file-output #f  \"Output for the staff-number-to-instrument-name-table file. Default is filename with .sn2in extension instead of .ly\")" -e"(ly:set-option 'instrument-name-file-output \"/path/to/output/note/file\")"
+%% lilypond -e"(ly:add-option 'instrument-name-file-output #f  \"Output for the staff-number-to-instrument-name-table file. Default is filename with .sn2in extension instead of .ly\")" -e"(ly:set-option 'instrument-name-file-output \"/path/to/output/sn2in/file\")"
 
 #(define instr-name-table-filename #f)
 #(define (table-filename-to-output-to)
