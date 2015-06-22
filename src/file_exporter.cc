@@ -1,6 +1,12 @@
+#include <sys/types.h> // for get file size
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <fstream>
 #include <stdexcept>
 #include "file_exporter.hh"
+
+
 
 enum event_type : uint8_t
 {
@@ -291,11 +297,41 @@ void output_staff_num_mapping(std::ofstream& file,
   }
 }
 
+static
+void output_svg_files(std::ofstream& file,
+		      const std::vector<std::string>& svg_filenames)
+{
+  output_as_big_endian(file, static_cast<uint16_t>(svg_filenames.size()));
+  for (const auto& filename : svg_filenames)
+  {
+    // get file size: http://stackoverflow.com/questions/5840148/how-can-i-get-a-files-size-in-c
+
+    // While not necessarily the most popular method, I've heard that the ftell,
+    // fseek method may not always give accurate results in some
+    // circumstances. Specifically, if an already opened file is used and the
+    // size needs to be worked out on that and it happens to be opened as a text
+    // file, then it's going to give out wrong answers.
+
+    struct stat stat_buf;
+    const auto rc = stat(filename.c_str(), &stat_buf);
+    if (rc != 0)
+    {
+      throw std::runtime_error(std::string{"Error, failed to get file size for "} + filename);
+    }
+    output_as_big_endian(file, static_cast<uint32_t>(stat_buf.st_size));
+
+    std::ifstream src(filename, std::ios::in | std::ios::binary);
+    file << src.rdbuf();
+  }
+}
+
+
 void save_events_to_file(const std::string& output_filename,
 			 const std::vector<key_event>& keyboard_events,
 			 const std::vector<cursor_box_t>& cursor_boxes,
   			 const std::vector<bar_num_event_t>& bar_num_events,
-  			 const std::vector<staff_to_instr_t>& staff_num_mapping)
+  			 const std::vector<staff_to_instr_t>& staff_num_mapping,
+			 const std::vector<std::string>& svg_filenames)
 {
   std::ofstream file(output_filename,
 		     std::ios::binary | std::ios::trunc | std::ios::out);
@@ -315,5 +351,6 @@ void save_events_to_file(const std::string& output_filename,
 
   output_staff_num_mapping(file, staff_num_mapping);
   output_events_data(file, keyboard_events, cursor_boxes, bar_num_events);
+  output_svg_files(file, svg_filenames);
   file.close();
 }

@@ -21,6 +21,7 @@ int main(int argc, const char * const * argv)
   std::vector<note_t> notes;
   std::vector<svg_file_t> sheets;
   std::vector<staff_to_instr_t> staffs_to_instrument;
+  std::vector<std::string> svg_filenames;
 
   for (unsigned int i = 1; i < static_cast<decltype(i)>(argc); ++i)
   {
@@ -39,6 +40,7 @@ int main(int argc, const char * const * argv)
     else
     {
       // svg file
+      svg_filenames.emplace_back(filename);
       sheets.emplace_back(get_svg_data(filename));
     }
   }
@@ -48,7 +50,12 @@ int main(int argc, const char * const * argv)
   const auto cursor_boxes = get_cursor_boxes(chords, sheets);
   const auto bar_num_events = get_bar_num_events(cursor_boxes);
 
-  save_events_to_file("/tmp/dummy", keyboard_events, cursor_boxes, bar_num_events, staffs_to_instrument);
+  save_events_to_file("/tmp/dummy",
+		      keyboard_events,
+		      cursor_boxes,
+		      bar_num_events,
+		      staffs_to_instrument,
+		      svg_filenames);
 
   return 0;
 }
