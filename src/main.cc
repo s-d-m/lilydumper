@@ -22,6 +22,7 @@ int main(int argc, const char * const * argv)
   std::vector<svg_file_t> sheets;
   std::vector<staff_to_instr_t> staffs_to_instrument;
   std::vector<std::string> svg_filenames;
+  std::string output_filename;
 
   for (unsigned int i = 1; i < static_cast<decltype(i)>(argc); ++i)
   {
@@ -46,6 +47,18 @@ int main(int argc, const char * const * argv)
 
       staffs_to_instrument = get_staff_instr_mapping(filename);
     }
+    else if (filename == "-o")
+    {
+      // not a filename, the real one will be the next parameter
+      if (i == static_cast<decltype(i)>(argc) - 1)
+      {
+	// was the last parameter, so there is no filename behind it!
+	throw std::runtime_error("Error: -o must be followed by a filename");
+      }
+
+      ++i;
+      output_filename = argv[i];
+    }
     else
     {
       // svg file
@@ -59,7 +72,7 @@ int main(int argc, const char * const * argv)
   const auto cursor_boxes = get_cursor_boxes(chords, sheets);
   const auto bar_num_events = get_bar_num_events(cursor_boxes);
 
-  save_to_file("/tmp/dummy",
+  save_to_file(output_filename,
 	       keyboard_events,
 	       cursor_boxes,
 	       bar_num_events,
