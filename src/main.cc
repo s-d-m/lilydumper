@@ -40,7 +40,7 @@ int main(int argc, const char * const * argv)
     else
     {
       // svg file
-      svg_filenames.emplace_back(filename);
+      svg_filenames.emplace_back(filename + ".no_skylines");
       sheets.emplace_back(get_svg_data(filename));
     }
   }
