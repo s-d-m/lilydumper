@@ -30,11 +30,20 @@ int main(int argc, const char * const * argv)
     if (filename.find(".notes") != std::string::npos)
     {
       // notes file
+      if (not notes.empty())
+      {
+	throw std::runtime_error("Error: only one note file can be processed per music sheet");
+      }
       notes = get_notes(filename);
     }
     else if (filename.find(".sn2in") != std::string::npos)
     {
       // staff number to instrument mapping
+      if (not staffs_to_instrument.empty())
+      {
+	throw std::runtime_error("Error: only one sn2in file can be processed per music sheet");
+      }
+
       staffs_to_instrument = get_staff_instr_mapping(filename);
     }
     else
