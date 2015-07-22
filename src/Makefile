@@ -1,5 +1,5 @@
 TARGET_DIR := ../bin
-TARGET := ${TARGET_DIR}/lilyplayer
+TARGET := ${TARGET_DIR}/lilydumper
 
 SRC :=  main.cc \
 	svg_extractor.cc \
