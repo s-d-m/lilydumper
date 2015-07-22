@@ -20,7 +20,7 @@ int main(int argc, const char * const * argv)
 
   std::vector<note_t> notes;
   std::vector<svg_file_t> sheets;
-  std::vector<staff_to_instr_t> staffs_to_instrument;
+  std::vector<std::string> staffs_to_instrument;
   std::vector<std::string> svg_filenames;
   std::string output_filename;
 

@@ -285,14 +285,13 @@ void output_events_data(std::ofstream& out,
 
 static
 void output_staff_num_mapping(std::ofstream& file,
-			      const std::vector<staff_to_instr_t>& staff_num_mapping)
+			      const std::vector<std::string>& staff_num_mapping)
 {
   file << static_cast<uint8_t>(staff_num_mapping.size());
 
   for (const auto& elt : staff_num_mapping)
   {
-    file << elt.staff_number
-	 << elt.instr_name
+    file << elt
 	 << static_cast<uint8_t>( 0 );
   }
 }
@@ -330,7 +329,7 @@ void save_to_file(const std::string& output_filename,
 		  const std::vector<key_event>& keyboard_events,
 		  const std::vector<cursor_box_t>& cursor_boxes,
 		  const std::vector<bar_num_event_t>& bar_num_events,
-		  const std::vector<staff_to_instr_t>& staff_num_mapping,
+		  const std::vector<std::string>& staff_num_mapping,
 		  const std::vector<std::string>& svg_filenames)
 {
   std::ofstream file(output_filename,

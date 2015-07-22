@@ -6,16 +6,25 @@
 #include "staff_num_to_instr_extractor.hh"
 
 
-std::vector<staff_to_instr_t> get_staff_instr_mapping(const std::string& filename)
+std::vector<std::string> get_staff_instr_mapping(const std::string& filename)
 {
+  // preconditions:
+  // 1) all staff numbers are in the range [0 .. staff_num_mapping.size() - 1]
+  // 2) all staff numbers are different
+  // 3) they are sorted in ascending order
+  //
+  // as a consequence, one can store only the strings in a vector, and
+  // the staff number is just the position in that vector
+
   std::ifstream file (filename, std::ios::in);
   if (! file.is_open() )
   {
     throw std::runtime_error(std::string{"Error: failed to open '"} + filename + "'");
   }
 
-  std::vector<staff_to_instr_t> res;
+  std::vector<std::string> res;
 
+  uint8_t current_staff_number = 0;
   for (std::string line; std::getline(file, line); )
   {
     std::istringstream str (line);
@@ -30,11 +39,11 @@ std::vector<staff_to_instr_t> get_staff_instr_mapping(const std::string& filenam
       throw std::runtime_error("Error: staff number too big");
     }
 
-    if (std::any_of(res.cbegin(), res.cend(), [=] (const auto& elt) {
-	  return elt.staff_number == instr_num;
-	}))
+    if (instr_num != current_staff_number)
     {
-      throw std::runtime_error("Error: the same staff number has been encountered twice");
+      throw std::runtime_error(std::string{"Error: instrument numbers should start at 0 and be incremented."} +
+			       "staff numbered " + std::to_string(instr_num) + " should actually be numbered " +
+			       std::to_string(current_staff_number) + ".");
     }
 
     if (instr_name == "")
@@ -44,10 +53,9 @@ std::vector<staff_to_instr_t> get_staff_instr_mapping(const std::string& filenam
 		<< "\n";
     }
 
-    res.emplace_back(staff_to_instr_t{
-	.staff_number = static_cast<decltype(staff_to_instr_t::staff_number)>(instr_num),
-	.instr_name = std::move(instr_name) }
-      );
+    res.emplace_back( std::move(instr_name) );
+
+    ++current_staff_number;
   }
 
   file.close();

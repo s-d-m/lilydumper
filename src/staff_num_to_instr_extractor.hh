@@ -4,12 +4,9 @@
 #include <string>
 #include <vector>
 
-struct staff_to_instr_t
-{
-    uint8_t staff_number;
-    std::string instr_name;
-};
-
-std::vector<staff_to_instr_t> get_staff_instr_mapping(const std::string& filename);
+// staff number must be 0 .. nb_staff - 1
+// therefore the staff number -> name association will be as simple
+// as the position of the string in the vector
+std::vector<std::string> get_staff_instr_mapping(const std::string& filename);
 
 #endif
