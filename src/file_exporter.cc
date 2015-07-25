@@ -230,11 +230,30 @@ void output_events_data(std::ofstream& out,
 
   auto current_svg_file = std::numeric_limits<decltype(cursor_box_t::svg_file_pos)>::max();
 
+  // the parser/reader needs to know when to stop reading events and when to
+  // start reading what comes next (svg files). One way to do so is to have a
+  // special "event type" that encodes "end of events". Another way is to add a
+  // field before the start of the group of events which tells how many of them
+  // there is
+
+  // The choice here has been to use the second method: tell how many numbers of
+  // group there is before dumping them. Sadly at this point, the software
+  // doesn't know it yet. Therefore let's leave 8 bytes in the output file for
+  // now, and update it when the program can tell how many group of events there
+  // is.
+
+  const auto nb_groups_pos = out.tellp();
+
+  uint64_t nb_groups_of_events = 0;
+  output_as_big_endian(out, nb_groups_of_events);
+
   // while there still is at least one event to process
   while ((key_event_it != end_key) and
 	 (cursor_event_it != end_cursor) and
 	 (bar_num_event_it != end_bar_num))
   {
+    nb_groups_of_events++;
+
     // output timing
     const auto current_timing = get_current_event_timing(key_event_it,
 							 cursor_event_it,
@@ -281,6 +300,14 @@ void output_events_data(std::ofstream& out,
       key_event_it++;
     }
   }
+
+  // now that we know how many group of events there is, let's write it at the
+  // right place in the file.
+  out.seekp(nb_groups_pos);
+  output_as_big_endian(out, nb_groups_of_events);
+
+  // don't forget to set the output position indicator back to the end.
+  out.seekp(0, std::ios_base::end);
 }
 
 static
