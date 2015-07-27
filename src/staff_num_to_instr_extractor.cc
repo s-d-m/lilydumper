@@ -43,7 +43,7 @@ std::vector<std::string> get_staff_instr_mapping(const std::string& filename)
     {
       throw std::runtime_error(std::string{"Error: instrument numbers should start at 0 and be incremented."} +
 			       "staff numbered " + std::to_string(instr_num) + " should actually be numbered " +
-			       std::to_string(current_staff_number) + ".");
+			       std::to_string(static_cast<long unsigned int>(current_staff_number)) + ".");
     }
 
     if (instr_name == "")
