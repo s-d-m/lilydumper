@@ -24,7 +24,8 @@ uint8_t get_nb_events_at_time(const std::vector<key_event>::const_iterator& key_
 			      const std::vector<key_event>::const_iterator& end_key,
 			      const std::vector<cursor_box_t>::const_iterator& end_cursor,
 			      const std::vector<bar_num_event_t>::const_iterator& end_bar_num,
-			      const uint64_t current_timing_event)
+			      const uint64_t current_timing_event,
+			      const decltype(cursor_box_t::svg_file_pos) current_svg_file)
 {
   unsigned int nb_key_events = 0;
   static_assert(std::numeric_limits<decltype(nb_key_events)>::max() >= std::numeric_limits<uint8_t>::max(),
@@ -48,6 +49,11 @@ uint8_t get_nb_events_at_time(const std::vector<key_event>::const_iterator& key_
   static_assert(std::numeric_limits<decltype(nb_cursor_events)>::max() >= std::numeric_limits<uint8_t>::max(),
 		"nb_events can constain key events and cursor events. Therefore the maximum number of cursor_events must be at least as big as the number of all events so avoid wrapping when uncessary");
 
+  // in case there is a cursor change, one has to check if the next cursor is on
+  // the same page or not. Turn pages are written off as separate events,
+  // therefore it must be counted separately than cursor_events
+  unsigned int nb_page_turn_event = 0;
+
   for (auto it = cursor_event_it;
        (it != end_cursor) and (it->start_time == current_timing_event);
        ++it)
@@ -58,6 +64,11 @@ uint8_t get_nb_events_at_time(const std::vector<key_event>::const_iterator& key_
     if (nb_cursor_events > 1)
     {
       throw std::logic_error("Error: can't move the cursor twice (or more) at the same.");
+    }
+
+    if (it->svg_file_pos != current_svg_file)
+    {
+      nb_page_turn_event++;
     }
   }
 
@@ -78,7 +89,10 @@ uint8_t get_nb_events_at_time(const std::vector<key_event>::const_iterator& key_
     }
   }
 
-  const auto res = nb_cursor_events + nb_key_events + nb_bar_num_events;
+  const auto res = nb_cursor_events +
+		   nb_key_events +
+                   nb_bar_num_events +
+		   nb_page_turn_event;
 
   // sanity check
   if (res > std::numeric_limits<uint8_t>::max())
@@ -271,7 +285,8 @@ void output_events_data(std::ofstream& out,
 						 end_key,
 						 end_cursor,
 						 end_bar_num,
-						 current_timing);
+						 current_timing,
+						 current_svg_file);
 
     static_assert(sizeof(nb_events) == 1, "value must be saved as 8bits BE");
     output_as_big_endian(out, nb_events);
