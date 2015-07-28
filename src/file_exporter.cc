@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <fstream>
 #include <stdexcept>
 #include "file_exporter.hh"
@@ -234,6 +235,32 @@ void output_events_data(std::ofstream& out,
 			const std::vector<cursor_box_t>& cursor_boxes,
 			const std::vector<bar_num_event_t>& bar_num_events)
 {
+  // sanity check: inputs must be sorted by time
+  if (not std::is_sorted(keyboard_events.cbegin(), keyboard_events.cend(), [] (const auto& a, const auto&b) {
+	return a.time < b.time;
+      }))
+  {
+    throw std::invalid_argument("Error: keyboard events should be sorted by time");
+  }
+
+  // sanity check: inputs must be sorted by time
+  if (not std::is_sorted(cursor_boxes.cbegin(), cursor_boxes.cend(), [] (const auto& a, const auto&b) {
+	return a.start_time < b.start_time;
+      }))
+  {
+    throw std::invalid_argument("Error: cursor events should be sorted by time");
+  }
+
+  // sanity check: inputs must be sorted by time
+  if (not std::is_sorted(bar_num_events.cbegin(), bar_num_events.cend(), [] (const auto& a, const auto&b) {
+	return a.time < b.time;
+      }))
+  {
+    throw std::invalid_argument("Error: bar number events should be sorted by time");
+  }
+
+
+
   auto key_event_it = keyboard_events.cbegin();
   auto cursor_event_it = cursor_boxes.cbegin();
   auto bar_num_event_it = bar_num_events.cbegin();

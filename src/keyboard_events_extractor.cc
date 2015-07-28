@@ -75,6 +75,17 @@ void separate_release_pressed_events(std::vector<key_event>& key_events)
       }
     }
   }
+
+  // sort the keys by time. In some rare cases, when separating a release and a
+  // pressed event by making the release happen a bit before, it is possible
+  // that the new shorter time, is lower than the time of the event that was
+  // happening just before. Therefore, these two events must be reordered
+  // appropriately.
+
+  std::stable_sort(key_events.begin(), key_events.end(), [] (const auto& a, const auto&b) {
+      return a.time < b.time;
+    });
+
 }
 
 
