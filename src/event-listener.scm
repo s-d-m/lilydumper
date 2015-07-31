@@ -53,9 +53,9 @@
 
 #(define (moment->frac-nanoseconds moment)
    (exact->inexact
-    ;; lilypond moments are stored in tenth of seconds unit
-    ;; so multiply by 10^8 to go to nanoseconds
-    (* 1000 1000 100
+    ;; lilypond moments are stored in seconds unit so multiply by 10^9
+    ;; to go to nanoseconds
+    (* 1000 1000 1000
        (moment->frac moment))))
 
 #(define (remove.00000000 moment)
@@ -79,9 +79,9 @@
      (+ last-tempo-realtime-change (* time-per-quarter-note nb-quarter-notes))))
 
 #(define (moment->real-time-nanoseconds moment)
-    ;; lilypond moments are stored in tenth of seconds unit
-    ;; so multiplay by 10^8 to go to nanoseconds
-    (* 1000 1000 100 (moment->real-time moment)))
+    ;; lilypond moments are stored in econds unit so multiplay by 10^9
+    ;; to go to nanoseconds
+    (* 1000 1000 1000 (moment->real-time moment)))
 
 
 
