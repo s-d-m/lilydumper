@@ -159,7 +159,7 @@ static note_head_t get_note_head(const std::string& id,
     }
     else
     {
-      throw std::runtime_error("Error: a note head with a specific has been found several times in a svg file");
+      throw std::runtime_error("Error: a note head with a specific id has been found several times in a svg file");
     }
   }
 
