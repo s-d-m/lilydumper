@@ -86,6 +86,21 @@ void separate_release_pressed_events(std::vector<key_event>& key_events)
       return a.time < b.time;
     });
 
+  // sanity check: two key release with the same pitch can't appear at the same time
+  // sanity check: two key pressed with the same pitch can't appear at the same time
+  const auto nb_events = key_events.size();
+  for (auto i = decltype(nb_events){0}; i < nb_events; ++i)
+  {
+    for (auto j = i + 1; j < nb_events; ++j)
+    {
+      if ((key_events[j].time         == key_events[i].time) and
+	  (key_events[j].data.ev_type == key_events[i].data.ev_type) and
+	  (key_events[j].data.pitch   == key_events[i].data.pitch))
+      {
+	throw std::invalid_argument("Error: same event happening twice at the same time detected");
+      }
+    }
+  }
 }
 
 
