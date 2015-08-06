@@ -204,6 +204,38 @@ static void fix_grace_notes(std::vector<note_t>& notes)
   }
 }
 
+
+static
+void fix_overlapping_key_presses(std::vector<note_t>& notes)
+{
+  // it can happen (though rarely) that on the music sheet, some keys
+  // appear to "overlap". In other words, that a key must - according
+  // to the music sheet - be pressed, while it is already pressed.
+
+  // as an example, this happens in "Für Elise", on measure 30. The Do
+  // (pitch = 72) is a do4 and there are these small grace notes
+  // supposed to be played while holding this do4 (72), ... that also
+  // contains a do (72).
+
+  // the algorithm here is quite simple, when two key_down overlap in
+  // time, shorten the first one so it finish at the exact same time
+  // the second one starts. There will be a next step that will
+  // separate the release/pressed events happening at the exact same
+  // time
+
+  for (auto i = decltype(notes.size()){0}; i < notes.size(); ++i)
+  {
+    for (auto j = i + 1; (j < notes.size()) and (notes[j].start_time <= notes[i].stop_time); ++j)
+    {
+      if (notes[j].pitch == notes[i].pitch)
+      {
+	notes[i].stop_time = notes[j].start_time;
+      }
+    }
+  }
+}
+
+
 std::vector<note_t> get_notes(const std::string& filename)
 {
   std::ifstream file (filename, std::ios::in);
@@ -281,6 +313,7 @@ std::vector<note_t> get_notes(const std::string& filename)
 
   fix_grace_notes(res);
   extend_tied_notes(res);
+  fix_overlapping_key_presses(res);
 
   // sanity check: post condition the array must be sorted by time
     // res is not sorted now due to the current handling of grace notes.
