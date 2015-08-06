@@ -3,7 +3,7 @@
 #include "keyboard_events_extractor.hh"
 
 static
-void separate_release_pressed_events(std::vector<key_event>& key_events)
+void assert_song_valid(std::vector<key_event>& key_events)
 {
   // precond the events MUST be sorted by time. this function only works on that case
   if (not std::is_sorted(key_events.begin(), key_events.end(), [] (const key_event& a, const key_event& b) {
@@ -12,6 +12,39 @@ void separate_release_pressed_events(std::vector<key_event>& key_events)
   {
     throw std::invalid_argument("Error, events are not sorted by play time");
   }
+
+  // all keys starts up.
+  std::vector<bool> is_pressed (std::numeric_limits<uint8_t>::max(), false);
+
+  for (const auto& event : key_events)
+  {
+    const auto pitch = event.data.pitch;
+    if (event.data.ev_type == key_data::type::pressed)
+    {
+      if (is_pressed[pitch])
+      {
+	throw std::invalid_argument("Error: pressing a key that is already pressed");
+      }
+      is_pressed[pitch] = true;
+    }
+
+    if (event.data.ev_type == key_data::type::released)
+    {
+      if (not (is_pressed[pitch]))
+      {
+	throw std::invalid_argument("Error: releasing a key that is not pressed");
+      }
+      is_pressed[pitch] = false;
+    }
+
+  }
+}
+
+static
+void separate_release_pressed_events(std::vector<key_event>& key_events)
+{
+  // sanity check:
+  assert_song_valid(key_events);
 
   // for each pressed event, look if there is another pressed event that happens
   // at the exact same time as its associated release event. If so, shorten the
@@ -86,21 +119,8 @@ void separate_release_pressed_events(std::vector<key_event>& key_events)
       return a.time < b.time;
     });
 
-  // sanity check: two key release with the same pitch can't appear at the same time
-  // sanity check: two key pressed with the same pitch can't appear at the same time
-  const auto nb_events = key_events.size();
-  for (auto i = decltype(nb_events){0}; i < nb_events; ++i)
-  {
-    for (auto j = i + 1; j < nb_events; ++j)
-    {
-      if ((key_events[j].time         == key_events[i].time) and
-	  (key_events[j].data.ev_type == key_events[i].data.ev_type) and
-	  (key_events[j].data.pitch   == key_events[i].data.pitch))
-      {
-	throw std::invalid_argument("Error: same event happening twice at the same time detected");
-      }
-    }
-  }
+  // post condition: the song must be human playable by now
+  assert_song_valid(key_events);
 }
 
 
