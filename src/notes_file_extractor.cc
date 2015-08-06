@@ -194,7 +194,7 @@ static void fix_grace_notes(std::vector<note_t>& notes)
     last_normal--; // we started at nb_notes (so off by one to avoid
 		   // problems when comparing with unsigned). In case
 		   // the vector were empty ...
-    finished = (notes[last_normal].id.find("#is-grace-note=yes#") != std::string::npos);
+    finished = (notes[last_normal].id.find("#is-grace-note=yes#") == std::string::npos);
   }
 
   for (auto i = last_normal + 1; i < nb_notes; ++i)
