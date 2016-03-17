@@ -425,7 +425,7 @@ unsigned int find_top_skyline_pos_of_staff(const rect_t& surface,
     throw std::logic_error("Error: distance is bigger than maximum logically possible");
   }
 
-  return top_skylines.size() - 1 - static_cast<unsigned>(std::distance(top_skylines.crbegin(), res));
+  return static_cast<unsigned>(top_skylines.size()) - 1 - static_cast<unsigned>(std::distance(top_skylines.crbegin(), res));
 }
 
 
