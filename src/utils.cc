@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <fstream>
 #include "utils.hh"
 
 
@@ -31,4 +32,51 @@ std::string get_value_from_field(const std::string& id_str, const char* const fi
 
   const auto start_value = eq_pos + 1;
   return id_str.substr(start_value, hash_pos - start_value);
+}
+
+
+void debug_dump(const std::vector<note_t>& song, const char* const out_filename)
+{
+  std::ofstream file(out_filename,
+		     std::ios::binary | std::ios::trunc | std::ios::out);
+
+  if (not file.is_open())
+  {
+    return;
+  }
+
+  for (const auto& event : song)
+  {
+      file << event.start_time << "\n";
+  }
+
+  file.close();
+}
+
+
+void debug_dump(const std::vector<key_event>& song, const char* const out_filename)
+{
+  std::ofstream file(out_filename,
+		     std::ios::binary | std::ios::trunc | std::ios::out);
+
+  if (not file.is_open())
+  {
+    return;
+  }
+
+  for (const auto& event : song)
+  {
+    if (event.data.ev_type == key_data::pressed)
+    {
+      file << event.time << " down " << static_cast<int>(event.data.pitch) << "\n";
+    }
+
+    if (event.data.ev_type == key_data::released)
+    {
+      file << event.time << " up " << static_cast<int>(event.data.pitch) << "\n";
+    }
+
+  }
+
+  file.close();
 }
