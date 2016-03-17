@@ -490,10 +490,10 @@ std::vector<staff_t> get_staves(const pugi::xml_document& svg_file)
 
     // since top and bottom skylines are sorted, the same way, and for each top
     // skyline, there is a corresponding bottom skyline, the position of the top
-    // and and bottom skyline of the current must match.
+    // and and bottom skyline of the current staff must match.
     if (top_pos not_eq bottom_pos)
     {
-      throw std::runtime_error("Error: the top and bottom skyline for a staff doesn't match");
+      throw std::runtime_error("Error: the top and bottom skyline for a staff don't match");
     }
 
     auto top_line = filter_segments(top_skylines[top_pos].full_line,
