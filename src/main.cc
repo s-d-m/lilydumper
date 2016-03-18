@@ -82,6 +82,27 @@ struct options get_options(const int argc, const char * const * argv)
       ++i;
       res.staff_num_to_instr_filename = argv[i];
     }
+    else if (str == "--enable-debug")
+    {
+      res.enable_debug_dump = true;
+    }
+    else if (str == "--debug-dump-dir")
+    {
+      // next parameter will be the staff-number to instrument file
+      if (i == static_cast<decltype(i)>(argc) - 1)
+      {
+	// was the last parameter, so there is no filename behind it!
+	throw std::runtime_error(std::string{"Error: '"} + str + "' must be followed by a filename");
+      }
+
+      if (not res.debug_data_dir.empty())
+      {
+	throw std::runtime_error("Error, the directory du dump debug data must be specified only once.");
+      }
+
+      ++i;
+      res.debug_data_dir = argv[i];
+    }
     else
     {
       // it must be a svg file. is it one with or without skylines.
@@ -99,17 +120,24 @@ struct options get_options(const int argc, const char * const * argv)
     throw std::runtime_error("Error, no svg files specified");
   }
 
+  if (res.enable_debug_dump and res.debug_data_dir.empty())
+  {
+    throw std::runtime_error("Error, debug_dump requires you to specify a folder where to dump data");
+  }
+
   return res;
 }
 
 static void usage(std::ostream& out, const char* const prog_name)
 {
-  out << "Usage: " << prog_name << "--output-file <filename> "
-      << "--staff_num_to_instr_filename <filename> "
-      << "--notes_file <filename> "
-      << "<svg_file> [svg_files...]"
-      << "\n"
-      << "\n";
+  out << "Usage: " << prog_name <<
+    "[--enable-debug --debug-dump-dir <dirname>] "
+    "--output-file <filename> "
+    "--staff_num_to_instr_filename <filename> "
+    "--notes_file <filename> "
+    "<svg_file> [svg_files...]"
+    "\n"
+    "\n";
 }
 
 int main(int argc, const char * const * argv)
