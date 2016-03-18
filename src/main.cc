@@ -10,6 +10,98 @@
 #include "staff_num_to_instr_extractor.hh"
 #include "file_exporter.hh"
 
+struct options
+{
+    std::string notes_filename;
+    std::string staff_num_to_instr_filename;
+    std::vector<std::string> svg_files_with_skylines;
+    std::vector<std::string> svg_files_without_skylines;
+    std::string output_filename;
+    bool enable_debug_dump = false;
+    std::string debug_data_dir;
+};
+
+static
+struct options get_options(const int argc, const char * const * argv)
+{
+  struct options res;
+
+  for (unsigned int i = 1; i < static_cast<decltype(i)>(argc); ++i)
+  {
+    // create a string just to use operator==
+    const auto str = std::string{argv[i]};
+
+    if ((str == "-o") or (str == "--output-file"))
+    {
+      // next parameter will be the output file
+      if (i == static_cast<decltype(i)>(argc) - 1)
+      {
+	// was the last parameter, so there is no filename behind it!
+	throw std::runtime_error(std::string{"Error: '"} + str + "' must be followed by a filename");
+      }
+
+      if (not res.output_filename.empty())
+      {
+	throw std::runtime_error("Error, the output file must be specified only once.");
+      }
+
+      ++i;
+      res.output_filename = argv[i];
+    }
+    else if ((str == "-n") or (str == "--notes-file"))
+    {
+      // next parameter will be the notes file
+      if (i == static_cast<decltype(i)>(argc) - 1)
+      {
+	// was the last parameter, so there is no filename behind it!
+	throw std::runtime_error(std::string{"Error: '"} + str + "' must be followed by a filename");
+      }
+
+      if (not res.notes_filename.empty())
+      {
+	throw std::runtime_error("Error, the notes file must be specified only once.");
+      }
+
+      ++i;
+      res.notes_filename = argv[i];
+    }
+    else if ((str == "-s") or (str == "--staff-number-to-instrument-file"))
+    {
+      // next parameter will be the staff-number to instrument file
+      if (i == static_cast<decltype(i)>(argc) - 1)
+      {
+	// was the last parameter, so there is no filename behind it!
+	throw std::runtime_error(std::string{"Error: '"} + str + "' must be followed by a filename");
+      }
+
+      if (not res.staff_num_to_instr_filename.empty())
+      {
+	throw std::runtime_error("Error, the staff_num_to_instr_filename file must be specified only once.");
+      }
+
+      ++i;
+      res.staff_num_to_instr_filename = argv[i];
+    }
+    else
+    {
+      // it must be a svg file. is it one with or without skylines.
+      // for now, keep it simple, request user to only pass svg with skylines,
+      // and expect that for each svg file, there is one with skyline whose name
+      // is the same one with ".no_skylines" at the end
+      const auto filename = std::string{argv[i]};
+      res.svg_files_with_skylines.push_back(filename);
+      res.svg_files_without_skylines.push_back(filename + ".no_skylines");
+    }
+  }
+
+  if (res.svg_files_without_skylines.empty())
+  {
+    throw std::runtime_error("Error, no svg files specified");
+  }
+
+  return res;
+}
+
 int main(int argc, const char * const * argv)
 {
   if (argc == 1)
@@ -18,53 +110,15 @@ int main(int argc, const char * const * argv)
     return 1;
   }
 
-  std::vector<note_t> notes;
+  const auto options = get_options(argc, argv);
+
+  const auto notes = get_notes(options.notes_filename);
+  const auto staffs_to_instrument = get_staff_instr_mapping(options.staff_num_to_instr_filename);
+
   std::vector<svg_file_t> sheets;
-  std::vector<std::string> staffs_to_instrument;
-  std::vector<std::string> svg_filenames;
-  std::string output_filename;
-
-  for (unsigned int i = 1; i < static_cast<decltype(i)>(argc); ++i)
+  for (const auto& filename : options.svg_files_with_skylines)
   {
-    const auto filename = std::string{argv[i]};
-
-    if (filename.find(".notes") != std::string::npos)
-    {
-      // notes file
-      if (not notes.empty())
-      {
-	throw std::runtime_error("Error: only one note file can be processed per music sheet");
-      }
-      notes = get_notes(filename);
-    }
-    else if (filename.find(".sn2in") != std::string::npos)
-    {
-      // staff number to instrument mapping
-      if (not staffs_to_instrument.empty())
-      {
-	throw std::runtime_error("Error: only one sn2in file can be processed per music sheet");
-      }
-
-      staffs_to_instrument = get_staff_instr_mapping(filename);
-    }
-    else if (filename == "-o")
-    {
-      // not a filename, the real one will be the next parameter
-      if (i == static_cast<decltype(i)>(argc) - 1)
-      {
-	// was the last parameter, so there is no filename behind it!
-	throw std::runtime_error("Error: -o must be followed by a filename");
-      }
-
-      ++i;
-      output_filename = argv[i];
-    }
-    else
-    {
-      // svg file
-      svg_filenames.emplace_back(filename + ".no_skylines");
       sheets.emplace_back(get_svg_data(filename));
-    }
   }
 
   const auto keyboard_events = get_key_events(notes);
@@ -72,12 +126,12 @@ int main(int argc, const char * const * argv)
   const auto cursor_boxes = get_cursor_boxes(chords, sheets);
   const auto bar_num_events = get_bar_num_events(cursor_boxes);
 
-  save_to_file(output_filename,
+  save_to_file(options.output_filename,
 	       keyboard_events,
 	       cursor_boxes,
 	       bar_num_events,
 	       staffs_to_instrument,
-	       svg_filenames);
+	       options.svg_files_without_skylines);
 
   return 0;
 }
