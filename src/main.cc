@@ -114,34 +114,41 @@ static void usage(std::ostream& out, const char* const prog_name)
 
 int main(int argc, const char * const * argv)
 {
-  if (argc == 1)
+  try
   {
-    usage(std::cerr, argv[0]);
-    return 1;
-  }
+    if (argc == 1)
+    {
+      usage(std::cerr, argv[0]);
+      return 1;
+    }
 
-  const auto options = get_options(argc, argv);
+    const auto options = get_options(argc, argv);
 
-  const auto notes = get_notes(options.notes_filename);
-  const auto staffs_to_instrument = get_staff_instr_mapping(options.staff_num_to_instr_filename);
+    const auto notes = get_notes(options.notes_filename);
+    const auto staffs_to_instrument = get_staff_instr_mapping(options.staff_num_to_instr_filename);
 
-  std::vector<svg_file_t> sheets;
-  for (const auto& filename : options.svg_files_with_skylines)
-  {
+    std::vector<svg_file_t> sheets;
+    for (const auto& filename : options.svg_files_with_skylines)
+    {
       sheets.emplace_back(get_svg_data(filename));
+    }
+
+    const auto keyboard_events = get_key_events(notes);
+    const auto chords = get_chords(notes);
+    const auto cursor_boxes = get_cursor_boxes(chords, sheets);
+    const auto bar_num_events = get_bar_num_events(cursor_boxes);
+
+    save_to_file(options.output_filename,
+		 keyboard_events,
+		 cursor_boxes,
+		 bar_num_events,
+		 staffs_to_instrument,
+		 options.svg_files_without_skylines);
   }
-
-  const auto keyboard_events = get_key_events(notes);
-  const auto chords = get_chords(notes);
-  const auto cursor_boxes = get_cursor_boxes(chords, sheets);
-  const auto bar_num_events = get_bar_num_events(cursor_boxes);
-
-  save_to_file(options.output_filename,
-	       keyboard_events,
-	       cursor_boxes,
-	       bar_num_events,
-	       staffs_to_instrument,
-	       options.svg_files_without_skylines);
-
+  catch (const std::exception& e)
+  {
+    std::cerr << e.what() << "\n";
+    return 2;
+  }
   return 0;
 }
