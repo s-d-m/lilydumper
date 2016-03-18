@@ -102,11 +102,21 @@ struct options get_options(const int argc, const char * const * argv)
   return res;
 }
 
+static void usage(std::ostream& out, const char* const prog_name)
+{
+  out << "Usage: " << prog_name << "--output-file <filename> "
+      << "--staff_num_to_instr_filename <filename> "
+      << "--notes_file <filename> "
+      << "<svg_file> [svg_files...]"
+      << "\n"
+      << "\n";
+}
+
 int main(int argc, const char * const * argv)
 {
   if (argc == 1)
   {
-    std::cerr << "Usage: " << argv[0] << " xml_file [xml_files... ] note_file\n";
+    usage(std::cerr, argv[0]);
     return 1;
   }
 
