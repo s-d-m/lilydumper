@@ -9,6 +9,17 @@
 #include "bar_number_events_extractor.hh"
 #include "staff_num_to_instr_extractor.hh"
 #include "file_exporter.hh"
+#include "utils.hh" // for debug dump
+#include "scope_exit.hh"
+
+extern bool enable_debug_dump;
+extern const char * debug_data_dir;
+
+bool enable_debug_dump;
+// it would be better not to use a raw pointer for debug_data_dir
+// however since it is a global variable, it requires an exit-time destructor
+// and a global constructor. so I can't use a std::string.
+const char * debug_data_dir = nullptr;
 
 struct options
 {
@@ -151,6 +162,9 @@ int main(int argc, const char * const * argv)
     }
 
     const auto options = get_options(argc, argv);
+    enable_debug_dump = options.enable_debug_dump;
+    debug_data_dir = options.debug_data_dir.c_str();
+    SCOPE_EXIT( debug_data_dir = nullptr );
 
     const auto notes = get_notes(options.notes_filename);
     const auto staffs_to_instrument = get_staff_instr_mapping(options.staff_num_to_instr_filename);
@@ -162,6 +176,7 @@ int main(int argc, const char * const * argv)
     }
 
     const auto keyboard_events = get_key_events(notes);
+    debug_dump(keyboard_events, "key_events_final");
     const auto chords = get_chords(notes);
     const auto cursor_boxes = get_cursor_boxes(chords, sheets);
     const auto bar_num_events = get_bar_num_events(cursor_boxes);

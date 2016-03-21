@@ -1,6 +1,10 @@
 #include <stdexcept>
 #include <fstream>
+#include <iostream>
 #include "utils.hh"
+
+extern bool enable_debug_dump;
+extern const char * debug_data_dir;
 
 
 // this function takes an id string, and return the value for the requested field
@@ -37,11 +41,25 @@ std::string get_value_from_field(const std::string& id_str, const char* const fi
 
 void debug_dump(const std::vector<note_t>& song, const char* const out_filename)
 {
-  std::ofstream file(out_filename,
+  if (not enable_debug_dump)
+  {
+    return;
+  }
+
+  if (debug_data_dir == nullptr)
+  {
+    std::cerr << "Error: directory to output debug data is unset (nullptr).\n";
+    return;
+  }
+
+  const auto out_file = std::string{debug_data_dir} + "/" + out_filename;
+
+  std::ofstream file(out_file,
 		     std::ios::binary | std::ios::trunc | std::ios::out);
 
   if (not file.is_open())
   {
+    std::cerr << "Error: could not open " << out_file << " for writing.\n";
     return;
   }
 
@@ -56,11 +74,25 @@ void debug_dump(const std::vector<note_t>& song, const char* const out_filename)
 
 void debug_dump(const std::vector<key_event>& song, const char* const out_filename)
 {
-  std::ofstream file(out_filename,
+  if (not enable_debug_dump)
+  {
+    return;
+  }
+
+  if (debug_data_dir == nullptr)
+  {
+    std::cerr << "Error: directory to output debug data is unset (nullptr).\n";
+    return;
+  }
+
+  const auto out_file = std::string{debug_data_dir} + "/" + out_filename;
+
+  std::ofstream file(out_file,
 		     std::ios::binary | std::ios::trunc | std::ios::out);
 
   if (not file.is_open())
   {
+    std::cerr << "Error: could not open " << out_file << " for writing.\n";
     return;
   }
 
