@@ -37,7 +37,7 @@ std::vector<chord_t> get_chords(const std::vector<note_t>& notes)
   }
 
   // sanity check: post condition.  all notes must be part of a chord.
-  // hence their must be the same number of notes in res than in the input.
+  // hence there must be the same number of notes in res than in the input.
   const auto nb_out_notes = std::accumulate(res.cbegin(), res.cend(), static_cast<decltype(res[0].notes.size())>(0),
 					    [] (const auto accu, const auto& chord) {
 					      return accu + chord.notes.size();
