@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include "chords_extractor.hh"
+#include "utils.hh" // for debug_dump
 
 std::vector<chord_t> get_chords(const std::vector<note_t>& notes)
 {
@@ -67,6 +68,8 @@ std::vector<chord_t> get_chords(const std::vector<note_t>& notes)
       throw std::logic_error("Error the chords are not sorted in strict ascending order");
     }
   }
+
+  debug_dump(res, "chords");
 
   return res;
 }
