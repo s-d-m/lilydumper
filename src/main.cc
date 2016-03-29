@@ -23,6 +23,17 @@ const char * debug_data_dir = nullptr;
 
 struct options
 {
+    options()
+      : notes_filename()
+      , staff_num_to_instr_filename()
+      , svg_files_with_skylines()
+      , svg_files_without_skylines()
+      , output_filename()
+      , enable_debug_dump(false)
+      , debug_data_dir()
+    {
+    }
+
     std::string notes_filename;
     std::string staff_num_to_instr_filename;
     std::vector<std::string> svg_files_with_skylines;
