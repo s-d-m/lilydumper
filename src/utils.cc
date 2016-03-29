@@ -38,6 +38,16 @@ std::string get_value_from_field(const std::string& id_str, const char* const fi
   return id_str.substr(start_value, hash_pos - start_value);
 }
 
+static
+std::string get_debug_filename_full_path(const char* const out_filename)
+{
+  if (debug_data_dir == nullptr)
+  {
+    throw std::runtime_error("Error: directory to output debug data is unset (nullptr)");
+  }
+
+  return std::string{debug_data_dir} + "/" + out_filename;
+}
 
 void debug_dump(const std::vector<note_t>& song, const char* const out_filename)
 {
@@ -46,13 +56,7 @@ void debug_dump(const std::vector<note_t>& song, const char* const out_filename)
     return;
   }
 
-  if (debug_data_dir == nullptr)
-  {
-    std::cerr << "Error: directory to output debug data is unset (nullptr).\n";
-    return;
-  }
-
-  const auto out_file = std::string{debug_data_dir} + "/" + out_filename;
+  const auto out_file = get_debug_filename_full_path(out_filename);
 
   std::ofstream file(out_file,
 		     std::ios::binary | std::ios::trunc | std::ios::out);
@@ -79,13 +83,7 @@ void debug_dump(const std::vector<key_event>& song, const char* const out_filena
     return;
   }
 
-  if (debug_data_dir == nullptr)
-  {
-    std::cerr << "Error: directory to output debug data is unset (nullptr).\n";
-    return;
-  }
-
-  const auto out_file = std::string{debug_data_dir} + "/" + out_filename;
+  const auto out_file = get_debug_filename_full_path(out_filename);
 
   std::ofstream file(out_file,
 		     std::ios::binary | std::ios::trunc | std::ios::out);
