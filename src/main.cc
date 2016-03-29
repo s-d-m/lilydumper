@@ -163,8 +163,8 @@ int main(int argc, const char * const * argv)
 
     const auto options = get_options(argc, argv);
     enable_debug_dump = options.enable_debug_dump;
-    debug_data_dir = options.debug_data_dir.c_str();
     SCOPE_EXIT( debug_data_dir = nullptr );
+    debug_data_dir = options.debug_data_dir.c_str();
 
     const auto notes = get_notes(options.notes_filename);
     const auto staffs_to_instrument = get_staff_instr_mapping(options.staff_num_to_instr_filename);
