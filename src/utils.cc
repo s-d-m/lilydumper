@@ -72,7 +72,6 @@ void debug_dump(const std::vector<note_t>& song, const char* const out_filename)
       file << event.start_time << "\n";
   }
 
-  file.close();
 }
 
 
@@ -108,7 +107,6 @@ void debug_dump(const std::vector<key_event>& song, const char* const out_filena
 
   }
 
-  file.close();
 }
 
 
