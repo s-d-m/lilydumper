@@ -110,3 +110,36 @@ void debug_dump(const std::vector<key_event>& song, const char* const out_filena
 
   file.close();
 }
+
+
+void debug_dump(const std::vector<chord_t>& chords, const char* const out_filename)
+{
+  if (not enable_debug_dump)
+  {
+    return;
+  }
+
+  const auto out_file = get_debug_filename_full_path(out_filename);
+
+  std::ofstream file(out_file,
+		     std::ios::binary | std::ios::trunc | std::ios::out);
+
+  if (not file.is_open())
+  {
+    std::cerr << "Error: could not open " << out_file << " for writing.\n";
+    return;
+  }
+
+  for (const auto& chord : chords)
+  {
+    const auto start_time = chord.notes[0].start_time;
+    file << start_time;
+
+    for (const auto& note : chord.notes)
+    {
+      file << "\n  " << static_cast<int>(note.pitch);
+    }
+
+    file << "\n\n";
+  }
+}
