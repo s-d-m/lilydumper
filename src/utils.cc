@@ -141,3 +141,29 @@ void debug_dump(const std::vector<chord_t>& chords, const char* const out_filena
     file << "\n\n";
   }
 }
+
+
+void debug_dump(const std::vector<std::string>& strings, const char* const out_filename)
+{
+  if (not enable_debug_dump)
+  {
+    return;
+  }
+
+  const auto out_file = get_debug_filename_full_path(out_filename);
+
+  std::ofstream file(out_file,
+		     std::ios::binary | std::ios::trunc | std::ios::out);
+
+  if (not file.is_open())
+  {
+    std::cerr << "Error: could not open " << out_file << " for writing.\n";
+    return;
+  }
+
+  for (const auto& string : strings)
+  {
+    file << string << "\n";
+  }
+
+}

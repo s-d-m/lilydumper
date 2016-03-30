@@ -12,5 +12,6 @@ std::string get_value_from_field(const std::string& id_str, const char* const fi
 void debug_dump(const std::vector<key_event>& song, const char* const out_filename);
 void debug_dump(const std::vector<note_t>& song, const char* const out_filename);
 void debug_dump(const std::vector<chord_t>& chord, const char* const out_filename);
+void debug_dump(const std::vector<std::string>& strings, const char* const out_filename);
 
 #endif /* UTILS_HH_ */
