@@ -135,7 +135,7 @@ void debug_dump(const std::vector<chord_t>& chords, const char* const out_filena
 
     for (const auto& note : chord.notes)
     {
-      file << "\n  " << static_cast<int>(note.pitch);
+      file << "\n  " << static_cast<int>(note.pitch) << " -> " << note.stop_time;
     }
 
     file << "\n\n";
