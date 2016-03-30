@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include "keyboard_events_extractor.hh"
+#include "utils.hh" // for debug_dump
 
 static
 void assert_song_valid(std::vector<key_event>& key_events)
@@ -152,5 +153,6 @@ std::vector<key_event> get_key_events(const std::vector<note_t>& notes)
     });
 
   separate_release_pressed_events(res);
+  debug_dump(res, "key_events_final");
   return res;
 }

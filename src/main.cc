@@ -187,7 +187,6 @@ int main(int argc, const char * const * argv)
     }
 
     const auto keyboard_events = get_key_events(notes);
-    debug_dump(keyboard_events, "key_events_final");
     const auto chords = get_chords(notes);
     const auto cursor_boxes = get_cursor_boxes(chords, sheets);
     const auto bar_num_events = get_bar_num_events(cursor_boxes);
