@@ -300,14 +300,9 @@ std::vector<skyline_t> get_skylines(const pugi::xml_document& svg_file,
     {
       const auto this_line = get_line(line_node.node());
       full_line.emplace_back(h_segment{
-	  .x1 = this_line.x1,
-	  .x2 = this_line.x2,
+	  .x1 = std::min(this_line.x1, this_line.x2),
+	  .x2 = std::max(this_line.x1, this_line.x2),
 	  .y = this_line.y1 });
-
-      if (this_line.x1 >= this_line.x2)
-      {
-	throw std::runtime_error("Error: wrong assumption on svg file format produced by lilypond. x1 not always <= x2");
-      }
     }
 
     auto left   = std::numeric_limits<decltype(rect_t::left)>::max();
