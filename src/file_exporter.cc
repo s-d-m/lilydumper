@@ -289,8 +289,8 @@ void output_events_data(std::ofstream& out,
   output_as_big_endian(out, nb_groups_of_events);
 
   // while there still is at least one event to process
-  while ((key_event_it != end_key) and
-	 (cursor_event_it != end_cursor) and
+  while ((key_event_it != end_key) or
+	 (cursor_event_it != end_cursor) or
 	 (bar_num_event_it != end_bar_num))
   {
     nb_groups_of_events++;
