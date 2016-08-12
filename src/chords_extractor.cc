@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <stdexcept>
+#include <numeric>
 #include "chords_extractor.hh"
 #include "utils.hh" // for debug_dump
 
