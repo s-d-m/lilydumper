@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include "staff_num_to_instr_extractor.hh"
-
+#include "utils.hh" // for debug_dump
 
 std::vector<std::string> get_staff_instr_mapping(const std::string& filename)
 {
@@ -59,5 +59,7 @@ std::vector<std::string> get_staff_instr_mapping(const std::string& filename)
   }
 
   file.close();
+
+  debug_dump(res, "instruments");
   return res;
 }

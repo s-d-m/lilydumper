@@ -1,6 +1,10 @@
 #include <stdexcept>
 #include <fstream>
+#include <iostream>
 #include "utils.hh"
+
+extern bool enable_debug_dump;
+extern const char * debug_data_dir;
 
 
 // this function takes an id string, and return the value for the requested field
@@ -34,14 +38,32 @@ std::string get_value_from_field(const std::string& id_str, const char* const fi
   return id_str.substr(start_value, hash_pos - start_value);
 }
 
+static
+std::string get_debug_filename_full_path(const char* const out_filename)
+{
+  if (debug_data_dir == nullptr)
+  {
+    throw std::runtime_error("Error: directory to output debug data is unset (nullptr)");
+  }
+
+  return std::string{debug_data_dir} + "/" + out_filename;
+}
 
 void debug_dump(const std::vector<note_t>& song, const char* const out_filename)
 {
-  std::ofstream file(out_filename,
+  if (not enable_debug_dump)
+  {
+    return;
+  }
+
+  const auto out_file = get_debug_filename_full_path(out_filename);
+
+  std::ofstream file(out_file,
 		     std::ios::binary | std::ios::trunc | std::ios::out);
 
   if (not file.is_open())
   {
+    std::cerr << "Error: could not open " << out_file << " for writing.\n";
     return;
   }
 
@@ -50,17 +72,24 @@ void debug_dump(const std::vector<note_t>& song, const char* const out_filename)
       file << event.start_time << "\n";
   }
 
-  file.close();
 }
 
 
 void debug_dump(const std::vector<key_event>& song, const char* const out_filename)
 {
-  std::ofstream file(out_filename,
+  if (not enable_debug_dump)
+  {
+    return;
+  }
+
+  const auto out_file = get_debug_filename_full_path(out_filename);
+
+  std::ofstream file(out_file,
 		     std::ios::binary | std::ios::trunc | std::ios::out);
 
   if (not file.is_open())
   {
+    std::cerr << "Error: could not open " << out_file << " for writing.\n";
     return;
   }
 
@@ -78,5 +107,63 @@ void debug_dump(const std::vector<key_event>& song, const char* const out_filena
 
   }
 
-  file.close();
+}
+
+
+void debug_dump(const std::vector<chord_t>& chords, const char* const out_filename)
+{
+  if (not enable_debug_dump)
+  {
+    return;
+  }
+
+  const auto out_file = get_debug_filename_full_path(out_filename);
+
+  std::ofstream file(out_file,
+		     std::ios::binary | std::ios::trunc | std::ios::out);
+
+  if (not file.is_open())
+  {
+    std::cerr << "Error: could not open " << out_file << " for writing.\n";
+    return;
+  }
+
+  for (const auto& chord : chords)
+  {
+    const auto start_time = chord.notes[0].start_time;
+    file << start_time;
+
+    for (const auto& note : chord.notes)
+    {
+      file << "\n  " << static_cast<int>(note.pitch) << " -> " << note.stop_time;
+    }
+
+    file << "\n\n";
+  }
+}
+
+
+void debug_dump(const std::vector<std::string>& strings, const char* const out_filename)
+{
+  if (not enable_debug_dump)
+  {
+    return;
+  }
+
+  const auto out_file = get_debug_filename_full_path(out_filename);
+
+  std::ofstream file(out_file,
+		     std::ios::binary | std::ios::trunc | std::ios::out);
+
+  if (not file.is_open())
+  {
+    std::cerr << "Error: could not open " << out_file << " for writing.\n";
+    return;
+  }
+
+  for (const auto& string : strings)
+  {
+    file << string << "\n";
+  }
+
 }
