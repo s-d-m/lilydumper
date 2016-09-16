@@ -15,19 +15,121 @@ SRC :=  main.cc \
 
 OBJS := ${SRC:.cc=.o}
 
-LIBS= -lpugixml
+LIBS= -lpugixml -lstdc++fs
 
-ifeq ($(findstring clang,$(CXX)), clang)
+
+COVERAGE_HTML_DIR := ../COVERAGE_OUTPUT
+LCOV=lcov
+LCOV_FLAGS= --rc lcov_branch_coverage=1 \
+	    --rc genhtml_branch_coverage=1 \
+	    --rc geninfo_gcov_all_blocks=1 \
+	    --directory .
+
+GENHTML = genhtml
+GENHTML_FLAGS = --branch-coverage
+
+GPROF = gprof
+PROFILING_OUTPUT = profiling_output.txt
+
+TOOLCHAIN=gcc
+
+CLANG_CC  = clang-4.0
+CLANG_CXX = clang++-4.0
+SCAN_BUILD = scan-build-4.0
+
+ifeq ($(TOOLCHAIN),clang)
+  CXX := ${CLANG_CXX}
   CXX_WARN_FLAGS ?= -Weverything \
 		    -Wno-c++98-compat \
 		    -Wno-c++98-compat-pedantic \
 		    -Wno-c99-extensions \
 		    -Wno-padded # remove padding warning
+  CC := ${CLANG_CC}
+  CC_WARN_FLAGS ?= -Weverything
+
+
+  SANITIZERS = \
+	-fsanitize=address \
+	-fsanitize=undefined \
+
+# -fsanitize=memory \
+# -fsanitize=dataflow \
+# -fsanitize=cfi \
+# -fsanitize=safe-stack
+
+# -fsanitize=thread #is incompatible with sanitize address
+# -fsanitize=leak # leak sanitizer can't be used if either address or thread sanitizer is used
+
+  HARDENING_FLAGS = \
+	-fstack-protector-all \
+	--param ssp-buffer-size=4 \
+	-D_FORTIFY_SOURCE=2 \
+	-fPIC \
+	-fPIE
+
+  LDFLAGS = \
+	-z noexecstack \
+	-z now\
+	-z relro \
+	-z nodlopen \
+	-z nodump
+
 else
+# for gcc 6
+  CC := gcc-6
+  CC_WARN_FLAGS ?= \
+	-Wall \
+	-pedantic -pedantic-errors \
+	-Wextra \
+	-Wdouble-promotion \
+	-Wformat=2 \
+	-Wnull-dereference \
+	-Winit-self \
+	-Wmissing-include-dirs \
+	-Wshift-overflow=2 \
+	-Wswitch-default \
+	-Wswitch-enum \
+	-Wunused-parameter \
+	-Wuninitialized \
+	-Wstrict-aliasing \
+	-Wstrict-overflow=5 \
+	-Wsuggest-attribute=pure \
+	-Wsuggest-attribute=const \
+	-Wsuggest-attribute=noreturn \
+	-Wsuggest-attribute=format \
+	-Wduplicated-cond \
+	-Wtrampolines \
+	-Wfloat-equal \
+	-Wtraditional-conversion \
+	-Wundef \
+	-Wshadow \
+	-funsafe-loop-optimizations \
+	-Wunsafe-loop-optimizations \
+	-Wpointer-arith \
+	-Wbad-function-cast \
+	-Wcast-qual \
+	-Wcast-align \
+	-Wwrite-strings \
+	-Wconversion \
+	-Wjump-misses-init \
+	-Wlogical-op \
+	-Waggregate-return \
+	-Wstrict-prototypes \
+	-Wold-style-definition \
+	-Wmissing-prototypes \
+	-Wmissing-declarations \
+	-Wredundant-decls \
+	-Winvalid-pch \
+	-Wvla \
+	-Wunsuffixed-float-constants \
+#	-Wpadded \
+
+  CXX=g++-6
 # for g++ 4.9
   CXX_WARN_FLAGS ?= \
 	-Werror \
 	-Wno-pedantic \
+	-Wpointer-arith \
 	-Wall \
 	-Wextra \
 	-Wformat=2 \
@@ -79,32 +181,95 @@ else
 #	unfortunately g++ reports padding warnings with lambda's variable capturing
 #	-Wpadded \
 
+# for G++ 5.1/5.2
+  CXX_WARN_FLAGS += \
+	-Wswitch-bool \
+	-Wlogical-not-parentheses \
+	-Wsizeof-array-argument \
+	-Wbool-compare  \
+	-Wodr \
+	-Wsuggest-final-types \
+	-Wsuggest-final-methods \
+	-Wsuggest-override
+
+# For g++ 6
+  CXX_WARN_FLAGS += \
+	-Wnull-dereference -fdelete-null-pointer-checks \
+	-Wduplicated-cond \
+	-Wplacement-new=2 \
+	-Wconditionally-supported \
+	-fsized-deallocation \
+	-Wsized-deallocation \
+
+
+# sanitizers on g++5.2
+  SANITIZERS = \
+	-fsanitize=address \
+	-fsanitize=undefined \
+	-fbounds-check \
+# -fcheck-pointer-bounds -mmpx # pointer checker is not supported with address sanitiser
+# -fsanitize=thread #is incompatible with sanitize address
+# -fsanitize=leak # leak sanitizer can't be used if either address or thread sanitizer is used
+
+  HARDENING_FLAGS = \
+	-fstack-protector-all \
+	--param ssp-buffer-size=4 \
+	-D_FORTIFY_SOURCE=2 \
+	-fPIC \
+	-fPIE
+
+  LDFLAGS = \
+	-pie \
+	-z noexecstack \
+	-z now\
+	-z relro \
+	-z nodlopen \
+	-z nodump
 endif
 
 BUILD ?= debug
 
+CFLAGS := -std=c11 -Werror ${HARDENING_FLAGS} ${CC_WARN_FLAGS} ${SANITIZERS}
+CXXFLAGS := -std=c++1z -Werror -fno-rtti -fstrict-enums ${HARDENING_FLAGS} ${CXX_WARN_FLAGS} ${SANITIZERS}
+
 ifeq ($(BUILD),release)
-  CXXFLAGS ?= -std=c++14 -Werror -O3 -march=native ${CXX_WARN_FLAGS}
+  CXXFLAGS += -O3 -flto
+  CFLAGS += -O3 -flto
+  LDFLAGS += -s
 else
-  CXXFLAGS ?= -std=c++14 -Werror -O0 -ggdb3 ${CXX_WARN_FLAGS}
+  CXXFLAGS += -O0 -ggdb3
+  CFLAGS += -O0 -ggdb3
+endif
+
+ifeq ($(GCOV),1)
+  CXXFLAGS += --coverage
+  CFLAGS += --coverage
 endif
 
 ifeq ($(GPROF),1)
   CXXFLAGS += -pg
+  CFLAGS += -pg
 endif
 
-ifeq ($(DEBUG_INFO),1)
-  CXXFLAGS += -ggdb3
+ifeq ($(32_BITS),1)
+  CXXFLAGS += -m32
+  CFLAGS += -m32
 endif
 
-
-SCAN_BUILD = scan-build
 
 all: ${TARGET}
 
 ${TARGET}: ${OBJS}
 	-mkdir -p ${TARGET_DIR}
 	${CXX} ${CXXFLAGS} -o ${TARGET} ${OBJS} ${LIBS}
+
+
+%.o: %.c
+	${CC} ${CFLAGS} -MD -c -o "$@" "$<"
+	@cp $*.d $*.P; \
+	   sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	       -e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
+	   rm -f $*.d
 
 %.o: %.cc
 	${CXX} ${CXXFLAGS} ${INCLUDES} -MD -c -o "$@" "$<"
@@ -114,11 +279,29 @@ ${TARGET}: ${OBJS}
 	   rm -f $*.d
 
 scan-build:
-	${SCAN_BUILD} -analyze-headers --use-c++=/usr/bin/clang++ --status-bugs --keep-going  make -B
+	${SCAN_BUILD} -analyze-headers --use-c++=${CLANG_CXX} --use-cc=${CLANG_CC} --status-bugs --keep-going  make -B TOOLCHAIN=clang
+
+${COVERAGE_HTML_DIR}:
+	[ -d "$@" ] || mkdir -p "$@"
+
+coverage: | ${COVERAGE_HTML_DIR}
+	${MAKE} GCOV=1 -B CXX=g++
+	${LCOV} ${LCOV_FLAGS} --zerocounters
+	${MAKE} check
+	${LCOV} ${LCOV_FLAGS} --no-external --capture --output-file "${TARGET}.info"
+	${GENHTML} ${GENHTML_FLAGS} --output-directory="${COVERAGE_HTML_DIR}" "${TARGET}.info"
+
+profiling:
+	${MAKE} GPROF=1 BUILD=release SANITIZERS= -B CXX=g++
+	-rm -f gmon.out
+	${TARGET}
+	${GPROF} "${TARGET}" gmon.out > "${PROFILING_OUTPUT}"
 
 clean:
-	rm -f ${TARGET} ${OBJS} $(SRC:%.cc=$/%.P)
+	rm -f ${TARGET} ${OBJS} $(SRC:%.cc=$/%.P) "${COVERAGE_HTML_DIR}" "${PROFILING_OUTPUT}"
 
-.PHONY: all clean
+.PHONY: all clean  scan-build coverage profiling
+
+.SUFFIXES:
 
 -include $(SRC:%.cc=$/%.P)
