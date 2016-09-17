@@ -232,7 +232,7 @@ endif
 
 BUILD ?= debug
 
-CFLAGS := -std=c11 -Werror ${HARDENING_FLAGS} ${CC_WARN_FLAGS} ${SANITIZERS}
+CFLAGS := -std=c11 -Werror ${HARDENING_FLAGS} ${CC_WARN_FLAGS} # ${SANITIZERS}
 CXXFLAGS := -std=c++1z -Werror -fno-rtti -fstrict-enums ${HARDENING_FLAGS} ${CXX_WARN_FLAGS} ${SANITIZERS}
 
 ifeq ($(BUILD),release)
