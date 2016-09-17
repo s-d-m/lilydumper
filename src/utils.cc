@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <cstring>
 #include <stdexcept>
 #include <fstream>
 #include <iostream>
@@ -166,4 +168,57 @@ void debug_dump(const std::vector<std::string>& strings, const char* const out_f
     file << string << "\n";
   }
 
+}
+
+fs::path get_temp_dir()
+{
+  const auto sys_temp_dir = fs::temp_directory_path() /= "lilycaller_XXXXXX";
+
+  // TODO: rework this when compilers will support C++17. std::string::data() returns a pointer to non-const data
+  // in C++17, so one can just pass path_to_dir.data() to mkdtemp instead of creating a useless copy.
+
+  std::string path_to_dir (sys_temp_dir.string());
+
+  // const auto res_str = mkdtemp(path_to_dir.data());
+  // if (res == nullptr)
+  // {
+  //   throw std::runtime_error("Unable to create a temporary directory.");
+  // }
+
+  // return fs::path(res_str);
+
+  struct dummy_writeable_string
+  {
+      struct Deleter
+      {
+	  void operator()(char* data) const
+	  {
+	    delete[] data;
+	  }
+      };
+
+      explicit dummy_writeable_string(const std::string& str)
+	: _data (new char[str.size() + 1])
+      {
+	std::memcpy(_data.get(), str.data(), str.size());
+	_data[str.size()] = '\0';
+      }
+
+      char* data()
+      {
+	return _data.get();
+      }
+
+    private:
+      std::unique_ptr<char[], Deleter> _data;
+  };
+
+  dummy_writeable_string dummy (path_to_dir);
+  const auto res_str = mkdtemp(dummy.data());
+  if (res_str == nullptr)
+  {
+    throw std::runtime_error("Unable to create a temporary directory.");
+  }
+
+  return fs::path(res_str);
 }
