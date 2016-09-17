@@ -64,8 +64,7 @@ ifeq ($(TOOLCHAIN),clang)
 	-fstack-protector-all \
 	--param ssp-buffer-size=4 \
 	-D_FORTIFY_SOURCE=2 \
-	-fPIC \
-	-fPIE
+	-fPIC
 
   LDFLAGS = \
 	-z noexecstack \
@@ -215,8 +214,7 @@ else
 	-fstack-protector-all \
 	--param ssp-buffer-size=4 \
 	-D_FORTIFY_SOURCE=2 \
-	-fPIC \
-	-fPIE
+	-fPIC
 
   LDFLAGS = \
 	-pie \
@@ -261,7 +259,7 @@ all: ${TARGET}
 
 ${TARGET}: ${OBJS}
 	-mkdir -p ${TARGET_DIR}
-	${CXX} ${CXXFLAGS} -o ${TARGET} ${OBJS} ${LIBS}
+	${CXX} ${CXXFLAGS} -fPIE ${LDFLAGS} -o ${TARGET} ${OBJS} ${LIBS}
 
 
 %.o: %.c
