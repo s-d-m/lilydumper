@@ -15,6 +15,10 @@ SRC :=  main.cc \
 
 OBJS := ${SRC:.cc=.o}
 
+OPEN_PRELOADER_SRC := open_preloader.c
+OPEN_PRELOADER_OBJS := ${OPEN_PRELOADER_SRC:.c=.o}
+OPEN_PRELOADER_LIB := open_preloader.so
+
 LIBS= -lpugixml -lstdc++fs
 
 
@@ -255,12 +259,27 @@ ifeq ($(32_BITS),1)
 endif
 
 
-all: ${TARGET}
+all: ${OPEN_PRELOADER_LIB} ${TARGET}
 
-${TARGET}: ${OBJS}
+${TARGET}: ${OBJS} ${OPEN_PRELOADER_LIB} command_executor.o
 	-mkdir -p ${TARGET_DIR}
 	${CXX} ${CXXFLAGS} -fPIE ${LDFLAGS} -o ${TARGET} ${OBJS} ${LIBS}
 
+${OPEN_PRELOADER_LIB}: ${OPEN_PRELOADER_OBJS} event_listener.h
+	${CC} ${CFLAGS} ${LDFLAGS} -shared -ldl -MD -o "$@" ${OPEN_PRELOADER_OBJS}
+
+event_listener.h: event-listener.scm
+	xxd -i "$<" "$@"
+	sed -i -e 's/unsigned char event_listener_scm/static constexpr const unsigned char event_listener_scm/' \
+	       -e 's/unsigned int event_listener_scm_len = /static constexpr const unsigned int event_listener_scm_len = /' "$@"
+
+open_preloader.h: ${OPEN_PRELOADER_LIB}
+	xxd -i "$<" "$@"
+	sed -i -e 's/unsigned char open_preloader_so/static constexpr const unsigned char open_preloader_so/' \
+	       -e 's/unsigned int open_preloader_so_len = /static constexpr const unsigned int open_preloader_so_len = /' "$@"
+
+command_executor.o: event_listener.h
+command_executor.o: open_preloader.h
 
 %.o: %.c
 	${CC} ${CFLAGS} -MD -c -o "$@" "$<"
