@@ -11,6 +11,7 @@ SRC :=  main.cc \
 	bar_number_events_extractor.cc \
 	staff_num_to_instr_extractor.cc \
 	file_exporter.cc \
+	command_executor.cc \
 
 
 OBJS := ${SRC:.cc=.o}
