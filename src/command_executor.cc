@@ -11,6 +11,16 @@
 #include "open_preloader.h"
 #include "common.h"
 
+#include "svg_extractor.hh"
+#include "notes_file_extractor.hh"
+#include "chords_extractor.hh"
+#include "cursor_boxes_extractor.hh"
+#include "keyboard_events_extractor.hh"
+#include "bar_number_events_extractor.hh"
+#include "staff_num_to_instr_extractor.hh"
+#include "file_exporter.hh"
+#include "utils.hh"
+
 constexpr const char* const without_skyline_suffix = ".without_skylines";
 
 static
@@ -161,10 +171,10 @@ bool execute_command(const std::vector<std::string>& command,
 }
 
 static
-void generate_note_and_staff_num_files(const std::string& lilypond_command,
-				       const fs::path& input_lily_file,
-				       const fs::path& output_tmp_directory,
-				       std::ofstream& output_debug_file)
+std::tuple<fs::path, fs::path> generate_note_and_staff_num_files(const std::string& lilypond_command,
+								 const fs::path& input_lily_file,
+								 const fs::path& output_tmp_directory,
+								 std::ofstream& output_debug_file)
 {
   // must run lilypond with force unfold repeat
   const std::string event_listener_filename = "event-listener.scm";
@@ -199,7 +209,7 @@ void generate_note_and_staff_num_files(const std::string& lilypond_command,
 
 
   const std::vector<std::string> env { { std::string{"LD_PRELOAD="} + out_preloader_file.c_str() },
-					 std::string{"LILYCALLER_OUTPUT_DIR="} + output_tmp_directory.c_str() };
+					 std::string{DUMP_OUTPUT_DIR} + "=" + output_tmp_directory.c_str() };
   const auto ret = execute_command_with_append_to_env(command_line, env, output_debug_file);
 
   if (not ret)
@@ -233,6 +243,9 @@ void generate_note_and_staff_num_files(const std::string& lilypond_command,
   {
     throw std::runtime_error("Failed to create the notes and staff-num-to-instrument name files");
   }
+
+
+  return std::make_tuple(out_note_file, out_staff_num_file);
 }
 
 static
@@ -312,7 +325,7 @@ std::vector<fs::path> generate_svg_files_with_skylines(const std::string& lilypo
     { lilypond_command,
 	"-dno-point-and-click",
 	std::string{"--output="} + output_tmp_directory.c_str(),
-	std::string{"-dinclude-setting="} + dst_event_listener_file.c_str(),
+	std::string{"-dinclude-settings="} + dst_event_listener_file.c_str(),
 	"-dbackend=svg",
 	input_lily_file.c_str() } };
 
@@ -358,12 +371,12 @@ std::vector<fs::path> generate_svg_files_with_skylines(const std::string& lilypo
 
 void generate_bin_file(const std::string& lilypond_command,
 		       const fs::path& input_lily_file,
-		       const fs::path& output_bin_file __attribute__((unused)),
+		       const fs::path& output_bin_file,
 		       const fs::path& output_tmp_directory,
 		       std::ofstream& output_debug_file)
 {
-  generate_note_and_staff_num_files(lilypond_command, input_lily_file,
-				    output_tmp_directory, output_debug_file);
+  const auto [notes_file, staffs_num_file] = generate_note_and_staff_num_files(lilypond_command, input_lily_file,
+									       output_tmp_directory, output_debug_file);
 
   const auto svgs_without_skylines = generate_svg_files_without_skylines(lilypond_command,
 									 input_lily_file,
@@ -398,4 +411,25 @@ void generate_bin_file(const std::string& lilypond_command,
     }
   }
 
+
+  const auto notes = get_notes(notes_file);
+  const auto staffs_to_instrument = get_staff_instr_mapping(staffs_num_file);
+
+  std::vector<svg_file_t> sheets;
+  for (const auto& filename : svgs_with_skylines)
+  {
+    sheets.emplace_back(get_svg_data(filename));
+  }
+
+  const auto keyboard_events = get_key_events(notes);
+  const auto chords = get_chords(notes);
+  const auto cursor_boxes = get_cursor_boxes(chords, sheets);
+  const auto bar_num_events = get_bar_num_events(cursor_boxes);
+
+  save_to_file(output_bin_file,
+	       keyboard_events,
+	       cursor_boxes,
+	       bar_num_events,
+	       staffs_to_instrument,
+	       svgs_without_skylines);
 }

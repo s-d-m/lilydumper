@@ -163,7 +163,7 @@ void debug_dump(FILE* fd, const char * const filename)
     return;
   }
 
-  const size_t nb_read = fread(buffer, (size_t) size, (size_t) 1, fd);
+  const size_t nb_read = fread(buffer, (size_t) 1, (size_t) size, fd);
   if (nb_read != (size_t) size)
   {
     if (feof(fd))

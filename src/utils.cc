@@ -41,23 +41,18 @@ std::string get_value_from_field(const std::string& id_str, const char* const fi
 }
 
 static
-std::string get_debug_filename_full_path(const char* const out_filename)
+fs::path get_debug_filename_full_path(const char* const out_filename)
 {
   if (debug_data_dir == nullptr)
   {
     throw std::runtime_error("Error: directory to output debug data is unset (nullptr)");
   }
 
-  return std::string{debug_data_dir} + "/" + out_filename;
+  return fs::path(std::string{debug_data_dir} + "/" + out_filename);
 }
 
 void debug_dump(const std::vector<note_t>& song, const char* const out_filename)
 {
-  if (not enable_debug_dump)
-  {
-    return;
-  }
-
   const auto out_file = get_debug_filename_full_path(out_filename);
 
   std::ofstream file(out_file,
@@ -79,11 +74,6 @@ void debug_dump(const std::vector<note_t>& song, const char* const out_filename)
 
 void debug_dump(const std::vector<key_event>& song, const char* const out_filename)
 {
-  if (not enable_debug_dump)
-  {
-    return;
-  }
-
   const auto out_file = get_debug_filename_full_path(out_filename);
 
   std::ofstream file(out_file,
@@ -114,11 +104,6 @@ void debug_dump(const std::vector<key_event>& song, const char* const out_filena
 
 void debug_dump(const std::vector<chord_t>& chords, const char* const out_filename)
 {
-  if (not enable_debug_dump)
-  {
-    return;
-  }
-
   const auto out_file = get_debug_filename_full_path(out_filename);
 
   std::ofstream file(out_file,
@@ -147,11 +132,6 @@ void debug_dump(const std::vector<chord_t>& chords, const char* const out_filena
 
 void debug_dump(const std::vector<std::string>& strings, const char* const out_filename)
 {
-  if (not enable_debug_dump)
-  {
-    return;
-  }
-
   const auto out_file = get_debug_filename_full_path(out_filename);
 
   std::ofstream file(out_file,
@@ -172,7 +152,7 @@ void debug_dump(const std::vector<std::string>& strings, const char* const out_f
 
 fs::path get_temp_dir()
 {
-  const auto sys_temp_dir = fs::temp_directory_path() /= "lilycaller_XXXXXX";
+  const auto sys_temp_dir = fs::temp_directory_path() /= "lilydumper_XXXXXX";
 
   // TODO: rework this when compilers will support C++17. std::string::data() returns a pointer to non-const data
   // in C++17, so one can just pass path_to_dir.data() to mkdtemp instead of creating a useless copy.
