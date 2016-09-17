@@ -110,16 +110,16 @@ struct options get_options(const int argc, const char * const * argv)
     }
     else if (str == "--debug-dump-dir")
     {
-      // next parameter will be the staff-number to instrument file
+      // next parameter will be the directory name
       if (i == static_cast<decltype(i)>(argc) - 1)
       {
-	// was the last parameter, so there is no filename behind it!
-	throw std::runtime_error(std::string{"Error: '"} + str + "' must be followed by a filename");
+	// was the last parameter, so there is no directory behind it!
+	throw std::runtime_error(std::string{"Error: '"} + str + "' must be followed by a directory name");
       }
 
       if (not res.debug_data_dir.empty())
       {
-	throw std::runtime_error("Error, the directory du dump debug data must be specified only once.");
+	throw std::runtime_error("Error, the debug-dump directory must be specified only once.");
       }
 
       ++i;
