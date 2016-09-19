@@ -4,9 +4,8 @@
 #include <fstream>
 #include <iostream>
 #include "staff_num_to_instr_extractor.hh"
-#include "utils.hh" // for debug_dump
 
-std::vector<std::string> get_staff_instr_mapping(const std::string& filename)
+std::vector<std::string> get_staff_instr_mapping(const fs::path& filename)
 {
   // preconditions:
   // 1) all staff numbers are in the range [0 .. staff_num_mapping.size() - 1]
@@ -19,7 +18,7 @@ std::vector<std::string> get_staff_instr_mapping(const std::string& filename)
   std::ifstream file (filename, std::ios::in);
   if (! file.is_open() )
   {
-    throw std::runtime_error(std::string{"Error: failed to open '"} + filename + "'");
+    throw std::runtime_error(std::string{"Error: failed to open '"} + filename.c_str() + "'");
   }
 
   std::vector<std::string> res;

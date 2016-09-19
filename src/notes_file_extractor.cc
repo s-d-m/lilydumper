@@ -236,12 +236,12 @@ void fix_overlapping_key_presses(std::vector<note_t>& notes)
 }
 
 
-std::vector<note_t> get_notes(const std::string& filename)
+std::vector<note_t> get_notes(const fs::path& filename)
 {
   std::ifstream file (filename, std::ios::in);
   if (! file.is_open() )
   {
-    throw std::runtime_error(std::string{"Error: failed to open '"} + filename + "'");
+    throw std::runtime_error(std::string{"Error: failed to open '"} + filename.c_str() + "'");
   }
 
   std::vector<note_t> res;
@@ -268,21 +268,21 @@ std::vector<note_t> get_notes(const std::string& filename)
     if (line_type != "note")
     {
       throw std::runtime_error(std::string{"Error: invalid line found in '"}
-			       + filename + "'. Starts by '" + field1
+			       + filename.c_str() + "'. Starts by '" + field1
 			       + "' instead of 'note'");
     }
 
     if (field1 != "start-time:")
     {
       throw std::runtime_error(std::string{"Error: invalid fieldname found in '"}
-			       + filename + "'. found '" + field1
+			       + filename.c_str() + "'. found '" + field1
 			       + "' instead of 'start-time:'");
     }
 
     if (field2 != "stop-time:")
     {
       throw std::runtime_error(std::string{"Error: invalid fieldname found in '"}
-			       + filename + "'. found '" + field2
+			       + filename.c_str() + "'. found '" + field2
 			       + "' instead of 'stop-time:'");
 
     }
@@ -290,7 +290,7 @@ std::vector<note_t> get_notes(const std::string& filename)
     if (field3 != "id:")
     {
       throw std::runtime_error(std::string{"Error: invalid fieldname found in '"}
-			       + filename + "'. found '" + field3
+			       + filename.c_str() + "'. found '" + field3
 			       + "' instead of 'id:'");
 
     }

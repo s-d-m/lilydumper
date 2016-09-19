@@ -9,7 +9,7 @@
 #include "bar_number_events_extractor.hh"
 #include "utils.hh"
 
-void save_to_file(const std::string& output_filename,
+void save_to_file(const fs::path& output_filename,
 		  const std::vector<key_event>& keyboard_events,
 		  const std::vector<cursor_box_t>& cursor_boxes,
 		  const std::vector<bar_num_event_t>& bar_num_events,

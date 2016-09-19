@@ -704,7 +704,7 @@ std::vector<note_head_t> get_note_heads(const pugi::xml_document& svg_file)
 }
 
 
-svg_file_t get_svg_data(const std::string& filename)
+svg_file_t get_svg_data(const fs::path& filename)
 {
   pugi::xml_document doc;
   // the parse_eol option replaces \r\n and single \r by \n
@@ -712,7 +712,7 @@ svg_file_t get_svg_data(const std::string& filename)
   if (parse_result.status not_eq pugi::status_ok)
   {
     throw std::runtime_error(std::string{"Error: Failed to parse file `"} +
-			     filename + "' ("
+			     filename.c_str() + "' ("
 			     + parse_result.description() + ")\n");
   }
 

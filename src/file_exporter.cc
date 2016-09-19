@@ -394,7 +394,7 @@ void output_svg_files(std::ofstream& file,
 }
 
 
-void save_to_file(const std::string& output_filename,
+void save_to_file(const fs::path& output_filename,
 		  const std::vector<key_event>& keyboard_events,
 		  const std::vector<cursor_box_t>& cursor_boxes,
 		  const std::vector<bar_num_event_t>& bar_num_events,
@@ -406,7 +406,7 @@ void save_to_file(const std::string& output_filename,
 
   if (not file.is_open())
   {
-    throw std::runtime_error(std::string{"Error: failed to open "} + output_filename);
+    throw std::runtime_error(std::string{"Error: failed to open "} + output_filename.c_str());
   }
 
   // magic number: LPYP
