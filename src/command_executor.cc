@@ -375,8 +375,14 @@ void generate_bin_file(const std::string& lilypond_command,
 		       const fs::path& output_tmp_directory,
 		       std::ofstream& output_debug_file)
 {
-  const auto [notes_file, staffs_num_file] = generate_note_and_staff_num_files(lilypond_command, input_lily_file,
-									       output_tmp_directory, output_debug_file);
+  // TODO C++17 rewrite the following as
+  //   const auto [notes_file, staffs_num_file] = generate_note_and_staff_num_files(lilypond_command, input_lily_file,
+  //									       output_tmp_directory, output_debug_file);
+  // when compilers will properly support C++17
+  const auto pair = generate_note_and_staff_num_files(lilypond_command, input_lily_file,
+						      output_tmp_directory, output_debug_file);
+  const auto notes_file = std::get<0>(pair);
+  const auto staffs_num_file = std::get<1>(pair);
 
   const auto svgs_without_skylines = generate_svg_files_without_skylines(lilypond_command,
 									 input_lily_file,
