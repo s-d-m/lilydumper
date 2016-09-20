@@ -1,5 +1,4 @@
-#ifndef FILE_EXPORTER_HH_
-#define FILE_EXPORTER_HH_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -15,5 +14,3 @@ void save_to_file(const fs::path& output_filename,
 		  const std::vector<bar_num_event_t>& bar_num_events,
 		  const std::vector<std::string>& staff_num_mapping,
 		  const std::vector<fs::path>& svg_filenames);
-
-#endif /* FILE_EXPORTER_HH_ */

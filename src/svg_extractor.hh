@@ -1,5 +1,4 @@
-#ifndef SVG_EXTRACTOR_HH_
-#define SVG_EXTRACTOR_HH_
+#pragma once
 
 #include <stdexcept>
 #include <limits>
@@ -74,5 +73,3 @@ struct svg_file_t
 };
 
 svg_file_t get_svg_data(const fs::path& filename);
-
-#endif /* SVG_EXTRACTOR_HH_ */

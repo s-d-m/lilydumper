@@ -1,5 +1,4 @@
-#ifndef SCOPE_EXIT_HH
-#define SCOPE_EXIT_HH
+#pragma once
 
 // the followins SCOPE_EXIT magic comes from
 // http://the-witness.net/news/2012/11/scopeexit-in-c11/
@@ -25,6 +24,3 @@ inline ScopeExit<F> MakeScopeExit(F f) {
 
 #define SCOPE_EXIT_BY_REF(code) \
      auto STRING_JOIN2(scope_exit_, __LINE__) = MakeScopeExit([&](){code;})
-
-
-#endif

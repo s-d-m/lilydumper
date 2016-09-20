@@ -1,5 +1,4 @@
-#ifndef CURSOR_BOXES_EXTRACTOR_HH_
-#define CURSOR_BOXES_EXTRACTOR_HH_
+#pragma once
 
 #include <vector>
 
@@ -21,5 +20,3 @@ struct cursor_box_t
 
 std::vector<cursor_box_t> get_cursor_boxes(const std::vector<chord_t>& chords,
 					   const std::vector<svg_file_t>& svg_files);
-
-#endif /* CURSOR_BOXES_EXTRACTOR_HH_ */
