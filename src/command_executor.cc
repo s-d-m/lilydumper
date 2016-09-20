@@ -364,6 +364,8 @@ void generate_bin_file(const std::string& lilypond_command,
 		       const fs::path& output_tmp_directory,
 		       std::ofstream& output_debug_file)
 {
+  fs::copy_file(input_lily_file, output_tmp_directory / input_lily_file.filename());
+
   // TODO C++17 rewrite the following as
   //   const auto [notes_file, staffs_num_file] = generate_note_and_staff_num_files(lilypond_command, input_lily_file,
   //									       output_tmp_directory, output_debug_file);
