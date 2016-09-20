@@ -5,7 +5,7 @@
 #include <iostream>
 #include "staff_num_to_instr_extractor.hh"
 
-std::vector<std::string> get_staff_instr_mapping(const fs::path& filename)
+std::vector<std::string> get_staff_instr_mapping(const fs::path& filename, std::ofstream& output_debug_file)
 {
   // preconditions:
   // 1) all staff numbers are in the range [0 .. staff_num_mapping.size() - 1]
@@ -47,9 +47,10 @@ std::vector<std::string> get_staff_instr_mapping(const fs::path& filename)
 
     if (instr_name == "")
     {
-      std::cerr << "Warning: no instrument name found for staff "
-		<< instr_num
-		<< "\n";
+      const std::string err_msg = std::string{"Warning: no instrument name found for staff "} +
+				  std::to_string(instr_num) + "\n";
+      std::cerr << err_msg;
+      output_debug_file << err_msg;
     }
 
     res.emplace_back( std::move(instr_name) );

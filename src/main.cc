@@ -166,8 +166,16 @@ int main(int argc, const char * const * argv)
     const auto debug_output_file = options.debug_data_dir / "logs";
     std::ofstream log_stream (debug_output_file.string());
 
-    generate_bin_file(options.lilypond_command, options.input_filename, options.output_filename,
-		      options.debug_data_dir, log_stream);
+    try
+    {
+      generate_bin_file(options.lilypond_command, options.input_filename, options.output_filename,
+			options.debug_data_dir, log_stream);
+    }
+    catch (const std::exception& e)
+    {
+      log_stream << e.what() << "\n";
+      throw;
+    }
   }
   catch (const std::exception& e)
   {

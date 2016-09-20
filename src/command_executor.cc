@@ -412,7 +412,7 @@ void generate_bin_file(const std::string& lilypond_command,
 
 
   const auto notes = get_notes(notes_file);
-  const auto staffs_to_instrument = get_staff_instr_mapping(staffs_num_file);
+  const auto staffs_to_instrument = get_staff_instr_mapping(staffs_num_file, output_debug_file);
 
   std::vector<svg_file_t> sheets;
   for (const auto& filename : svgs_with_skylines)
