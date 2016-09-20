@@ -249,24 +249,28 @@ std::tuple<fs::path, fs::path> generate_note_and_staff_num_files(const std::stri
 }
 
 static
-std::vector<fs::path> generate_svg_files_without_skylines(const std::string& lilypond_command,
-							  const fs::path& input_lily_file,
-							  const fs::path& output_tmp_directory,
-							  std::ofstream& output_debug_file)
+std::vector<fs::path> generate_svg_files(const std::string& lilypond_command,
+					 const fs::path& input_lily_file,
+					 const fs::path& output_tmp_directory,
+					 std::ofstream& output_debug_file,
+					 bool with_skylines)
 {
   const std::vector<std::string> command_line {
     { lilypond_command,
-	"-dno-point-and-click",
-	std::string{"--output="} + output_tmp_directory.c_str(),
-	"-dbackend=svg",
-	input_lily_file.c_str() } };
+      "-dno-point-and-click",
+      std::string{"--output="} + output_tmp_directory.c_str(),
+      "-dbackend=svg",
+      std::string{"-ddebug-skylines=#"} + (with_skylines ? "t" : "f"),
+      input_lily_file.c_str(),
+    }
+  };
 
   const auto ret = execute_command(command_line, output_debug_file);
   if (not ret)
   {
-    throw std::runtime_error("Failed to create the SVGs files (without skylines)");
+    throw std::runtime_error(std::string{"Failed to create the SVGs files (with}"} + (with_skylines ? "" : "out")
+			     + " skylines)");
   }
-
 
   std::vector<fs::path> svg_files;
   for (const auto& file : fs::directory_iterator(output_tmp_directory))
@@ -282,15 +286,31 @@ std::vector<fs::path> generate_svg_files_without_skylines(const std::string& lil
   const auto nb_svgs = svg_files.size();
   if (nb_svgs == 0)
   {
-    throw std::runtime_error("Error: no SVGs files (the ones without skylines) were created in the temporary directory");
+    throw std::runtime_error(std::string{"Error: no SVGs files (the ones with"} + (with_skylines ? "" : "out")
+			     + " skylines) were created in the temporary directory");
   }
 
   std::sort(std::begin(svg_files), std::end(svg_files), [] (const auto& a, const auto& b) {
       return fs::last_write_time(a) < fs::last_write_time(b);
     });
 
-  output_debug_file << "Found " << nb_svgs << " svgs files without skylines:\n";
+  return svg_files;
+}
 
+
+static
+std::vector<fs::path> generate_svg_files_without_skylines(const std::string& lilypond_command,
+							  const fs::path& input_lily_file,
+							  const fs::path& output_tmp_directory,
+							  std::ofstream& output_debug_file)
+{
+  auto svg_files = generate_svg_files(lilypond_command,
+				      input_lily_file,
+				      output_tmp_directory,
+				      output_debug_file,
+				      false);
+
+  // add .without_skylines extension
   for (auto& svg_file : svg_files)
   {
     const auto new_name = [] (const auto& file_name) {
@@ -300,8 +320,14 @@ std::vector<fs::path> generate_svg_files_without_skylines(const std::string& lil
     }(svg_file);
 
     fs::rename(svg_file, new_name);
-    output_debug_file << "  " << new_name << "\n";
     svg_file = new_name;
+  }
+
+  output_debug_file << "Found " << svg_files.size() << " svgs files without skylines:\n";
+
+  for (const auto& svg_file : svg_files)
+  {
+    output_debug_file << "  " << svg_file << "\n";
   }
 
   output_debug_file << "\n";
@@ -315,49 +341,13 @@ std::vector<fs::path> generate_svg_files_with_skylines(const std::string& lilypo
 						       const fs::path& output_tmp_directory,
 						       std::ofstream& output_debug_file)
 {
+  auto svg_files = generate_svg_files(lilypond_command,
+				      input_lily_file,
+				      output_tmp_directory,
+				      output_debug_file,
+				      true);
 
-  const std::string event_listener_filename = "event-listener.scm";
-  const auto dst_event_listener_file = output_tmp_directory / event_listener_filename;
-
-  copy_event_listener_to(dst_event_listener_file);
-
-  const std::vector<std::string> command_line {
-    { lilypond_command,
-	"-dno-point-and-click",
-	std::string{"--output="} + output_tmp_directory.c_str(),
-	std::string{"-dinclude-settings="} + dst_event_listener_file.c_str(),
-	"-dbackend=svg",
-	input_lily_file.c_str() } };
-
-  const auto ret = execute_command(command_line, output_debug_file);
-  if (not ret)
-  {
-    throw std::runtime_error("Failed to create the SVGs files (without skylines)");
-  }
-
-
-  std::vector<fs::path> svg_files;
-  for (const auto& file : fs::directory_iterator(output_tmp_directory))
-  {
-    const auto& path = file.path();
-
-    if (fs::is_regular_file(path) and (path.extension() == ".svg"))
-    {
-      svg_files.push_back(file);
-    }
-  }
-
-  const auto nb_svgs = svg_files.size();
-  if (nb_svgs == 0)
-  {
-    throw std::runtime_error("Error: no SVGs files (the ones with skylines) were created in the temporary directory");
-  }
-
-  std::sort(std::begin(svg_files), std::end(svg_files), [] (const auto& a, const auto& b) {
-      return fs::last_write_time(a) < fs::last_write_time(b);
-    });
-
-  output_debug_file << "Found " << nb_svgs << " svgs files with skylines:\n";
+  output_debug_file << "Found " << svg_files.size() << " svgs files with skylines:\n";
 
   for (const auto& svg_file : svg_files)
   {
