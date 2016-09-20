@@ -373,14 +373,15 @@ void generate_bin_file(const std::string& lilypond_command,
   const auto notes_file = std::get<0>(pair);
   const auto staffs_num_file = std::get<1>(pair);
 
-  const auto svgs_without_skylines = generate_svg_files_without_skylines(lilypond_command,
-									 input_lily_file,
-									 output_tmp_directory,
-									 output_debug_file);
   const auto svgs_with_skylines = generate_svg_files_with_skylines(lilypond_command,
 								   input_lily_file,
 								   output_tmp_directory,
 								   output_debug_file);
+
+  const auto svgs_without_skylines = generate_svg_files_without_skylines(lilypond_command,
+									 input_lily_file,
+									 output_tmp_directory,
+									 output_debug_file);
 
   // safety check: there should be the same number of images with and without skylines
   const auto nb_svgs = svgs_with_skylines.size();
