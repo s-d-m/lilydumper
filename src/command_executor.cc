@@ -197,6 +197,7 @@ std::tuple<fs::path, fs::path> generate_note_and_staff_num_files(const std::stri
 
   const std::vector<std::string> command_line {
     { lilypond_command,
+	std::string{"-dlog-file=\""} + (output_tmp_directory / "notes_and_staff_num_generation").c_str() + "\"",
 	"-dno-point-and-click",
 	std::string{"--output="} + output_tmp_directory.c_str(),
 	"--evaluate=(ly:add-option 'note-file-output #f  \"Output for the note file. Default is filename with .notes extension instead of .ly\")",
@@ -257,6 +258,8 @@ std::vector<fs::path> generate_svg_files(const std::string& lilypond_command,
 {
   const std::vector<std::string> command_line {
     { lilypond_command,
+      std::string{"-dlog-file=\""} + (output_tmp_directory / (std::string{"svg_with"} +
+							      (with_skylines ? "" : "out") +"_skylines_generation")).c_str() + "\"",
       "-dno-point-and-click",
       std::string{"--output="} + output_tmp_directory.c_str(),
       "-dbackend=svg",
