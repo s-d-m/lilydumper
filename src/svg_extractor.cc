@@ -429,7 +429,7 @@ unsigned int find_bottom_skyline_pos_of_staff(const rect_t& surface,
 	return a.surface.top < b.surface.top;
       }))
   {
-    throw std::runtime_error("Error: skylines should be ordered from bottom to bottom");
+    throw std::runtime_error("Error: skylines should be ordered from top to bottom");
   }
 
   const auto bottom_surface = surface.bottom;
