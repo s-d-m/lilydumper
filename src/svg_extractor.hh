@@ -1,11 +1,10 @@
-#ifndef SVG_EXTRACTOR_HH_
-#define SVG_EXTRACTOR_HH_
+#pragma once
 
 #include <stdexcept>
 #include <limits>
 #include <vector>
 #include <pugixml.hpp> // definition of xml document (the svg files to read from)
-
+#include "utils.hh"
 
 // segments are used only to provide a full skyline.  Since a skyline
 // is a contiguous line composed only of horizontal and vertical
@@ -67,12 +66,10 @@ std::vector<note_head_t> get_note_heads(const pugi::xml_document& svg_file);
 
 struct svg_file_t
 {
-    const std::string filename;
+    const fs::path filename;
     std::vector<note_head_t> note_heads;
     std::vector<system_t> systems;
     std::vector<staff_t> staves;
 };
 
-svg_file_t get_svg_data(const std::string& filename);
-
-#endif /* SVG_EXTRACTOR_HH_ */
+svg_file_t get_svg_data(const fs::path& filename);

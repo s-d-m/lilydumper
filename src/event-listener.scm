@@ -86,35 +86,53 @@
 
 
 #(define was-file-removed? #f)
-
+#(define was-note-option-checked? #f)
+#(define should-produce-note-file? #t)
 
 #(define (simple-print-line text)
-  (let ((filename (filename-to-output-to)))
-    (if (not was-file-removed?)
-	(begin
-	  (if (access? filename F_OK)
-	      (delete-file filename))
-	  (set! was-file-removed? #t)))
+   (if (not was-note-option-checked?)
+       (begin
+	 (let ((option (ly:get-option 'disable-notes-output)))
+	   (set! should-produce-note-file?
+		 (not option)))
+	 (set! was-note-option-checked? #t)))
+   (if should-produce-note-file?
+       (let ((filename (filename-to-output-to)))
+	 (if (not was-file-removed?)
+	     (begin
+	       (if (access? filename F_OK)
+		   (delete-file filename))
+	       (set! was-file-removed? #t)))
 
-    (let* ((p (open-file filename "a")))
-      ;; for regtest comparison
-      (display (string-append text "\n") p)
-      (close p))))
+	 (let* ((p (open-file filename "a")))
+	   ;; for regtest comparison
+	   (display (string-append text "\n") p)
+	   (close p)))))
 
 
 #(define was-table-file-removed? #f)
-#(define (output-to-table-file text)
-  (let ((filename (table-filename-to-output-to)))
-    (if (not was-table-file-removed?)
-	(begin
-	  (if (access? filename F_OK)
-	      (delete-file filename))
-	  (set! was-table-file-removed? #t)))
+#(define was-table-option-checked? #f)
+#(define should-produce-table-file? #t)
 
-    (let* ((p (open-file filename "a")))
-      ;; for regtest comparison
-      (display (string-append text "\n") p)
-      (close p))))
+#(define (output-to-table-file text)
+   (if (not was-table-option-checked?)
+       (begin
+	 (let ((option (ly:get-option 'disable-table-output)))
+	   (set! should-produce-table-file?
+		 (not option)))
+	 (set! was-table-option-checked? #t)))
+   (if should-produce-table-file?
+       (let ((filename (table-filename-to-output-to)))
+	 (if (not was-table-file-removed?)
+	     (begin
+	       (if (access? filename F_OK)
+		   (delete-file filename))
+	       (set! was-table-file-removed? #t)))
+
+	 (let* ((p (open-file filename "a")))
+	   ;; for regtest comparison
+	   (display (string-append text "\n") p)
+	   (close p)))))
 
 
 %%% main functions

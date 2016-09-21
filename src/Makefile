@@ -11,9 +11,14 @@ SRC :=  main.cc \
 	bar_number_events_extractor.cc \
 	staff_num_to_instr_extractor.cc \
 	file_exporter.cc \
+	command_executor.cc \
 
 
 OBJS := ${SRC:.cc=.o}
+
+OPEN_PRELOADER_SRC := open_preloader.c
+OPEN_PRELOADER_OBJS := ${OPEN_PRELOADER_SRC:.c=.o}
+OPEN_PRELOADER_LIB := open_preloader.so
 
 LIBS= -lpugixml -lstdc++fs
 
@@ -64,8 +69,7 @@ ifeq ($(TOOLCHAIN),clang)
 	-fstack-protector-all \
 	--param ssp-buffer-size=4 \
 	-D_FORTIFY_SOURCE=2 \
-	-fPIC \
-	-fPIE
+	-fPIC
 
   LDFLAGS = \
 	-z noexecstack \
@@ -215,8 +219,7 @@ else
 	-fstack-protector-all \
 	--param ssp-buffer-size=4 \
 	-D_FORTIFY_SOURCE=2 \
-	-fPIC \
-	-fPIE
+	-fPIC
 
   LDFLAGS = \
 	-pie \
@@ -229,7 +232,7 @@ endif
 
 BUILD ?= debug
 
-CFLAGS := -std=c11 -Werror ${HARDENING_FLAGS} ${CC_WARN_FLAGS} ${SANITIZERS}
+CFLAGS := -std=c11 -Werror ${HARDENING_FLAGS} ${CC_WARN_FLAGS} # ${SANITIZERS}
 CXXFLAGS := -std=c++1z -Werror -fno-rtti -fstrict-enums ${HARDENING_FLAGS} ${CXX_WARN_FLAGS} ${SANITIZERS}
 
 ifeq ($(BUILD),release)
@@ -257,12 +260,27 @@ ifeq ($(32_BITS),1)
 endif
 
 
-all: ${TARGET}
+all: ${OPEN_PRELOADER_LIB} ${TARGET}
 
-${TARGET}: ${OBJS}
+${TARGET}: ${OBJS} ${OPEN_PRELOADER_LIB} command_executor.o
 	-mkdir -p ${TARGET_DIR}
-	${CXX} ${CXXFLAGS} -o ${TARGET} ${OBJS} ${LIBS}
+	${CXX} ${CXXFLAGS} -fPIE ${LDFLAGS} -o ${TARGET} ${OBJS} ${LIBS}
 
+${OPEN_PRELOADER_LIB}: ${OPEN_PRELOADER_OBJS} event_listener.h
+	${CC} ${CFLAGS} ${LDFLAGS} -shared -ldl -MD -o "$@" ${OPEN_PRELOADER_OBJS}
+
+event_listener.h: event-listener.scm
+	xxd -i "$<" "$@"
+	sed -i -e 's/unsigned char event_listener_scm/static constexpr const unsigned char event_listener_scm/' \
+	       -e 's/unsigned int event_listener_scm_len = /static constexpr const unsigned int event_listener_scm_len = /' "$@"
+
+open_preloader.h: ${OPEN_PRELOADER_LIB}
+	xxd -i "$<" "$@"
+	sed -i -e 's/unsigned char open_preloader_so/static constexpr const unsigned char open_preloader_so/' \
+	       -e 's/unsigned int open_preloader_so_len = /static constexpr const unsigned int open_preloader_so_len = /' "$@"
+
+command_executor.o: event_listener.h
+command_executor.o: open_preloader.h
 
 %.o: %.c
 	${CC} ${CFLAGS} -MD -c -o "$@" "$<"

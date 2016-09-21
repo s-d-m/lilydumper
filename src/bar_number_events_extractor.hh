@@ -1,5 +1,4 @@
-#ifndef BAR_NUMBER_EVENTS_EXTRACTOR_HH
-#define BAR_NUMBER_EVENTS_EXTRACTOR_HH
+#pragma once
 
 #include <vector>
 #include "cursor_boxes_extractor.hh"
@@ -11,5 +10,3 @@ struct bar_num_event_t
 };
 
 std::vector<bar_num_event_t> get_bar_num_events(const std::vector<cursor_box_t>& cursor_boxes);
-
-#endif /* BAR_NUMBER_EVENTS_EXTRACTOR_HH */

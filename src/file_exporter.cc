@@ -367,7 +367,7 @@ void output_staff_num_mapping(std::ofstream& file,
 
 static
 void output_svg_files(std::ofstream& file,
-		      const std::vector<std::string>& svg_filenames)
+		      const std::vector<fs::path>& svg_filenames)
 {
   output_as_big_endian(file, static_cast<uint16_t>(svg_filenames.size()));
   for (const auto& filename : svg_filenames)
@@ -384,7 +384,7 @@ void output_svg_files(std::ofstream& file,
     const auto rc = stat(filename.c_str(), &stat_buf);
     if (rc != 0)
     {
-      throw std::runtime_error(std::string{"Error, failed to get file size for "} + filename);
+      throw std::runtime_error(std::string{"Error, failed to get file size for "} + filename.string());
     }
     output_as_big_endian(file, static_cast<uint32_t>(stat_buf.st_size));
 
@@ -394,19 +394,19 @@ void output_svg_files(std::ofstream& file,
 }
 
 
-void save_to_file(const std::string& output_filename,
+void save_to_file(const fs::path& output_filename,
 		  const std::vector<key_event>& keyboard_events,
 		  const std::vector<cursor_box_t>& cursor_boxes,
 		  const std::vector<bar_num_event_t>& bar_num_events,
 		  const std::vector<std::string>& staff_num_mapping,
-		  const std::vector<std::string>& svg_filenames)
+		  const std::vector<fs::path>& svg_filenames)
 {
   std::ofstream file(output_filename,
 		     std::ios::binary | std::ios::trunc | std::ios::out);
 
   if (not file.is_open())
   {
-    throw std::runtime_error(std::string{"Error: failed to open "} + output_filename);
+    throw std::runtime_error(std::string{"Error: failed to open "} + output_filename.c_str());
   }
 
   // magic number: LPYP
