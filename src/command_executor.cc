@@ -287,7 +287,7 @@ std::vector<fs::path> generate_svg_files(const std::vector<std::string>& command
       return fs::last_write_time(a) < fs::last_write_time(b);
     });
 
-  output_debug_file << "Found " << nb_svgs << " svgs files with" << (with_skyline ? "" : "out") << "skylines:\n";
+  output_debug_file << "Found " << nb_svgs << " svgs files with" << (with_skyline ? "" : "out") << " skylines:\n";
 
   const auto suffix = (with_skyline ? with_skyline_suffix : without_skyline_suffix);
 
