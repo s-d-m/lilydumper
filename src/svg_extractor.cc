@@ -312,10 +312,6 @@ std::vector<skyline_t> get_skylines(const pugi::xml_document& svg_file,
 
     for (const auto& current_segment : full_line)
     {
-      // the svg file always keep x1 <= x2. If not previous check would
-      // throw. Obvisously this code would need to be updated. the
-      // change would be to: left <- min(left, x1, x2) (and similarly
-      // for right)
       left   = std::min(left, current_segment.x1);
       right  = std::max(right, current_segment.x2);
       top    = std::min(top, current_segment.y);
