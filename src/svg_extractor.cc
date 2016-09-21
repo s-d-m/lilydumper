@@ -305,25 +305,28 @@ std::vector<skyline_t> get_skylines(const pugi::xml_document& svg_file,
 	  .y = this_line.y1 });
     }
 
-    auto left   = std::numeric_limits<decltype(rect_t::left)>::max();
-    auto right  = std::numeric_limits<decltype(rect_t::right)>::min();
-    auto top    = std::numeric_limits<decltype(rect_t::top)>::max();
-    auto bottom = std::numeric_limits<decltype(rect_t::bottom)>::min();
-
-    for (const auto& current_segment : full_line)
+    if (not full_line.empty())
     {
-      left   = std::min(left, current_segment.x1);
-      right  = std::max(right, current_segment.x2);
-      top    = std::min(top, current_segment.y);
-      bottom = std::max(bottom, current_segment.y);
-    }
+      auto left   = std::numeric_limits<decltype(rect_t::left)>::max();
+      auto right  = std::numeric_limits<decltype(rect_t::right)>::min();
+      auto top    = std::numeric_limits<decltype(rect_t::top)>::max();
+      auto bottom = std::numeric_limits<decltype(rect_t::bottom)>::min();
 
-    res.emplace_back(skyline_t{
-	.surface = rect_t{ .top = top,
-			 .bottom = bottom,
-			 .left = left,
-			 .right = right },
-	.full_line = std::move(full_line) });
+      for (const auto& current_segment : full_line)
+      {
+	left   = std::min(left, current_segment.x1);
+	right  = std::max(right, current_segment.x2);
+	top    = std::min(top, current_segment.y);
+	bottom = std::max(bottom, current_segment.y);
+      }
+
+      res.emplace_back(skyline_t{
+	  .surface = rect_t{ .top = top,
+			     .bottom = bottom,
+			     .left = left,
+			     .right = right },
+	    .full_line = std::move(full_line) });
+    }
   }
 
   // sanity check: (top left corner is (0, 0), so top lines have lower y values
