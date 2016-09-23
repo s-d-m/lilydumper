@@ -61,7 +61,11 @@ void remove_duplicate_events(std::vector<key_event>& key_events)
   size_t i = 0;
   while (i < key_events.size())
   {
-    if (std::count(key_events.begin(), key_events.end(), key_events[i]) > 1)
+    if (std::count_if(key_events.begin(), key_events.end(), [&] (const auto& elt) {
+	  return     (elt.time == key_events[i].time)
+	         and (elt.data.ev_type == key_events[i].data.ev_type)
+	         and (elt.data.pitch == key_events[i].data.pitch);
+	}) > 1)
     {
       const auto it_pos = key_events.begin() + static_cast<std::vector<key_event>::difference_type>(i);
       key_events.erase(it_pos);

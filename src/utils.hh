@@ -68,24 +68,12 @@ struct key_data
     uint8_t  pitch; // the key that is pressed or released
     type     ev_type; // was the key pressed or released?
     uint8_t  staff_number; // used to color keys
-
-    bool operator==(const key_data& other) const
-    {
-      return (pitch == other.pitch) and
-	     (ev_type == other.ev_type) and
-	     (staff_number == other.staff_number);
-    }
 };
 
 struct key_event
 {
     uint64_t time; // the time the event occurs during the sond
     key_data data;
-
-    bool operator==(const key_event& other) const
-    {
-      return (time == other.time) and (data == other.data);
-    }
 };
 
 
