@@ -79,7 +79,7 @@ void separate_release_pressed_events(std::vector<key_event>& key_events)
 	// sanity check: a release event must be preceded by a pressed event.
 	if (note_start_pos == key_events.rend())
 	{
-	  throw std::invalid_argument("error, a there is release event comming from nowhere (failed to find the associated pressed event)");
+	  throw std::invalid_argument("error, there is a release event comming from nowhere (failed to find the associated pressed event)");
 	}
 
 	// compute the shortening time
