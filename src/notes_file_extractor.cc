@@ -233,6 +233,36 @@ void fix_overlapping_key_presses(std::vector<note_t>& notes)
       }
     }
   }
+
+  // It is possible that due to the fixing made right above, a note gets to get a null played time,
+  // i.e. that its stop_time now coincide with the start time. One can get an example of this with
+  // the following snippet:
+  //
+  // \version "2.8.5"
+  //
+  // \score {
+  //   \new PianoStaff \with{systemStartDelimiter = #'SystemStartBracket } <<
+  //     \new Staff = "upper" { g }
+  //     \new Staff = "lower" { \clef bass g}
+  //   >>
+  // }
+  //
+  // These null time notes need then to be removed.
+
+  size_t i = 0;
+  while (i < notes.size())
+  {
+    if (notes[i].start_time == notes[i].stop_time)
+    {
+      const auto it_pos = notes.begin() + static_cast<std::vector<key_event>::difference_type>(i);
+      notes.erase(it_pos);
+    }
+    else
+    {
+      ++i;
+    }
+  }
+
 }
 
 
