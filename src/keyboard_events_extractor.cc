@@ -24,7 +24,8 @@ void assert_song_valid(std::vector<key_event>& key_events)
     {
       if (is_pressed[pitch])
       {
-	throw std::invalid_argument("Error: pressing a key that is already pressed");
+	throw std::invalid_argument(std::string{"Error: pressing key "} + std::to_string(static_cast<unsigned>(pitch)) + " at " +
+				    std::to_string(event.time) + " while it is already pressed");
       }
       is_pressed[pitch] = true;
     }
@@ -33,7 +34,8 @@ void assert_song_valid(std::vector<key_event>& key_events)
     {
       if (not (is_pressed[pitch]))
       {
-	throw std::invalid_argument("Error: releasing a key that is not pressed");
+	throw std::invalid_argument(std::string{"Error: releasing key "} + std::to_string(static_cast<unsigned>(pitch)) + " at " +
+				    std::to_string(event.time) + " while it is not pressed yet");
       }
       is_pressed[pitch] = false;
     }
