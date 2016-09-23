@@ -44,6 +44,45 @@ void assert_song_valid(std::vector<key_event>& key_events)
 }
 
 static
+void remove_duplicate_events(std::vector<key_event>& key_events)
+{
+  // precond the events MUST be sorted by time. The complete suboptimal implementation of this
+  // function doesn't require the events to be sorted. However, since this function should only be
+  // called with sorted events, let's keep the check to ensure one can later change the function
+  // implementation without breaking anything.
+  if (not std::is_sorted(key_events.begin(), key_events.end(), [] (const key_event& a, const key_event& b) {
+	return a.time < b.time;
+      }))
+  {
+    throw std::invalid_argument("Error, events are not sorted by play time");
+  }
+
+  // completely suboptimal implementation.
+  size_t i = 0;
+  while (i < key_events.size())
+  {
+    if (std::count(key_events.begin(), key_events.end(), key_events[i]) > 1)
+    {
+      const auto it_pos = key_events.begin() + static_cast<std::vector<key_event>::difference_type>(i);
+      key_events.erase(it_pos);
+    }
+    else
+    {
+      ++i;
+    }
+  }
+
+  // post cond: this function only removes element, therefore is the events are sorted when entering
+  // the function, they should still be when leaving the fnuction.
+  if (not std::is_sorted(key_events.begin(), key_events.end(), [] (const key_event& a, const key_event& b) {
+	return a.time < b.time;
+      }))
+  {
+    throw std::invalid_argument("Error, events order was unexpectedly changed");
+  }
+}
+
+static
 void separate_release_pressed_events(std::vector<key_event>& key_events)
 {
   // sanity check:
@@ -153,6 +192,27 @@ std::vector<key_event> get_key_events(const std::vector<note_t>& notes)
   std::stable_sort(res.begin(), res.end(), [] (const auto& a, const auto&b) {
       return a.time < b.time;
     });
+
+  // there are some corner cases here to process. The following lilypond snippets produces some of these:
+  //
+  // \score { << c''  \\ c'' >> }
+  // \score { << a'4  \\ a'4. >> }
+  // \score { << { a'4. }  \\ { b'16 a'4 } >> }
+  //
+  // In the first one, the note appears on two voices? and as such, there are two pressed and
+  // released events seen by lilypond, although it is the same one. These pressed and merge must
+  // obviously been merged together.
+  //
+  // In the second case, the duration are different, as a consequence, there are two pressed event
+  // at the same time (due to the first corner case) but there will be two different release
+  // events. After merging the two pressed events, the second release event will appear as if it
+  // comes from nowhere. Therefore the first release event should actually be removed (as if the
+  // note was prolongated)
+  //
+  // the third corner case is about having also the pressed event at different times, but the key
+  // must be pressed from two different voice? and they collide in when it must be pressed.
+
+  remove_duplicate_events(res); // handle the first corner cases
 
   separate_release_pressed_events(res);
   debug_dump(res, "key_events_final");
