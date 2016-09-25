@@ -196,6 +196,20 @@ std::tuple<fs::path, fs::path> generate_note_and_staff_num_files(const std::stri
   copy_event_listener_to(out_listener_file);
   copy_open_preloader_to(out_preloader_file);
 
+  // remove note and staff_num file if they already exists, and then create an empty one.  Removing them first
+  // is necessary to avoid working on "polluted" data. Creating them right after is a workaround to avoid the
+  // event listener to do it itself. It has been noted that the guile part can fail in some weird way when
+  // creating these, by e.g. setting the permissions for the sn2in file to 100 (--x------). Consequence being
+  // then the program can't read the file back.
+  const auto create_out_file = [&] (const auto& path) {
+    std::error_code dummy_ec;
+    fs::remove(path, dummy_ec); // remove file if it exists
+    std::ofstream(path.c_str()); // create file
+    fs::permissions(path, fs::perms::owner_read | fs::perms::owner_write);
+  };
+  create_out_file(out_note_file);
+  create_out_file(out_staff_num_file);
+
   const std::vector<std::string> command_line {
     { lilypond_command,
 	std::string{"-dlog-file=\""} + (output_tmp_directory / "notes_and_staff_num_generation").c_str() + "\"",
@@ -220,7 +234,7 @@ std::tuple<fs::path, fs::path> generate_note_and_staff_num_files(const std::stri
   }
 
   const auto is_file_ok = [&] (const auto& file) {
-    if ((not fs::exists(file)) or (not is_regular_file(file)))
+    if ((not fs::exists(file)) or (not is_regular_file(file)) or fs::is_empty(file))
     {
       output_debug_file << "  Failed to create [" << file.c_str() << "]\n";
       return false;
