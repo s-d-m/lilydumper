@@ -2,7 +2,6 @@
 #include <stdexcept>
 #include <sstream>
 #include <fstream>
-#include <iostream>
 #include "staff_num_to_instr_extractor.hh"
 
 std::vector<std::string> get_staff_instr_mapping(const fs::path& filename, std::ofstream& output_debug_file)
@@ -47,10 +46,7 @@ std::vector<std::string> get_staff_instr_mapping(const fs::path& filename, std::
 
     if (instr_name == "")
     {
-      const std::string err_msg = std::string{"Warning: no instrument name found for staff "} +
-				  std::to_string(instr_num) + "\n";
-      std::cerr << err_msg;
-      output_debug_file << err_msg;
+      output_debug_file << std::string{"Warning: no instrument name found for staff "} + std::to_string(instr_num) + "\n";
     }
 
     res.emplace_back( std::move(instr_name) );
