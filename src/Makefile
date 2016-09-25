@@ -244,6 +244,15 @@ ifeq ($(BUILD),release)
     # clang-4.0 complains about recursive macro '#define stderr stderr' when compiling the
     # open-preloader in release mode. Disable the warning so it compiles.
     CFLAGS += -Wno-disabled-macro-expansion
+  else
+    # g++-6 complains at link time when compiling in release mode with the following error
+    #
+    # main.cc:154:5: error: assuming that the loop counter does not overflow [-Werror=unsafe-loop-optimizations]
+    #  int main(int argc, const char * const * argv)
+    #
+    # lto1: all warnings being treated as errors
+    # lto-wrapper: fatal error: g++-6 returned 1 exit status
+    LDFLAGS += -Wno-unsafe-loop-optimizations
   endif
 
 else
