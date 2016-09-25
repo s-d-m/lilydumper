@@ -9,7 +9,7 @@
 %% lilypond -e"(ly:add-option 'note-file-output #f  \"Output for the note file. Default is filename with .notes extension instead of .ly\")" -e"(ly:set-option 'note-file-output \"/path/to/output/note/file\")"
 
 #(define global-variable-filename #f)
-#(define (filename-to-output-to)
+#(define (notes-filename)
    (if (not global-variable-filename)
        (let ((option-name (ly:get-option 'note-file-output)))
 	 (set! global-variable-filename
@@ -29,7 +29,7 @@
 %% lilypond -e"(ly:add-option 'instrument-name-file-output #f  \"Output for the staff-number-to-instrument-name-table file. Default is filename with .sn2in extension instead of .ly\")" -e"(ly:set-option 'instrument-name-file-output \"/path/to/output/sn2in/file\")"
 
 #(define instr-name-table-filename #f)
-#(define (table-filename-to-output-to)
+#(define (table-filename)
    (if (not instr-name-table-filename)
        (let ((option-name (ly:get-option 'instrument-name-file-output)))
 	 (set! instr-name-table-filename
@@ -83,12 +83,16 @@
     ;; to go to nanoseconds
     (* 1000 1000 1000 (moment->real-time moment)))
 
-
+#(define (print-line-to-file text filename)
+   (let* ((p (open-file filename "a")))
+     ;; for regtest comparison
+     (display (string-append text "\n") p)
+     (close p)))
 
 #(define was-note-option-checked? #f)
 #(define should-produce-note-file? #t)
 
-#(define (simple-print-line text)
+#(define (output-to-notes-file text)
    (if (not was-note-option-checked?)
        (begin
 	 (let ((option (ly:get-option 'disable-notes-output)))
@@ -96,11 +100,7 @@
 		 (not option)))
 	 (set! was-note-option-checked? #t)))
    (if should-produce-note-file?
-       (let ((filename (filename-to-output-to)))
-	 (let* ((p (open-file filename "a")))
-	   ;; for regtest comparison
-	   (display (string-append text "\n") p)
-	   (close p)))))
+       (print-line-to-file text (notes-filename))))
 
 
 #(define was-table-option-checked? #f)
@@ -114,12 +114,7 @@
 		 (not option)))
 	 (set! was-table-option-checked? #t)))
    (if should-produce-table-file?
-       (let ((filename (table-filename-to-output-to)))
-	 (let* ((p (open-file filename "a")))
-	   ;; for regtest comparison
-	   (display (string-append text "\n") p)
-	   (close p)))))
-
+       (print-line-to-file text (table-filename))))
 
 %%% main functions
 
@@ -235,7 +230,7 @@
 				       current-bar-number
 				       id)))
 
-	(simple-print-line
+	(output-to-notes-file
 	 (format "note start-time: ~d stop-time: ~d id: ~a"
 		 (round (moment->real-time-nanoseconds start-moment))
 		 (round (moment->real-time-nanoseconds stop-moment))
