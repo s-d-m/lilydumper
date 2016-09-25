@@ -469,13 +469,13 @@ std::vector<staff_t> get_staves(const pugi::xml_document& svg_file, std::ofstrea
   // too, so there can be more skylines than staves)
   if (bottom_skylines.size() < nb_staves)
   {
-    throw std::runtime_error("Error: there should be at least as many bottom skylines as staves");
+    throw std::runtime_error("Error: there should be at least as many bottom staves skylines as staves");
   }
 
   // sanity check, there must be the same number of top and bottom skyline.
   if (top_skylines.size() not_eq bottom_skylines.size())
   {
-    throw std::runtime_error("Error: mismatch between the number of top and bottom skylines");
+    throw std::runtime_error("Error: mismatch between the number of top and bottom staves skylines");
   }
 
   std::vector<staff_t> res;
@@ -578,7 +578,9 @@ std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
   // sanity check: there must be as many top skylines as bottom ones.
   if (nb_systems != bottom_systems_skyline.size())
   {
-    throw std::runtime_error("Error: mismatch between the top and bottom skylines of systems");
+    throw std::runtime_error(std::string{"Error: mismatch between the top and bottom skylines of systems.\n"
+	  "  There are has been " + std::to_string(top_systems_skyline.size()) + " top skylines detected\n  "
+	  "  and " + std::to_string(bottom_systems_skyline.size()) + " bottom skylines detected\n" });
   }
 
   std::vector<system_t> res (nb_systems, system_t{
