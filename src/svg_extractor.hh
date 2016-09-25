@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <limits>
 #include <vector>
+#include <fstream>
 #include <pugixml.hpp> // definition of xml document (the svg files to read from)
 #include "utils.hh"
 
@@ -72,4 +73,4 @@ struct svg_file_t
     std::vector<staff_t> staves;
 };
 
-svg_file_t get_svg_data(const fs::path& filename);
+svg_file_t get_svg_data(const fs::path& filename, std::ofstream& output_debug_file);

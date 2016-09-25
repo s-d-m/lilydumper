@@ -429,7 +429,7 @@ void generate_bin_file(const std::string& lilypond_command,
   std::vector<svg_file_t> sheets;
   for (const auto& filename : svgs_with_skylines)
   {
-    sheets.emplace_back(get_svg_data(filename));
+    sheets.emplace_back(get_svg_data(filename, output_debug_file));
   }
 
   const auto keyboard_events = get_key_events(notes);

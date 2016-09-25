@@ -451,26 +451,31 @@ unsigned int find_bottom_skyline_pos_of_staff(const rect_t& surface,
 
 
 // precondition svg_file is already parsed
-std::vector<staff_t> get_staves(const pugi::xml_document& svg_file)
+static
+std::vector<staff_t> get_staves(const pugi::xml_document& svg_file, std::ofstream& output_debug_file)
 {
   const auto staves ( get_staves_surface(svg_file) );
   const auto top_skylines ( get_top_staves_skyline(svg_file) );
   const auto bottom_skylines ( get_bottom_staves_skyline(svg_file) );
 
   const auto nb_staves = staves.size();
+  if (nb_staves == 0)
+  {
+    output_debug_file << "Warning: no staves detected in a svg file\n";
+  }
 
   // sanity check: each staff must have a bottom skyline, hence there must at
   // least as many skylines, as there are staves. (Note, lyrics have skylines
   // too, so there can be more skylines than staves)
   if (bottom_skylines.size() < nb_staves)
   {
-    throw std::runtime_error("Error: there should be at least as many bottom skylines as staves");
+    throw std::runtime_error("Error: there should be at least as many bottom staves skylines as staves");
   }
 
   // sanity check, there must be the same number of top and bottom skyline.
   if (top_skylines.size() not_eq bottom_skylines.size())
   {
-    throw std::runtime_error("Error: mismatch between the number of top and bottom skylines");
+    throw std::runtime_error("Error: mismatch between the number of top and bottom staves skylines");
   }
 
   std::vector<staff_t> res;
@@ -533,9 +538,10 @@ std::vector<staff_t> get_staves(const pugi::xml_document& svg_file)
 }
 
 
-
+static
 std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
-				  const std::vector<staff_t>& staves)
+				  const std::vector<staff_t>& staves,
+				  std::ofstream& output_debug_file)
 {
   // sanity check: precondition staves must be sorted
   if (not std::is_sorted(staves.begin(), staves.end(), [] (const auto& a, const auto& b) {
@@ -550,6 +556,11 @@ std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
 
   const auto nb_systems = top_systems_skyline.size();
   const auto nb_staves = staves.size();
+
+  if (nb_systems == 0)
+  {
+    output_debug_file << "Warning: no system detected in a svg file\n";
+  }
 
   // following check is necessary because a system store the index of
   // the first and last staff. Thus, the index can't be bigger than
@@ -567,7 +578,9 @@ std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
   // sanity check: there must be as many top skylines as bottom ones.
   if (nb_systems != bottom_systems_skyline.size())
   {
-    throw std::runtime_error("Error: mismatch between the top and bottom skylines of systems");
+    throw std::runtime_error(std::string{"Error: mismatch between the top and bottom skylines of systems.\n"
+	  "  There are has been " + std::to_string(top_systems_skyline.size()) + " top skylines detected\n  "
+	  "  and " + std::to_string(bottom_systems_skyline.size()) + " bottom skylines detected\n" });
   }
 
   std::vector<system_t> res (nb_systems, system_t{
@@ -618,7 +631,7 @@ std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
   // sanity check: the output should normally be sorted in ascending
   // order.  and for each system, the first staff must immediately
   // succeed the last staff of the former system
-  for (auto i = decltype(nb_systems){0}; i < nb_systems - 1; ++i)
+  for (auto i = decltype(nb_systems){0}; i + 1 < nb_systems; ++i)
   {
     if (res[i + 1].first != (res[i].last + 1))
     {
@@ -703,7 +716,7 @@ std::vector<note_head_t> get_note_heads(const pugi::xml_document& svg_file)
 }
 
 
-svg_file_t get_svg_data(const fs::path& filename)
+svg_file_t get_svg_data(const fs::path& filename, std::ofstream& output_debug_file)
 {
   pugi::xml_document doc;
   // the parse_eol option replaces \r\n and single \r by \n
@@ -715,13 +728,23 @@ svg_file_t get_svg_data(const fs::path& filename)
 			     + parse_result.description() + ")\n");
   }
 
-  auto staves = get_staves(doc);
-  auto systems = get_systems(doc, staves);
+  try
+  {
+    output_debug_file << "processing [" << filename.c_str() << "]\n";
+    auto staves = get_staves(doc, output_debug_file);
+    auto systems = get_systems(doc, staves, output_debug_file);
+    auto note_heads = get_note_heads(doc);
 
-  return svg_file_t{
+    return svg_file_t{
       .filename = filename,
-      .note_heads = get_note_heads(doc),
+      .note_heads = std::move(note_heads),
       .systems = std::move(systems),
       .staves = std::move(staves),
     };
+  }
+  catch (const std::exception& e)
+  {
+    throw std::runtime_error(std::string{"Error occured while processing ["} + filename.c_str() + "]\n" +
+			     e.what());
+  }
 }
