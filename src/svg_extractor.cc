@@ -631,7 +631,7 @@ std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
   // sanity check: the output should normally be sorted in ascending
   // order.  and for each system, the first staff must immediately
   // succeed the last staff of the former system
-  for (auto i = decltype(nb_systems){0}; i < nb_systems - 1; ++i)
+  for (auto i = decltype(nb_systems){0}; i + 1 < nb_systems; ++i)
   {
     if (res[i + 1].first != (res[i].last + 1))
     {
