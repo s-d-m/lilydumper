@@ -239,6 +239,13 @@ ifeq ($(BUILD),release)
   CXXFLAGS += -O3 -flto
   CFLAGS += -O3 -flto
   LDFLAGS += -s
+
+  ifeq ($(TOOLCHAIN),clang)
+    # clang-4.0 complains about recursive macro '#define stderr stderr' when compiling the
+    # open-preloader in release mode. Disable the warning so it compiles.
+    CFLAGS += -Wno-disabled-macro-expansion
+  endif
+
 else
   CXXFLAGS += -O0 -ggdb3
   CFLAGS += -O0 -ggdb3
