@@ -324,7 +324,23 @@ static cursor_box_t get_cursor_box(const chord_t& chord,
     // they must all share the same bar number
     if (head.bar_number != first_bar_number)
     {
-      throw std::runtime_error("Error: all notes in a chord must have the same bar number");
+      throw std::runtime_error(std::string{"Error: all notes in a chord must have the same bar number\n"} +
+			       "in svg file [" + svg_file.filename.c_str() + "]\n"
+			       "notes with bar number  " + std::to_string(static_cast<unsigned>(first_bar_number)) +
+			       " and id " + first_note_head.id + "\n" +
+			       "and the one within bar " + std::to_string(static_cast<unsigned>(head.bar_number)) +
+			       " and id " + head.id + "\n" +
+			       "appear in the same chord\n" +
+			       "\n"
+			       "This error occurs when the source file contains a repeat in a voice,"
+			       " but not in all of them.\n"
+			       "If one voice uses a repeat, but not on the second one, lilydumper considers"
+			       " that at some point it has to play the first note of the part to repeat in"
+			       " the first voice, and the first note right after the repeat part in the second"
+			       " voice at the same time. This is obviously wrong and the lilydumper detects"
+			       " this and issues this error.\n"
+			       "One way to fix it is to edit the source file and use repeats on every voices,"
+			       " and run lilydumper again");
     }
   }
 
