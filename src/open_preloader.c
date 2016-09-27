@@ -103,7 +103,11 @@ bool patch_buffer_to_file(const char* const buffer, const size_t filesize, FILE*
   const size_t to_copy_at_begin = (size_t) (make_music_pos - buffer);
   fwrite(buffer, (size_t) 1, to_copy_at_begin, output_fd);
 
-  const char* const unfold_repeat_str = "(make-music 'UnfoldedRepeatedMusic";
+  const char* const unfold_repeat_str =
+    "    (if (or (string=? name \"percent\")\n"
+    "		 (string=? name \"tremolo\"))\n"
+    "      (ly:error (_ \"A `~S' repeat was detected which is sadly not supported by lilydumper. Sorry.\") name))\n"
+    "    (make-music 'UnfoldedRepeatedMusic";
   const size_t len_unfold_repeat_str = strlen(unfold_repeat_str);
   fwrite(unfold_repeat_str, (size_t) 1, len_unfold_repeat_str, output_fd);
 

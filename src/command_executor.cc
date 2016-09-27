@@ -113,7 +113,7 @@ bool execute_command(const std::vector<std::string>& command,
   int status;
   waitpid(pid, &status, 0);
 
-  const auto print_command = [] (std::ofstream& stream ,const auto& _command) {
+  const auto print_command = [] (std::ofstream& stream, const auto& _command) {
     for (const auto& str : _command)
     {
       stream << " " << str;
@@ -172,6 +172,24 @@ bool execute_command(const std::vector<std::string>& command,
 }
 
 static
+std::string get_file_content(const fs::path& filename, const std::string& prepend_to_lines)
+{
+  std::ifstream file (filename, std::ios::in);
+  if (! file.is_open() )
+  {
+    return {};
+  }
+
+  std::string res;
+  for (std::string line; std::getline(file, line); )
+  {
+    res += prepend_to_lines + line + "\n";
+  }
+
+  return res;
+}
+
+static
 std::tuple<fs::path, fs::path> generate_note_and_staff_num_files(const std::string& lilypond_command,
 								 const fs::path& input_lily_file,
 								 const fs::path& output_tmp_directory,
@@ -210,9 +228,11 @@ std::tuple<fs::path, fs::path> generate_note_and_staff_num_files(const std::stri
   create_out_file(out_note_file);
   create_out_file(out_staff_num_file);
 
+  const auto log_file = (output_tmp_directory / "notes_and_staff_num_generation");
+
   const std::vector<std::string> command_line {
     { lilypond_command,
-	std::string{"-dlog-file=\""} + (output_tmp_directory / "notes_and_staff_num_generation").c_str() + "\"",
+	std::string{"-dlog-file=\""} + log_file.string() + "\"",
 	"-dno-point-and-click",
 	std::string{"--output="} + output_tmp_directory.c_str(),
 	"--evaluate=(ly:add-option 'note-file-output #f  \"Output for the note file. Default is filename with .notes extension instead of .ly\")",
@@ -228,9 +248,17 @@ std::tuple<fs::path, fs::path> generate_note_and_staff_num_files(const std::stri
 					 std::string{DUMP_OUTPUT_DIR} + "=" + output_tmp_directory.c_str() };
   const auto ret = execute_command_with_append_to_env(command_line, env, output_debug_file);
 
+  const auto get_error_message = [&] () {
+    auto real_log_file = log_file;
+    real_log_file.replace_extension(".log");
+    return std::string{"Failed to create the notes and staff-num-to-instrument name files.\n"
+		       "Below is the content of the command log file:\n"}
+                      + get_file_content(real_log_file, "  ");
+  };
+
   if (not ret)
   {
-    throw std::runtime_error("Failed to create the notes and staff-num-to-instrument name files");
+    throw std::runtime_error(get_error_message());
   }
 
   const auto is_file_ok = [&] (const auto& file) {
@@ -257,7 +285,7 @@ std::tuple<fs::path, fs::path> generate_note_and_staff_num_files(const std::stri
 
   if (has_error)
   {
-    throw std::runtime_error("Failed to create the notes and staff-num-to-instrument name files");
+    throw std::runtime_error(get_error_message());
   }
 
 
