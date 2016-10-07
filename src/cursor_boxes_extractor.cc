@@ -3,6 +3,11 @@
 #include <string>
 #include "cursor_boxes_extractor.hh"
 
+static constexpr const char * const maybe_has_repeat_unfold_msg =
+  "This can happen if the lilypond source file contains unfolded repeats, expand a variable twice.\n"
+  "If this is the case, try editing the source file and replace the \"repeat unfold x {music}\" by \n"
+  "copy-pasting the music x times, expand variables by hand and rerun the program";
+
 
 // returns true iff the svg contains a note_head with the given id
 static
@@ -136,7 +141,18 @@ static uint8_t find_svg_pos(const std::vector<note_t>& notes,
   // svg file
   if (indexes.size() != 1)
   {
-    throw std::runtime_error("Error: notes with same ids have been found in several pages!");
+    std::string err_msg = "Error: notes with the following IDs\n";
+    for (const auto& note : notes)
+    {
+      err_msg += "  " + note.id + "\n";
+    }
+    err_msg += "appears in in the following files (they should appear in only one file)\n";
+    for (const auto& index : indexes)
+    {
+      err_msg += "  " + svg_files[index].filename.string() + "\n";
+    }
+    err_msg += maybe_has_repeat_unfold_msg;
+    throw std::runtime_error(err_msg);
   }
 
   return indexes[0];
@@ -160,10 +176,8 @@ static note_head_t get_note_head(const std::string& id,
     else
     {
       throw std::runtime_error(std::string{"Error: a note head with id "} + id + " has been found several times (" +
-			       std::to_string(nb_candidates) + ") in the svg file " + svg_file.filename.c_str()) + "\n"
-	                       "  This can happen if the lilypond source file contains unfolded repeats.\n"
-	                       "  If this is the case, try editing the source file and replace the \"repeat unfold x {music}\" by \n"
-	                       "  copy-pasting the music x times and rerun the program");
+			       std::to_string(nb_candidates) + ") in the svg file " + svg_file.filename.c_str() + "\n" +
+                               maybe_has_repeat_unfold_msg);
     }
   }
 
