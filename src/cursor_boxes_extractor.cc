@@ -155,11 +155,15 @@ static note_head_t get_note_head(const std::string& id,
   {
     if (nb_candidates == 0)
     {
-      throw std::runtime_error("Error: a note head with a specific id could not be found in a svg file");
+      throw std::runtime_error(std::string{"Error: a note head with id "} + id + " could not be found in a svg file");
     }
     else
     {
-      throw std::runtime_error("Error: a note head with a specific id has been found several times in a svg file");
+      throw std::runtime_error(std::string{"Error: a note head with id "} + id + " has been found several times (" +
+			       std::to_string(nb_candidates) + ") in the svg file " + svg_file.filename.c_str()) + "\n"
+	                       "  This can happen if the lilypond source file contains unfolded repeats.\n"
+	                       "  If this is the case, try editing the source file and replace the \"repeat unfold x {music}\" by \n"
+	                       "  copy-pasting the music x times and rerun the program");
     }
   }
 
