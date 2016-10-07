@@ -372,7 +372,7 @@ static cursor_box_t get_cursor_box(const chord_t& chord,
   const auto system_top = svg_file.staves[ first_staff ].top_skyline;
   const auto system_bottom = svg_file.staves[ last_staff ].bottom_skyline;
 
-  return cursor_box_t {
+  const cursor_box_t res = {
       .left = min_left,
       .right = max_right,
       .top = system_top,
@@ -381,6 +381,14 @@ static cursor_box_t get_cursor_box(const chord_t& chord,
       .svg_file_pos = svg_pos,
       .system_number = system,
       .bar_number = first_bar_number };
+
+  // sanity check: a cursor box must be at least 1unit high and wide
+  if ((res.left >= res.right) or (res.top >= res.bottom))
+  {
+    throw std::runtime_error("Error cursor box found is invalid.");
+  }
+
+  return res;
 }
 
 // returns a cursor for each chord. chords[ x ] -> res[ x ]

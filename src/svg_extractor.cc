@@ -682,17 +682,31 @@ static note_head_t get_note_head(const pugi::xml_node& node)
     throw std::runtime_error("Error: invalid id found for the note head (missing #origin). Did you runned with the event listener?");
   }
 
+
+  auto left = std::numeric_limits<decltype(note_head_t::left)>::max();
+  auto right = std::numeric_limits<decltype(note_head_t::right)>::min();
+  auto top = std::numeric_limits<decltype(note_head_t::left)>::max();
+  auto bottom = std::numeric_limits<decltype(note_head_t::right)>::min();
+
   const auto& path_node = node.select_single_node(".//path[1]"); // the first path node in current context
-  const auto transform = std::string{ path_node.node().attribute("transform").value() };
-  const auto x_center = get_x_from_translate_str(transform);
-  const auto y_center = get_y_from_translate_str(transform);
+  if (not path_node.node().empty())
+  {
+    const auto transform = std::string{ path_node.node().attribute("transform").value() };
+    const auto x_center = get_x_from_translate_str(transform);
+    const auto y_center = get_y_from_translate_str(transform);
+
+    left = x_center - (x_width / 2);
+    right = x_center + (x_width / 2);
+    top =  y_center - (y_height / 2);
+    bottom = y_center + (y_height / 2);
+  }
 
   return note_head_t{
       .id = id.substr(real_id_pos),
-      .left = x_center - (x_width / 2),
-      .right = x_center + (x_width / 2),
-      .top =  y_center - (y_height / 2),
-      .bottom = y_center + (y_height / 2),
+      .left = left,
+      .right = right,
+      .top =  top,
+      .bottom = bottom,
       .bar_number = bar_number};
 
 }
@@ -703,7 +717,7 @@ std::vector<note_head_t> get_note_heads(const pugi::xml_document& svg_file)
   // these nodes contain a (grand-)child, which is a path node. When the notes
   // are colored, the first child is a g node with a color property. This node
   // will have the path node has child
-  const auto& node_set = svg_file.select_nodes("//g[@id and .//path]");
+  const auto& node_set = svg_file.select_nodes("//g[@id]");
   std::vector<note_head_t> res;
   res.reserve(node_set.size());
 
