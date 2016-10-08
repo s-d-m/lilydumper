@@ -276,59 +276,49 @@ std::vector<note_t> get_notes(const fs::path& filename)
 
   std::vector<note_t> res;
 
-  for (std::string line; std::getline(file, line); )
+  unsigned int current_line = 1;
+  for (std::string line; std::getline(file, line); ++current_line)
   {
     std::istringstream str (line);
     std::string line_type;
-    std::string field1;
+    std::array<std::string, 3> fields;
     uint64_t start_time;
-    std::string field2;
     uint64_t stop_time;
-    std::string field3;
     std::string id_str;
 
     str >> line_type
-	>> field1
+	>> fields[0]
 	>> start_time
-	>> field2
+	>> fields[1]
 	>> stop_time
-	>> field3
+	>> fields[2]
 	>> id_str;
+
+    const decltype(fields) expected_fields = { { "start-time:", "stop-time:", "id:"} };
 
     if (line_type != "note")
     {
-      throw std::runtime_error(std::string{"Error: invalid line found in '"}
-			       + filename.c_str() + "'. Starts by '" + field1
-			       + "' instead of 'note'");
+      throw std::runtime_error(std::string{"Error in file '"} + filename.c_str() + "' at line " + std::to_string(current_line) + "\n"
+			       + "  Line starts by '" +  line_type + "' instead of 'note'");
     }
 
-    if (field1 != "start-time:")
+    for (unsigned int i = 0; i < fields.size(); ++i)
     {
-      throw std::runtime_error(std::string{"Error: invalid fieldname found in '"}
-			       + filename.c_str() + "'. found '" + field1
-			       + "' instead of 'start-time:'");
-    }
-
-    if (field2 != "stop-time:")
-    {
-      throw std::runtime_error(std::string{"Error: invalid fieldname found in '"}
-			       + filename.c_str() + "'. found '" + field2
-			       + "' instead of 'stop-time:'");
-
-    }
-
-    if (field3 != "id:")
-    {
-      throw std::runtime_error(std::string{"Error: invalid fieldname found in '"}
-			       + filename.c_str() + "'. found '" + field3
-			       + "' instead of 'id:'");
-
+      if (fields[i] != expected_fields[i])
+      {
+	throw std::runtime_error(std::string{"Error in file '"} + filename.c_str() + "' at line " + std::to_string(current_line) + "\n"
+				 "  Expected field name: " + expected_fields[i] + "\n"
+				 "  Got: " + fields[i] );
+      }
     }
 
     const auto pitch = std::stoul(get_value_from_field(id_str, "pitch"));
     if ((pitch < pitch_t::la_0) or (pitch > pitch_t::do_8))
     {
-      throw std::logic_error("Error: note is not valid for keyboard");
+      throw std::runtime_error(std::string{"Error in file '"} + filename.c_str() + "' at line " + std::to_string(current_line) + "\n"
+			       "  note with value " + std::to_string(pitch) + " and id " + id_str + " is not valid for keyboard.\n"
+			       "  Should be between la_0 (" + std::to_string(static_cast<int>(pitch_t::la_0)) +
+			       ") and do_8 (" + std::to_string(static_cast<int>(pitch_t::do_8)) + ")");
     }
 
     res.emplace_back(note_t{
