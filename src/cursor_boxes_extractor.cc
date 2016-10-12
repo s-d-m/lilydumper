@@ -48,6 +48,12 @@ std::vector<uint8_t> find_svg_files(const note_t& note,
     throw std::logic_error("output vector should be sorted");
   }
 
+  // sanity check: a note head should appear on at least one svg file
+  if (res.empty())
+  {
+    throw std::runtime_error(std::string{"Error: note head with the following id couldn't be found in any svg file\n  not found id: "} + note.id);
+  }
+
   return res;
 }
 
