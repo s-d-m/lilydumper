@@ -4,7 +4,6 @@
 #include <limits>
 #include <vector>
 #include <fstream>
-#include <pugixml.hpp> // definition of xml document (the svg files to read from)
 #include "utils.hh"
 
 // segments are used only to provide a full skyline.  Since a skyline
@@ -42,15 +41,6 @@ struct system_t
     uint8_t last;
 };
 
-// a staff represents the surface of a staff on the music sheet.
-// it is represented by the coordinates on the music sheet.
-std::vector<staff_t> get_staves(const pugi::xml_document& svg_file);
-
-
-// group staves into system
-std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
-				  const std::vector<staff_t>& staves);
-
 struct note_head_t
 {
     // bounding box of the note in the svg file
@@ -61,9 +51,6 @@ struct note_head_t
     uint32_t bottom;
     uint16_t bar_number;
 };
-
-// returns the bounding boxes + note ids found in the svg file.
-std::vector<note_head_t> get_note_heads(const pugi::xml_document& svg_file);
 
 struct svg_file_t
 {

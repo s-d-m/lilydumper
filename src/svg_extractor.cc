@@ -711,6 +711,7 @@ static note_head_t get_note_head(const pugi::xml_node& node)
 
 }
 
+static
 std::vector<note_head_t> get_note_heads(const pugi::xml_document& svg_file)
 {
   // on the svg file, note heads are covered by a 'g' node with an id field.
