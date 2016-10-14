@@ -85,12 +85,10 @@ struct line_t
     uint32_t y2;
 };
 
+static constexpr const char * const translate_str = "translate(";
 
-// str must be of the form "translate(X_value, Y_value)"
-// both X_value and Y_value must conforms to is_valid_number
-static auto get_x_from_translate_str(const std::string& transform)
+static auto get_separation_pos(const std::string& transform)
 {
-  const auto translate_str = "translate(";
   if (not begins_by(transform.c_str(), translate_str))
   {
     throw std::runtime_error("Error: lines must have a translate transformation");
@@ -104,6 +102,18 @@ static auto get_x_from_translate_str(const std::string& transform)
   {
     throw std::runtime_error("Error: coordinates in translate must be separated by ', '");
   }
+
+  return separation_pos;
+}
+
+// str must be of the form "translate(X_value, Y_value)"
+// both X_value and Y_value must conforms to is_valid_number
+static auto get_x_from_translate_str(const std::string& transform)
+{
+  // x_tr and y_tr are initialised with the part inside translate=(...)
+  // e.g. if transform == "translate(14.2264, 33.0230)"
+  // x_tr will be "14.2264" and y_tr "33.0230"
+  const auto separation_pos = get_separation_pos(transform);
 
   const std::string x_tr (std::begin(transform) + static_cast<int>(std::strlen(translate_str)),
 			  std::begin(transform) + static_cast<int>(separation_pos));
@@ -116,21 +126,7 @@ static auto get_x_from_translate_str(const std::string& transform)
 // both X_value and Y_value must conforms to is_valid_number
 static auto get_y_from_translate_str(const std::string& transform)
 {
-  const auto translate_str = "translate(";
-  if (not begins_by(transform.c_str(), translate_str))
-  {
-    throw std::runtime_error("Error: lines must have a translate transformation");
-  }
-
-  // x_tr and y_tr are initialised with the part inside translate=(...)
-  // e.g. if transform == "translate(14.2264, 33.0230)"
-  // x_tr will be "14.2264" and y_tr "33.0230"
-  const auto separation_pos = transform.find(", ");
-  if (separation_pos == std::string::npos)
-  {
-    throw std::runtime_error("Error: coordinates in translate must be separated by ', '");
-  }
-
+  const auto separation_pos = get_separation_pos(transform);
   const auto parenthesis_pos = transform.find(')', separation_pos);
   if (parenthesis_pos == std::string::npos)
   {
