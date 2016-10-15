@@ -284,15 +284,13 @@ std::vector<note_t> get_notes(const fs::path& filename)
     std::array<std::string, 3> fields;
     uint64_t start_time;
     uint64_t stop_time;
-    std::string id_str;
 
     str >> line_type
 	>> fields[0]
 	>> start_time
 	>> fields[1]
 	>> stop_time
-	>> fields[2]
-	>> id_str;
+	>> fields[2];
 
     const decltype(fields) expected_fields = { { "start-time:", "stop-time:", "id:"} };
 
@@ -310,6 +308,19 @@ std::vector<note_t> get_notes(const fs::path& filename)
 				 "  Expected field name: " + expected_fields[i] + "\n"
 				 "  Got: " + fields[i] );
       }
+    }
+
+    const std::string id_str (line.substr(line.find(expected_fields[2]) + 4)); // + 4 for strlen("id: ")
+    if (id_str.find("#origin=") != 0)
+    {
+      throw std::runtime_error(std::string{"Error in file '"} + filename.c_str() + "' at line " + std::to_string(current_line) + "\n"
+			       " the id does not start by '#origin='");
+    }
+
+    if (id_str.empty() or (id_str.back() != '#'))
+    {
+      throw std::runtime_error(std::string{"Error in file '"} + filename.c_str() + "' at line " + std::to_string(current_line) + "\n"
+			       " the id does not end by '#'");
     }
 
     const auto pitch = std::stoul(get_value_from_field(id_str, "pitch"));
