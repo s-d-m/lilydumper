@@ -21,80 +21,49 @@ bool has_note(const svg_file_t& svg, const std::string& id_str)
 // return the indexes of all svg files containing a note_head with the same id as note.
 // post condition, the output is sorted
 static
-std::vector<uint8_t> find_svg_files(const note_t& note,
-				    const std::vector<svg_file_t>& svg_files)
+uint8_t find_svg_pos(const note_t& note,  const std::vector<svg_file_t>& svg_files)
 {
-  std::vector<uint8_t> res;
+  std::vector<uint8_t> candidates;
 
   const auto nb_svg = svg_files.size();
-  if (nb_svg > std::numeric_limits<decltype(res)::value_type>::max())
+  if (nb_svg > std::numeric_limits<uint8_t>::max())
   {
     throw std::runtime_error(std::string{"Error, this program can't handle more than "}
                              + std::to_string(static_cast<int>(std::numeric_limits<uint8_t>::max())) +
                              " svg files per music sheet");
   }
 
-  for (decltype(res)::value_type i = 0; i < static_cast<decltype(i)>(nb_svg); ++i)
+  for (auto i = decltype(nb_svg){0}; i < nb_svg; ++i)
   {
     if (has_note(svg_files[i], note.id))
     {
-      res.push_back(i);
+      candidates.push_back(static_cast<uint8_t>(i));
     }
   }
 
-  // sanity check
-  if (not std::is_sorted(res.cbegin(), res.cend()))
-  {
-    throw std::logic_error("output vector should be sorted");
-  }
-
   // sanity check: a note head should appear on at least one svg file
-  if (res.empty())
+  if (candidates.empty())
   {
     throw std::runtime_error(std::string{"Error: note head with the following id couldn't be found in any svg file\n  not found id: "} + note.id);
   }
 
-  return res;
-}
-
-
-// return the index of all svg files containing all the note
-// E.g. if the notes id are [ "foo", "bar", "baz" ] and
-// the function returns [ 0, 2, 3 ], it means that svg_files[0] contains
-// a note head with if "foo", another one with id "bar", and and yet
-// another one with id "baz". Same goes for svg_files[2], and svg_files[3]
-//
-// if svg_files[1] has a note with id "foo", and "bar", but is missing "baz"
-// 1 won't appear in the results
-static
-std::vector<uint8_t> find_svg_files(const std::vector<note_t>& notes,
-				    const std::vector<svg_file_t>& svg_files)
-{
-  if (notes.empty() or svg_files.empty())
+  // sanity check: a note must appear in at most one svg file
+  if (candidates.size() > 1)
   {
-    throw std::logic_error("Error: invalid parameters");
+    std::string err_msg = "Error: note with the following ID\n";
+    err_msg += "  " + note.id + "\n";
+    err_msg += "appear in in the following files (it should appear in only one file)\n";
+    for (const auto& index : candidates)
+    {
+      err_msg += "  " + svg_files[index].filename.string() + "\n";
+    }
+    err_msg += maybe_has_repeat_unfold_msg;
+    throw std::runtime_error(err_msg);
   }
 
-  std::vector<uint8_t> res;
-
-  res = find_svg_files(notes[0], svg_files);
-
-  const auto nb_notes = notes.size();
-  for (unsigned int i = 1; i < static_cast<decltype(i)>(nb_notes); ++i)
-  {
-    const auto current_svg = find_svg_files(notes[i], svg_files);
-
-    // tmp = res intersection current_svg
-    decltype(res) tmp;
-    std::set_intersection(res.cbegin(), res.cend(),
-			  current_svg.cbegin(), current_svg.cend(),
-			  std::back_inserter(tmp));
-
-    res = std::move(tmp); // res <- tmp
-  }
-
-  return res;
+  return candidates[0];;
 }
+
 
 
 // return the index of the file containing all the notes
@@ -129,39 +98,25 @@ static uint8_t find_svg_pos(const std::vector<note_t>& notes,
     throw std::runtime_error("Error: all notes of a chord must start at the same time");
   }
 
-  const auto indexes = find_svg_files(notes, svg_files);
+  const auto first_note_pos = find_svg_pos(notes[0], svg_files);
 
-  // sanity check: post-condition, the notes must all appear in at least one svg file
-  if (indexes.empty())
+  // sanity check: all notes in a chord must appear on the same page
+  const auto nb_notes = notes.size();
+  for (auto i = decltype(first_note_pos){1}; i < static_cast<decltype(i)>(nb_notes); ++i)
   {
-    std::string err_msg = "Error: the notes with the following ids could not be found all in the same svg file";
-    for (const auto& note : notes)
+    const auto cur_svg_pos = find_svg_pos(notes[i], svg_files);
+    if (cur_svg_pos != first_note_pos)
     {
-      err_msg += "\n  " + note.id;
+      throw std::runtime_error(std::string{"Error: the notes with the following IDs\n"
+	    "  "} + notes[0].id + "\n"
+	    "  " + notes[i].id + "\n"
+	"both appears in a chord said to be played at t=" + std::to_string(start_time) + " but the appear in two different svg files."
+	    "The first note appear in\n  " + svg_files[first_note_pos].filename.string() + "\n"
+	"The second note appear in\n  " + svg_files[i].filename.string() + "\n\n" + maybe_has_repeat_unfold_msg);
     }
-    throw std::runtime_error(err_msg);
   }
 
-  // sanity check: post-condition, a note with a specific id must
-  // appear only once in the whole music sheet, therefore in only one
-  // svg file
-  if (indexes.size() != 1)
-  {
-    std::string err_msg = "Error: notes with the following IDs\n";
-    for (const auto& note : notes)
-    {
-      err_msg += "  " + note.id + "\n";
-    }
-    err_msg += "appears in in the following files (they should appear in only one file)\n";
-    for (const auto& index : indexes)
-    {
-      err_msg += "  " + svg_files[index].filename.string() + "\n";
-    }
-    err_msg += maybe_has_repeat_unfold_msg;
-    throw std::runtime_error(err_msg);
-  }
-
-  return indexes[0];
+  return first_note_pos;
 }
 
 // return the note head in the svg file with that specific id
