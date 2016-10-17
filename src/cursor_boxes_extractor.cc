@@ -323,6 +323,20 @@ static cursor_box_t get_cursor_box(const chord_t& chord,
     }
   }
 
+
+  // sanity check: a cursor box must be at least 1unit high and wide
+  if ((min_left >= max_right) or (min_top >= max_bottom))
+  {
+    std::string err_msg = "Error: the chord made of following note heads\n";
+    for (const auto& note : notes)
+    {
+      err_msg += note.id + "\n";
+    }
+    err_msg += "has an invalid cursor box";
+    throw std::runtime_error(err_msg);
+  }
+
+
   const auto system = find_system_with_point(svg_file,
 					     (min_left + max_right) / 2,
 					     (min_top + max_bottom) / 2);
@@ -342,12 +356,6 @@ static cursor_box_t get_cursor_box(const chord_t& chord,
       .svg_file_pos = svg_pos,
       .system_number = system,
       .bar_number = first_bar_number };
-
-  // sanity check: a cursor box must be at least 1unit high and wide
-  if ((res.left >= res.right) or (res.top >= res.bottom))
-  {
-    throw std::runtime_error("Error cursor box found is invalid.");
-  }
 
   return res;
 }
