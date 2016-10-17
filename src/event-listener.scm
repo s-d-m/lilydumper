@@ -178,6 +178,9 @@
 	 (set! seen-staff-numbers (cons staff-number seen-staff-numbers)))))
 
 
+#(define (is-note-transparent grob)
+   (ly:grob-property grob 'transparent #f))
+
 #(define (on-note-head engraver grob source-engraver)
    (let* ((context  (ly:translator-context source-engraver))
 	  (event (event-cause grob))
@@ -188,6 +191,7 @@
 	  (origin (ly:input-both-locations
 		   (ly:event-property event 'origin)))
 	  (layout (ly:grob-layout grob))
+	  (is-transparent (is-note-transparent grob))
 	  (music (ly:event-property event 'music-cause))
 	  (articulations (ly:music-property music 'articulations))
 	  (has-tie-attached (any (lambda (x) (is-tie-articulation? x)) articulations))
@@ -207,10 +211,13 @@
 			    (car (cddddr origin))))
 	  ; grace notes have a negative numerator
 	  (is-grace-note (is-grace-note-moment moment))
-	  (id (ly:format "#origin=~a#pitch=~a#has-tie-attached=~a#staff-number=~a#duration-string=~a#duration=~a#is-grace-note=~a#"
+	  (id (ly:format "#origin=~a#pitch=~a#has-tie-attached=~a#is-transparent=~a#staff-number=~a#duration-string=~a#duration=~a#is-grace-note=~a#"
 			 formated-origin
 			 pitch
 			 (if has-tie-attached
+			     "yes"
+			     "no")
+			 (if is-transparent
 			     "yes"
 			     "no")
 			 staff-number

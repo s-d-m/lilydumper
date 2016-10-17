@@ -332,14 +332,21 @@ std::vector<note_t> get_notes(const fs::path& filename)
 			       ") and do_8 (" + std::to_string(static_cast<int>(pitch_t::do_8)) + ")");
     }
 
-    res.emplace_back(note_t{
-	.start_time = start_time,
-	.stop_time = stop_time,
-	.pitch = static_cast<decltype(note_t::pitch)>(pitch),
-	.is_played = true, // set to true for now. second pass will set this value based on ties
-	.staff_number = static_cast<decltype(note_t::staff_number)>(std::stoul(get_value_from_field(id_str, "staff-number"))),
-	.id = std::move(id_str) }
-      );
+    const auto is_transparent_note = [] (const std::string& id) {
+      return id.find("#is-transparent=yes#") != std::string::npos;
+    };
+
+    if (not is_transparent_note(id_str))
+    {
+      res.emplace_back(note_t{
+	  .start_time = start_time,
+	    .stop_time = stop_time,
+	    .pitch = static_cast<decltype(note_t::pitch)>(pitch),
+	    .is_played = true, // set to true for now. second pass will set this value based on ties
+	    .staff_number = static_cast<decltype(note_t::staff_number)>(std::stoul(get_value_from_field(id_str, "staff-number"))),
+	    .id = std::move(id_str) }
+	);
+    }
   }
 
   fix_grace_notes(res);
