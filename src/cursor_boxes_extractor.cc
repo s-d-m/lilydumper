@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <string>
+#include <fstream>
 #include "cursor_boxes_extractor.hh"
 
 static constexpr const char * const maybe_has_repeat_unfold_msg =
@@ -207,6 +208,32 @@ static std::vector<uint8_t> find_system_with_point(const svg_file_t& svg_file,
 }
 
 
+static fs::path make_svg_debug_no_system_for_box(const svg_file_t& svg_file,
+						 uint32_t x,
+						 uint32_t y)
+{
+  auto dst_file = svg_file.filename;
+  dst_file.replace_extension("with_point_not_fitting_in_system");
+
+  std::ifstream file (svg_file.filename.c_str());
+  std::ofstream output (dst_file.c_str());
+
+  for (std::string line; std::getline(file, line); )
+  {
+    if (line.find("</svg>") != std::string::npos)
+    {
+      const auto to_dotted_str = [] (const auto value) {
+	return std::to_string(value / 10000) + "." + std::to_string(value % 10000);
+      };
+
+      output << "   <circle cx=\"" << to_dotted_str(x) << "\" cy=\"" << to_dotted_str(y)
+	     << "\" r=\"0.5\" stroke=\"green\" stroke-width=\"0.1\" fill=\"yellow\" />\n";
+    }
+    output << line << "\n";
+  }
+  return dst_file;
+}
+
 static uint8_t find_system_with_point(const svg_file_t& svg_file,
 				      uint32_t x,
 				      uint32_t y)
@@ -248,7 +275,9 @@ static uint8_t find_system_with_point(const svg_file_t& svg_file,
   {
     if (nb_candidates == 0)
     {
-      throw std::runtime_error("Error, unable to find a system containing a cursor box");
+      const auto debug_svg_file = make_svg_debug_no_system_for_box(svg_file, x, y);
+      throw std::runtime_error(std::string{"Error, unable to find a system containing a cursor box\n"} +
+			       "The file \n  " + debug_svg_file.string() + "\ncan be better visualised in file");
     }
     else
     {
