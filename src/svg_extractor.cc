@@ -692,7 +692,10 @@ static note_head_t get_note_head(const pugi::xml_node& node)
     const auto y_center = get_y_from_translate_str(transform);
 
     left = x_center - (x_width / 2);
-    right = x_center + (x_width / 2);
+    right = x_center + ((x_width * 3) / 2); // lilypond put the note head center at the left most point.
+					    // therefore by chosing setting offseting left to -x_width / 2 and
+					    // settig right to +1/2 with we are creating a box centered on the
+					    // note head, with a bit of margin on both sides.
     top =  y_center - (y_height / 2);
     bottom = y_center + (y_height / 2);
   }
