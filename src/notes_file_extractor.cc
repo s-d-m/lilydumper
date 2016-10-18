@@ -265,8 +265,7 @@ void fix_overlapping_key_presses(std::vector<note_t>& notes)
 
 }
 
-
-std::vector<note_t> get_notes(const fs::path& filename)
+std::vector<note_t> get_unprocessed_notes(const fs::path& filename)
 {
   std::ifstream file (filename, std::ios::in);
   if (! file.is_open() )
@@ -349,12 +348,19 @@ std::vector<note_t> get_notes(const fs::path& filename)
     }
   }
 
+  return res;
+}
+
+std::vector<note_t> get_processed_notes(const std::vector<note_t>& unprocessed_notes)
+{
+  auto res = unprocessed_notes;
+
   fix_grace_notes(res);
   extend_tied_notes(res);
   fix_overlapping_key_presses(res);
 
   // sanity check: post condition the array must be sorted by time
-    // res is not sorted now due to the current handling of grace notes.
+  // res is not sorted now due to the current handling of grace notes.
   if (not std::is_sorted(std::begin(res), std::end(res), [] (const auto& a, const auto& b) {
 	return a.start_time < b.start_time;
       }))

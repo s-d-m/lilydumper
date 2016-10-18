@@ -122,7 +122,8 @@ static uint8_t find_svg_pos(const std::vector<note_t>& notes,
 
 // return the note head in the svg file with that specific id
 static note_head_t get_note_head(const std::string& id,
-				 const svg_file_t svg_file)
+				 const svg_file_t svg_file,
+				 const std::vector<note_t>& unprocessed_notes)
 {
   // sanity check: precondition there must be one, and only note
   // note_head with that specific id
@@ -143,9 +144,65 @@ static note_head_t get_note_head(const std::string& id,
     }
   }
 
-  return *std::find_if(svg_file.note_heads.cbegin(),
-		       svg_file.note_heads.cend(),
-		       [&] (const auto& elt) { return elt.id == id; });
+  auto candidate = *std::find_if(svg_file.note_heads.cbegin(),
+				 svg_file.note_heads.cend(),
+				 [&] (const auto& elt) { return elt.id == id; });
+
+  // in some cases, it is possible that a note head does not have any path in the svg file because another
+  // note head played at the same time at the same pitch is used to represent the note. Therefore, if this
+  // notehead has invalid bouding box, try to find another one which is played at the same time, with the
+  // same pitch, that appears in the same svg file, and use its bounding box. That one (the one with the
+  // bounding box) might have been filtered out by the process removing duplicated notes, or notes played for
+  // 0ms.
+  if (candidate.left >= candidate.right)
+  {
+    if (std::find_if(unprocessed_notes.cbegin(), unprocessed_notes.cend(),
+		     [&] (const auto& elt) { return elt.id == id; }) == unprocessed_notes.cend())
+    {
+      throw std::runtime_error("Error, processing a note whose id is not in the unfiltered list");
+    }
+
+    const auto candidate_note = *std::find_if(unprocessed_notes.cbegin(), unprocessed_notes.cend(),
+					      [&] (const auto& elt) { return elt.id == id; });
+
+
+    std::vector<note_head_t> other_candidates;
+    for (const auto& note : unprocessed_notes)
+    {
+      if ((note.start_time == candidate_note.start_time) and
+	  (note.pitch == candidate_note.pitch) and
+	  (note.id != candidate_note.id) and
+	  (std::find_if(svg_file.note_heads.cbegin(), svg_file.note_heads.cend(),
+			[&] (const auto& elt) { return elt.id == note.id; }) != svg_file.note_heads.cend()))
+      {
+	const auto nb_appeareance = std::count_if(svg_file.note_heads.cbegin(),
+						   svg_file.note_heads.cend(),
+						   [&] (const auto& elt) { return elt.id == note.id; });
+	if (nb_appeareance > 1)
+	{
+	  throw std::runtime_error(std::string{"Error: a note head with id "} + note.id + " has been found several times (" +
+				   std::to_string(nb_appeareance) + ") in the svg file " + svg_file.filename.c_str() + "\n" +
+				   maybe_has_repeat_unfold_msg);
+	}
+
+	const auto potential_candidate = *std::find_if(svg_file.note_heads.cbegin(), svg_file.note_heads.cend(),
+						       [&] (const auto& elt) { return elt.id == note.id; });
+
+	if ((potential_candidate.left < potential_candidate.right) and
+	    (potential_candidate.top < potential_candidate.bottom))
+	{
+	  other_candidates.push_back(potential_candidate);
+	}
+      }
+    }
+
+    if (not other_candidates.empty() > 0)
+    {
+      candidate = other_candidates[0];
+    }
+  }
+
+  return candidate;
 }
 
 
@@ -289,7 +346,8 @@ static uint8_t find_system_with_point(const svg_file_t& svg_file,
 }
 
 static cursor_box_t get_cursor_box(const chord_t& chord,
-				   const std::vector<svg_file_t>& svg_files)
+				   const std::vector<svg_file_t>& svg_files,
+				   const std::vector<note_t>& unprocessed_notes)
 {
   const auto& notes = chord.notes;
 
@@ -317,12 +375,12 @@ static cursor_box_t get_cursor_box(const chord_t& chord,
   auto min_top = std::numeric_limits<decltype(cursor_box_t::left)>::max();
   auto max_bottom = std::numeric_limits<decltype(cursor_box_t::right)>::min();
 
-  const auto first_note_head = get_note_head(notes[0].id, svg_file);
+  const auto first_note_head = get_note_head(notes[0].id, svg_file, unprocessed_notes);
   const auto first_bar_number = first_note_head.bar_number;
 
   for (const auto& note : notes)
   {
-    const auto head = get_note_head(note.id, svg_file);
+    const auto head = get_note_head(note.id, svg_file, unprocessed_notes);
     min_left = std::min(min_left, head.left);
     max_right = std::max(max_right, head.right);
     min_top = std::min(min_top, head.top);
@@ -391,13 +449,14 @@ static cursor_box_t get_cursor_box(const chord_t& chord,
 
 // returns a cursor for each chord. chords[ x ] -> res[ x ]
 std::vector<cursor_box_t> get_cursor_boxes(const std::vector<chord_t>& chords,
-					   const std::vector<svg_file_t>& svg_files)
+					   const std::vector<svg_file_t>& svg_files,
+					   const std::vector<note_t>& unprocessed_notes)
 {
   std::vector<cursor_box_t> res;
 
   for (const auto& chord : chords)
   {
-    res.emplace_back( get_cursor_box(chord, svg_files) );
+    res.emplace_back( get_cursor_box(chord, svg_files, unprocessed_notes) );
   }
 
   return res;

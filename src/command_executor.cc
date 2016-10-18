@@ -450,8 +450,8 @@ void generate_bin_file(const std::string& lilypond_command,
     }
   }
 
-
-  const auto notes = get_notes(notes_file);
+  const auto unprocessed_notes = get_unprocessed_notes(notes_file);
+  const auto notes = get_processed_notes(unprocessed_notes);
   const auto staffs_to_instrument = get_staff_instr_mapping(staffs_num_file, output_debug_file);
 
   std::vector<svg_file_t> sheets;
@@ -462,7 +462,7 @@ void generate_bin_file(const std::string& lilypond_command,
 
   const auto keyboard_events = get_key_events(notes);
   const auto chords = get_chords(notes);
-  const auto cursor_boxes = get_cursor_boxes(chords, sheets);
+  const auto cursor_boxes = get_cursor_boxes(chords, sheets, unprocessed_notes);
   const auto bar_num_events = get_bar_num_events(cursor_boxes);
 
   save_to_file(output_bin_file,
