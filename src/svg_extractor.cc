@@ -217,43 +217,42 @@ std::vector<rect_t> get_staves_surface(const pugi::xml_document& svg_file)
       return (a.y1 < b.y1) or ((a.y1 == b.y1) and (a.x1 < b.x1));
     });
 
-  unsigned int i = 0;
   const auto nb_elt = lines.size();
-  while (i + 4 < nb_elt)
+  for (unsigned i = 0; i < nb_elt; ++i)
   {
-    const auto dist_01 = (lines[i + 1].y1 - lines[  i  ].y1);
-    const auto dist_12 = (lines[i + 2].y1 - lines[i + 1].y1);
-    const auto dist_23 = (lines[i + 3].y1 - lines[i + 2].y1);
-    const auto dist_34 = (lines[i + 4].y1 - lines[i + 3].y1);
-
-    if ((lines[i].x1     == lines[i + 1].x1) and
-	(lines[i].x2     == lines[i + 1].x2) and
-
-	(lines[i + 1].x1 == lines[i + 2].x1) and
-	(lines[i + 1].x2 == lines[i + 2].x2) and
-
-	(lines[i + 2].x1 == lines[i + 3].x1) and
-	(lines[i + 2].x2 == lines[i + 3].x2) and
-
-	(lines[i + 3].x1 == lines[i + 4].x1) and
-	(lines[i + 3].x2 == lines[i + 4].x2) and
-
-	(dist_01 == dist_12) and
-	(dist_12 == dist_23) and
-	(dist_23 == dist_34) and
-	(dist_01 != 0))
+    // find the next four lines that has the same x1 and x2 as current line
+    std::array<line_t, 4> next_lines;
+    unsigned nb_found_next = 0;
+    for (unsigned int j = i + 1; (j < nb_elt) and (nb_found_next < next_lines.size()); ++j)
     {
-      staves.emplace_back(rect_t{
-	  .top    = lines[i].y1,
-	  .bottom = lines[i + 4].y1,
-	  .left   = lines[i + 4].x1,
-	  .right  = lines[i + 4].x2 });
-
-      i += 5;
+      if ((lines[j].x1 == lines[i].x1) and (lines[j].x2 == lines[i].x2))
+      {
+	next_lines[nb_found_next] = lines[j];
+	++nb_found_next;
+      }
     }
-    else
+
+    // if there was enough lines fitting the x1/x2 criteria
+    if (nb_found_next == next_lines.size())
     {
-      i++;
+      // are all lines equi-distants?
+      bool equi_distant = true;
+      for (unsigned int j = 0; j + 1 < next_lines.size(); ++j)
+      {
+	if ((next_lines[j + 1].y1 - next_lines[j].y1) != (next_lines[0].y1 - lines[i].y1))
+	{
+	  equi_distant = false;
+	}
+      }
+
+      if (equi_distant)
+      {
+	staves.emplace_back(rect_t{
+	    .top    = lines[i].y1,
+	      .bottom = next_lines[ next_lines.size() - 1].y1,
+	      .left   = lines[i].x1,
+	      .right  = lines[i].x2 });
+      }
     }
   }
 
