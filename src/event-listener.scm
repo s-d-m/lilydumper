@@ -211,7 +211,7 @@
 			    (car (cddddr origin))))
 	  ; grace notes have a negative numerator
 	  (is-grace-note (is-grace-note-moment moment))
-	  (id (ly:format "#origin=~a#pitch=~a#has-tie-attached=~a#is-transparent=~a#staff-number=~a#duration-string=~a#duration=~a#is-grace-note=~a#"
+	  (id (ly:format "#origin=~a#pitch=~a#has-tie-attached=~a#is-transparent=~a#duration-string=~a#duration=~a#is-grace-note=~a#"
 			 formated-origin
 			 pitch
 			 (if has-tie-attached
@@ -220,7 +220,6 @@
 			 (if is-transparent
 			     "yes"
 			     "no")
-			 staff-number
 			 duration-string
 			 duration
 			 (if is-grace-note
@@ -238,9 +237,10 @@
 				       id)))
 
 	(output-to-notes-file
-	 (format "note start-time: ~d stop-time: ~d id: ~a"
+	 (format "note start-time: ~d stop-time: ~d staff-number: ~d id: ~a"
 		 (round (moment->real-time-nanoseconds start-moment))
 		 (round (moment->real-time-nanoseconds stop-moment))
+		 staff-number
 		 id))
 	(save-staff-number-instrument-name staff-number context)
 	(ly:grob-set-property! grob 'id id-with-bar-number)

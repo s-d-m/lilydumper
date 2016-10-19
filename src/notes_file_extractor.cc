@@ -39,15 +39,14 @@ static void extend_tied_notes(std::vector<note_t>& notes)
       // finishes. Since several notes can be "chained" by ties, e.g. like
       // do4~do~do, the extension time must find the latest one of the chain.
       const auto pitch = with_tie_note->pitch;
-      const auto staff_number = std::string{"#staff-number="}
-				+ get_value_from_field(with_tie_note->id, "staff-number") + "#";
+      const auto staff_number = with_tie_note->staff_number;
 
       bool chain_finished;
       do
       {
 	const auto when_tie_finish = with_tie_note->stop_time;
 	const auto next_note = std::find_if(std::next(with_tie_note), end, [&] (const auto& note) {
-	    return (note.pitch == pitch) and (note.id.find(staff_number) != std::string::npos)
+	    return (note.pitch == pitch) and (note.staff_number == staff_number)
 	            and (note.start_time == when_tie_finish);
 	  });
 
@@ -280,18 +279,21 @@ std::vector<note_t> get_unprocessed_notes(const fs::path& filename)
   {
     std::istringstream str (line);
     std::string line_type;
-    std::array<std::string, 3> fields;
+    std::array<std::string, 4> fields;
     uint64_t start_time;
     uint64_t stop_time;
+    uint64_t staff_number;
 
     str >> line_type
 	>> fields[0]
 	>> start_time
 	>> fields[1]
 	>> stop_time
-	>> fields[2];
+	>> fields[2]
+	>> staff_number
+	>> fields[3];
 
-    const decltype(fields) expected_fields = { { "start-time:", "stop-time:", "id:"} };
+    const decltype(fields) expected_fields = { { "start-time:", "stop-time:", "staff-number:", "id:"} };
 
     if (line_type != "note")
     {
@@ -309,7 +311,7 @@ std::vector<note_t> get_unprocessed_notes(const fs::path& filename)
       }
     }
 
-    const std::string id_str (line.substr(line.find(expected_fields[2]) + 4)); // + 4 for strlen("id: ")
+    const std::string id_str (line.substr(line.find(expected_fields[expected_fields.size() - 1]) + 4)); // + 4 for strlen("id: ")
     if (id_str.find("#origin=") != 0)
     {
       throw std::runtime_error(std::string{"Error in file '"} + filename.c_str() + "' at line " + std::to_string(current_line) + "\n"
@@ -342,7 +344,7 @@ std::vector<note_t> get_unprocessed_notes(const fs::path& filename)
 	    .stop_time = stop_time,
 	    .pitch = static_cast<decltype(note_t::pitch)>(pitch),
 	    .is_played = true, // set to true for now. second pass will set this value based on ties
-	    .staff_number = static_cast<decltype(note_t::staff_number)>(std::stoul(get_value_from_field(id_str, "staff-number"))),
+	    .staff_number = static_cast<decltype(note_t::staff_number)>(staff_number),
 	    .id = std::move(id_str) }
 	);
     }
