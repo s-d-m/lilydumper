@@ -190,6 +190,20 @@ std::string get_file_content(const fs::path& filename, const std::string& prepen
 }
 
 static
+fs::path get_directory_of_file(const fs::path& filepath)
+{
+  if (not filepath.has_filename())
+  {
+    throw std::runtime_error(std::string{"Error: invalid parameter. A path to a file was expected. Got ["} + filepath.string() + "]");
+  }
+
+  auto res = filepath;
+  res.remove_filename();
+  res = fs::absolute(res);
+  return res;
+}
+
+static
 std::tuple<fs::path, fs::path> generate_note_and_staff_num_files(const std::string& lilypond_command,
 								 const fs::path& input_lily_file,
 								 const fs::path& output_tmp_directory,
@@ -202,6 +216,7 @@ std::tuple<fs::path, fs::path> generate_note_and_staff_num_files(const std::stri
   const fs::path out_patched_file = output_tmp_directory / PATCHED_FILE_NAME;
 
   const fs::path lily_filename = input_lily_file.filename();
+  const fs::path input_lily_dir = get_directory_of_file(input_lily_file);
   const auto out_lily_with_ext = [&] (const char* extension) {
     auto res = output_tmp_directory / lily_filename;
     res.replace_extension(extension);
@@ -233,6 +248,7 @@ std::tuple<fs::path, fs::path> generate_note_and_staff_num_files(const std::stri
   const std::vector<std::string> command_line {
     { lilypond_command,
 	std::string{"-dlog-file=\""} + log_file.string() + "\"",
+	std::string{"--include="} + input_lily_dir.c_str(),
 	"-dno-point-and-click",
 	std::string{"--output="} + output_tmp_directory.c_str(),
 	"--evaluate=(ly:add-option 'note-file-output #f  \"Output for the note file. Default is filename with .notes extension instead of .ly\")",
@@ -357,9 +373,11 @@ std::vector<fs::path> generate_svg_files_without_skylines(const std::string& lil
 							  const fs::path& output_tmp_directory,
 							  std::ofstream& output_debug_file)
 {
+  const fs::path input_lily_dir = get_directory_of_file(input_lily_file);
   const std::vector<std::string> command_line {
     { lilypond_command,
 	std::string{"-dlog-file=\""} + (output_tmp_directory / std::string{"svg_without_skylines_generation"}).c_str() + "\"",
+      std::string{"--include="} + input_lily_dir.c_str(),
       "-dno-point-and-click",
       std::string{"--output="} + output_tmp_directory.c_str(),
       "-dbackend=svg",
@@ -382,9 +400,11 @@ std::vector<fs::path> generate_svg_files_with_skylines(const std::string& lilypo
 
   copy_event_listener_to(dst_event_listener_file);
 
+  const fs::path input_lily_dir = get_directory_of_file(input_lily_file);
   const std::vector<std::string> command_line {
     { lilypond_command,
       std::string{"-dlog-file=\""} + (output_tmp_directory / std::string{"svg_with_skylines_generation"}).c_str() + "\"",
+      std::string{"--include="} + input_lily_dir.c_str(),
       "-dno-point-and-click",
       std::string{"--output="} + output_tmp_directory.c_str(),
 	"--evaluate=(ly:add-option 'disable-notes-output #f \"prevent the generation of the notes file.\")",
