@@ -342,7 +342,21 @@ std::vector<fs::path> generate_svg_files(const std::vector<std::string>& command
   }
 
   std::sort(std::begin(svg_files), std::end(svg_files), [] (const auto& a, const auto& b) {
-      return fs::last_write_time(a) < fs::last_write_time(b);
+      const auto get_page_number = [] (const auto& elt) {
+	const auto path = elt.string();
+	const std::string page_str = "-page-";
+	const auto page_pos = path.rfind(page_str);
+	if (page_pos == std::string::npos)
+	{
+	  return 1; // couldn't find the string "-page-" in filename means lilypond generated only one file,
+		    // so page number 1
+	}
+
+	const auto page_num_pos = page_pos + page_str.length();
+	return std::stoi(path.substr(page_num_pos));
+      };
+
+      return get_page_number(a) < get_page_number(b);
     });
 
   output_debug_file << "Found " << nb_svgs << " svgs files with" << (with_skyline ? "" : "out") << " skylines:\n";
