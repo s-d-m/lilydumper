@@ -237,7 +237,7 @@
 				       id)))
 
 	(output-to-notes-file
-	 (format "note start-time: ~d stop-time: ~d staff-number: ~d id: ~a"
+	 (format #f "note start-time: ~d stop-time: ~d staff-number: ~d id: ~a"
 		 (round (moment->real-time-nanoseconds start-moment))
 		 (round (moment->real-time-nanoseconds stop-moment))
 		 staff-number
@@ -259,7 +259,7 @@
 					 (x-width (interval-length x-interval))
 					 (y-interval (ly:stencil-extent note Y))
 					 (y-height (interval-length y-interval))
-					 (new-values (format "#x-width=~1,4f#y-height=~1,4f" x-width y-height))
+					 (new-values (format #f "#x-width=~1,4f#y-height=~1,4f" x-width y-height))
 					 (new-id (string-append new-values former-id)))
 				    (ly:grob-set-property! grob 'id new-id)
 				    note))
