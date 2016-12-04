@@ -167,16 +167,21 @@ static void fix_grace_notes(std::vector<note_t>& notes)
       // between the two normal ones. Each grace note will last the
       // same amount of time and while all start after previous_normal
       // and last before next_normal
+      // However, the length of a grace note can't be bigger than grace_note_length
+      // If the duration between the two normal notes is too big that the grace notes
+      // will have to be limited to grace_note_length, then the grace notes will be
+      // placed at the end of the interval, that is closer to the next normal note.
 
       const auto previous_normal = grace_pos - 1; // we are sure this is valid as we started grace_pos at current_normal_note + 1
       const auto nb_grace_notes = next_normal - grace_pos;
       const auto nb_slots = nb_grace_notes + 1;
       const auto diff_time = notes[next_normal].start_time - notes[previous_normal].start_time;
+      const auto grace_time = std::min(grace_note_length, (diff_time / nb_slots));
 
       for (auto i = decltype(nb_grace_notes){ 0 }; i < nb_grace_notes; ++i)
       {
-	notes[grace_pos + i].start_time = notes[previous_normal].start_time + ((diff_time * (i + 1)) / nb_slots);
-	notes[grace_pos + i].stop_time = notes[previous_normal].start_time + ((diff_time * (i + 2)) / nb_slots);
+	notes[grace_pos + i].start_time = notes[next_normal].start_time - ((nb_grace_notes - i) * grace_time);
+	notes[grace_pos + i].stop_time = notes[next_normal].start_time - ((nb_grace_notes - i - 1) * grace_time);
       }
     }
 
