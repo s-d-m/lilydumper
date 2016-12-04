@@ -89,9 +89,9 @@ static void fix_grace_notes(std::vector<note_t>& notes)
     first_normal_note++;
   }
 
-  // let's say all grace note from the very beginning will last 1/8 of a second.
-  // totally arbitrary value!
-  constexpr auto grace_note_length = decltype(note_t::start_time){ 125000000 }; // unit is nanoseconds
+  // grace note length is (29 / 128) * (60 / 100) seconds to match
+  // midi files produced by lilypond -> (29 * 60 * 1'000'000'000) / (128 * 100)
+  constexpr auto grace_note_length = decltype(note_t::start_time){ 135937500 }; // unit is nanoseconds
 
   // first_normal_note is either out of range (extreme case of a music
   // sheet containing only grace notes), or points to the first normal note.
