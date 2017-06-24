@@ -128,9 +128,8 @@ else
 	-Wunsuffixed-float-constants \
 #	-Wpadded \
 
-  CXX=g++-6
 # for g++ 4.9
-  CXX_WARN_FLAGS ?= \
+  CXX_WARN_FLAGS_FOR_GCC_4.9 ?= \
 	-Werror \
 	-Wno-pedantic \
 	-Wpointer-arith \
@@ -186,7 +185,8 @@ else
 #	-Wpadded \
 
 # for G++ 5.1/5.2
-  CXX_WARN_FLAGS += \
+  CXX_WARN_FLAGS_FOR_GCC_5 := \
+	${CXX_WARN_FLAGS_FOR_GCC_4.9} \
 	-Wswitch-bool \
 	-Wlogical-not-parentheses \
 	-Wsizeof-array-argument \
@@ -196,8 +196,8 @@ else
 	-Wsuggest-final-methods \
 	-Wsuggest-override
 
-# For g++ 6
-  CXX_WARN_FLAGS += \
+  CXX_WARN_FLAGS_FOR_GCC_6 := \
+	${CXX_WARN_FLAGS_FOR_GCC_5} \
 	-Wnull-dereference -fdelete-null-pointer-checks \
 	-Wduplicated-cond \
 	-Wplacement-new=2 \
@@ -205,8 +205,7 @@ else
 	-fsized-deallocation \
 	-Wsized-deallocation \
 
-# For g++ 7
-  CXX_WARN_FLAGS += \
+  CXX_WARN_FLAGS_FOR_GCC_7 := \
 	${CXX_WARN_FLAGS_FOR_GCC_6} \
 	-Wduplicated-branches \
 	-Wrestrict \
@@ -220,6 +219,24 @@ else
 	-Wstringop-overflow=4 \
 	-Waligned-new
 #	-Walloc-size-larger-than=1073741824 \ # Allocating more than 1GiB is likely a bug
+
+  GCC_VERSION := $(shell "${CXX}" -v 2>&1 | gawk '($$1 == "gcc") && ($$2 == "version") { sub(/\..*/, "", $$3) ; print $$3 ; exit }' )
+
+  ifeq ($(shell [ "${GCC_VERSION}" -ge 7 ] && echo $$?),0)
+	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_7}
+  endif
+
+  ifeq (${GCC_VERSION},6)
+	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_6}
+  endif
+
+  ifeq (${GCC_VERSION},5)
+	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_5}
+  endif
+
+  ifeq (${CXX_WARN_FLAGS},)
+	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_4.9}
+  endif
 
 
 # sanitizers on g++5.2
