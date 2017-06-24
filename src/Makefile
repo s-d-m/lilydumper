@@ -205,6 +205,22 @@ else
 	-fsized-deallocation \
 	-Wsized-deallocation \
 
+# For g++ 7
+  CXX_WARN_FLAGS += \
+	${CXX_WARN_FLAGS_FOR_GCC_6} \
+	-Wduplicated-branches \
+	-Wrestrict \
+	-Wregister \
+	-Wdangling-else \
+	-Walloc-size-larger-than=1073741824 \
+	-Walloc-zero \
+	-Walloca \
+	-Wformat-overflow=2 \
+	-Wformat-truncation=2 \
+	-Wstringop-overflow=4 \
+	-Waligned-new
+#	-Walloc-size-larger-than=1073741824 \ # Allocating more than 1GiB is likely a bug
+
 
 # sanitizers on g++5.2
   SANITIZERS = \
