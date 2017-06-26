@@ -79,54 +79,90 @@ ifeq ($(TOOLCHAIN),clang)
 	-z nodump
 
 else
-# for gcc 6
-  CC := gcc-6
-  CC_WARN_FLAGS ?= \
+
+  CC_WARN_FLAGS_FOR_GCC_4.9 := \
+	-Werror \
+	-Wpedantic \
 	-Wall \
-	-pedantic -pedantic-errors \
 	-Wextra \
 	-Wdouble-promotion \
 	-Wformat=2 \
-	-Wnull-dereference \
 	-Winit-self \
+	-Wuninitialized \
 	-Wmissing-include-dirs \
-	-Wshift-overflow=2 \
 	-Wswitch-default \
 	-Wswitch-enum \
+	-Wunused \
 	-Wunused-parameter \
-	-Wuninitialized \
-	-Wstrict-aliasing \
+	-Wunknown-pragmas \
+	-Wstrict-aliasing=3 \
 	-Wstrict-overflow=5 \
 	-Wsuggest-attribute=pure \
 	-Wsuggest-attribute=const \
 	-Wsuggest-attribute=noreturn \
 	-Wsuggest-attribute=format \
-	-Wduplicated-cond \
+	-Wmissing-format-attribute \
 	-Wtrampolines \
 	-Wfloat-equal \
 	-Wtraditional-conversion \
 	-Wundef \
 	-Wshadow \
-	-funsafe-loop-optimizations \
 	-Wunsafe-loop-optimizations \
 	-Wpointer-arith \
+	-Wtype-limits \
 	-Wbad-function-cast \
+	-Wc++-compat \
 	-Wcast-qual \
 	-Wcast-align \
 	-Wwrite-strings \
 	-Wconversion \
+	-Wdate-time \
 	-Wjump-misses-init \
+	-Wconversion \
 	-Wlogical-op \
 	-Waggregate-return \
 	-Wstrict-prototypes \
 	-Wold-style-definition \
-	-Wmissing-prototypes \
 	-Wmissing-declarations \
+	-Wpacked \
+	-Wpadded \
 	-Wredundant-decls \
+	-Wnested-externs \
+	-Winline \
 	-Winvalid-pch \
+	-Wvariadic-macros \
+	-Wvarargs \
 	-Wvla \
+	-Wdisabled-optimization \
 	-Wunsuffixed-float-constants \
-#	-Wpadded \
+	-Wno-c++-compat
+
+  CC_WARN_FLAGS_FOR_GCC_5 := \
+	${CC_WARN_FLAGS_FOR_GCC_4.9} \
+# All the new warning flags for gcc 5 are enabled by default or -Wall, hence nothing to add here
+
+#-fcheck-pointer-bounds
+# Pointer Bounds Checker, a bounds violation detector, has been added and can be enabled via
+# -fcheck-pointer-bounds. Memory accesses are instrumented with run-time checks of used pointers
+# against their bounds to detect pointer bounds violations (overflows). The Pointer Bounds Checker
+# is available on x86/x86-64 GNU/Linux targets with a new ISA extension Intel MPX support. See the
+# Pointer Bounds Checker Wiki page for more details.
+
+  CC_WARN_FLAGS_FOR_GCC_6 := \
+	${CC_WARN_FLAGS_FOR_GCC_5} \
+	-Wshift-overflow=2 \
+	-fdelete-null-pointer-checks \
+	-Wnull-dereference \
+	-Wduplicated-cond
+
+  CC_WARN_FLAGS_FOR_GCC_7 := \
+	${CC_WARN_FLAGS_FOR_GCC_6} \
+	-Wduplicated-branches \
+	-Wrestrict \
+	-Walloc-zero \
+	-Wformat-overflow=2 \
+	-Wformat-signedness \
+	-Wformat-truncation=2
 
 # for g++ 4.9
   CXX_WARN_FLAGS_FOR_GCC_4.9 ?= \
@@ -224,18 +260,22 @@ else
 
   ifeq ($(shell [ "${GCC_VERSION}" -ge 7 ] && echo $$?),0)
 	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_7}
+	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_7}
   endif
 
   ifeq (${GCC_VERSION},6)
 	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_6}
+	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_6}
   endif
 
   ifeq (${GCC_VERSION},5)
 	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_5}
+	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_5}
   endif
 
   ifeq (${CXX_WARN_FLAGS},)
 	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_4.9}
+	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_4.9}
   endif
 
 
