@@ -73,10 +73,10 @@ struct options get_options(const int argc, const char * const * argv)
     }
     else if ((str == "-i") or (str == "--input-file"))
     {
-      // next parameter will be the directory name
+      // next parameter will be the input file name
       if (i == static_cast<decltype(i)>(argc) - 1)
       {
-	// was the last parameter, so there is no directory behind it!
+	// was the last parameter, so there is input file behind it!
 	throw std::runtime_error(std::string{"Error: '"} + str + "' must be followed by a filename");
       }
 
@@ -90,10 +90,10 @@ struct options get_options(const int argc, const char * const * argv)
     }
     else if ((str == "-c") or (str == "--lilypond-command"))
     {
-      // next parameter will be the directory name
+      // next parameter will be the command name
       if (i == static_cast<decltype(i)>(argc) - 1)
       {
-	// was the last parameter, so there is no directory behind it!
+	// was the last parameter, so there is no command behind it!
 	throw std::runtime_error(std::string{"Error: '"} + str + "' must be followed by a command");
       }
 
@@ -118,7 +118,6 @@ struct options get_options(const int argc, const char * const * argv)
   {
     throw std::runtime_error(std::string{"Error, missing input file"});
   }
-
 
   // set defaults values for optional and unset values
   if (res.lilypond_command.empty())

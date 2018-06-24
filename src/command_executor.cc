@@ -390,7 +390,7 @@ std::vector<fs::path> generate_svg_files_without_skylines(const std::string& lil
   const fs::path input_lily_dir = get_directory_of_file(input_lily_file);
   const std::vector<std::string> command_line {
     { lilypond_command,
-	std::string{"-dlog-file=\""} + (output_tmp_directory / std::string{"svg_without_skylines_generation"}).c_str() + "\"",
+      std::string{"-dlog-file=\""} + (output_tmp_directory / std::string{"svg_without_skylines_generation"}).c_str() + "\"",
       std::string{"--include="} + input_lily_dir.c_str(),
       "-dno-point-and-click",
       std::string{"--output="} + output_tmp_directory.c_str(),

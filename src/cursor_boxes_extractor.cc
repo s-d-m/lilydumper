@@ -19,8 +19,10 @@ bool has_note(const svg_file_t& svg, const std::string& id_str)
     });
 }
 
-// return the indexes of all svg files containing a note_head with the same id as note.
-// post condition, the output is sorted
+/**
+ * \return the indexes of all svg files containing a note_head with the same id as note.
+ * \note post condition, the output is sorted
+ */
 static
 uint8_t find_svg_pos(const note_t& note,  const std::vector<svg_file_t>& svg_files)
 {

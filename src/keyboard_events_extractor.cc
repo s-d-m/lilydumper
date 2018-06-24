@@ -76,8 +76,8 @@ void remove_duplicate_events(std::vector<key_event>& key_events)
     }
   }
 
-  // post cond: this function only removes element, therefore is the events are sorted when entering
-  // the function, they should still be when leaving the fnuction.
+  // post cond: this function only removes element, therefore if the events are sorted when entering
+  // the function, they should still be when leaving the function.
   if (not std::is_sorted(key_events.cbegin(), key_events.cend(), [] (const key_event& a, const key_event& b) {
 	return a.time < b.time;
       }))
