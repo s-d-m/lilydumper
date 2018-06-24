@@ -226,10 +226,10 @@ void fix_overlapping_key_presses(std::vector<note_t>& notes)
   // the second one starts. There will be a next step that will
   // separate the release/pressed events happening at the exact same
   // time
-
-  for (auto i = decltype(notes.size()){0}; i < notes.size(); ++i)
+  const auto nr_notes = notes.size();
+  for (auto i = decltype(nr_notes){0}; i < nr_notes; ++i)
   {
-    for (auto j = i + 1; (j < notes.size()) and (notes[j].start_time <= notes[i].stop_time); ++j)
+    for (auto j = i + 1; (j < nr_notes) and (notes[j].start_time <= notes[i].stop_time); ++j)
     {
       if (notes[j].pitch == notes[i].pitch)
       {
