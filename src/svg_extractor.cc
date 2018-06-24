@@ -563,7 +563,7 @@ std::vector<system_t> get_systems(const pugi::xml_document& svg_file,
   }
 
   // sanity check: there must be as many top skylines as bottom ones.
-  if (nb_systems != bottom_systems_skyline.size())
+  if ((nb_systems != bottom_systems_skyline.size()) and (nb_systems != bottom_systems_skyline.size()))
   {
     throw std::runtime_error(std::string{"Error: mismatch between the top and bottom skylines of systems.\n"
 	  "  There are has been " + std::to_string(top_systems_skyline.size()) + " top skylines detected\n  "
