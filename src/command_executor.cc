@@ -60,7 +60,7 @@ bool execute_command(const std::vector<std::string>& command,
     throw std::runtime_error("Error: can't execute an empty command");
   }
 
-  auto pid = fork();
+  const auto pid = fork();
   if (pid == -1)
   {
     throw std::runtime_error(std::string{"Couldn't launch the ["} + command[0] + "] command");
