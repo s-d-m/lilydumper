@@ -165,23 +165,15 @@ int main(int argc, const char * const * argv)
     const auto debug_output_file = options.debug_data_dir / "logs";
     std::ofstream log_stream (debug_output_file.string());
 
-    try
+    log_stream << "Program was launched with the following command:\n ";
+    for (unsigned int i = 0; i < static_cast<unsigned>(argc); ++i)
     {
-      log_stream << "Program was launched with the following command:\n ";
-      for (unsigned int i = 0; i < static_cast<unsigned>(argc); ++i)
-      {
-	log_stream << " '" << argv[i] << "'";
-      }
-      log_stream << "\n\n";
+      log_stream << " '" << argv[i] << "'";
+    }
+    log_stream << "\n\n";
 
-      generate_bin_file(options.lilypond_command, options.input_filename, options.output_filename,
-			options.debug_data_dir, log_stream);
-    }
-    catch (const std::exception& e)
-    {
-      log_stream << e.what() << "\n";
-      throw;
-    }
+    generate_bin_file(options.lilypond_command, options.input_filename, options.output_filename,
+		      options.debug_data_dir, log_stream);
   }
   catch (const std::exception& e)
   {
