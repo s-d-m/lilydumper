@@ -164,6 +164,11 @@ else
 	-Wformat-signedness \
 	-Wformat-truncation=2
 
+  CC_WARN_FLAGS_FOR_GCC_8 := \
+	${CC_WARN_FLAGS_FOR_GCC_7} \
+	-Wmultistatement-macros \
+	-Wcast-align=strict
+
 # for g++ 4.9
   CXX_WARN_FLAGS_FOR_GCC_4.9 ?= \
 	-Werror \
@@ -208,7 +213,7 @@ else
 	-Wuseless-cast \
 	-Wlogical-op \
 	-Wvector-operation-performance \
-	-Wabi \
+	-Wabi=11 \
 	-Wctor-dtor-privacy \
 	-Wnoexcept \
 	-Weffc++ \
@@ -256,26 +261,58 @@ else
 	-Waligned-new
 #	-Walloc-size-larger-than=1073741824 \ # Allocating more than 1GiB is likely a bug
 
+  CXX_WARN_FLAGS_FOR_GCC_8 := \
+	${CXX_WARN_FLAGS_FOR_GCC_7} \
+	-Wmultistatement-macros \
+	-Wcast-align=strict \
+
+  HARDENING_FLAGS_FOR_GCC_4.9 := \
+	-fstack-protector-all \
+	--param ssp-buffer-size=4 \
+	-D_FORTIFY_SOURCE=2 \
+	-fPIC
+
+  HARDENING_FLAGS_FOR_GCC_5 := ${HARDENING_FLAGS_FOR_GCC_4.9}
+
+  HARDENING_FLAGS_FOR_GCC_6 := ${HARDENING_FLAGS_FOR_GCC_5}
+
+  HARDENING_FLAGS_FOR_GCC_7 := ${HARDENING_FLAGS_FOR_GCC_6}
+
+  HARDENING_FLAGS_FOR_GCC_8 := \
+	${HARDENING_FLAGS_FOR_GCC_7} \
+	-fcf-protection=full \
+	-fstack-clash-protection
+
   GCC_VERSION := $(shell "${CXX}" -v 2>&1 | gawk '($$1 == "gcc") && ($$2 == "version") { sub(/\..*/, "", $$3) ; print $$3 ; exit }' )
 
-  ifeq ($(shell [ "${GCC_VERSION}" -ge 7 ] && echo $$?),0)
+  ifeq ($(shell [ "${GCC_VERSION}" -ge 8 ] && echo $$?),0)
+	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_8}
+	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_8}
+	HARDENING_FLAGS := ${HARDENING_FLAGS_FOR_GCC_8}
+  endif
+
+  ifeq (${GCC_VERSION},7)
 	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_7}
 	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_7}
+	HARDENING_FLAGS := ${HARDENING_FLAGS_FOR_GCC_7}
   endif
 
   ifeq (${GCC_VERSION},6)
 	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_6}
 	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_6}
+	HARDENING_FLAGS := ${HARDENING_FLAGS_FOR_GCC_6}
   endif
 
   ifeq (${GCC_VERSION},5)
 	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_5}
 	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_5}
+	HARDENING_FLAGS := ${HARDENING_FLAGS_FOR_GCC_5}
   endif
 
   ifeq (${CXX_WARN_FLAGS},)
 	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_4.9}
 	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_4.9}
+	HARDENING_FLAGS := ${HARDENING_FLAGS_FOR_GCC_4.9}
   endif
 
 
@@ -287,12 +324,6 @@ else
 # -fcheck-pointer-bounds -mmpx # pointer checker is not supported with address sanitiser
 # -fsanitize=thread #is incompatible with sanitize address
 # -fsanitize=leak # leak sanitizer can't be used if either address or thread sanitizer is used
-
-  HARDENING_FLAGS = \
-	-fstack-protector-all \
-	--param ssp-buffer-size=4 \
-	-D_FORTIFY_SOURCE=2 \
-	-fPIC
 
   LDFLAGS = \
 	-pie \
