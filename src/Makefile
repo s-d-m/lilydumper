@@ -38,9 +38,9 @@ PROFILING_OUTPUT = profiling_output.txt
 
 TOOLCHAIN=gcc
 
-CLANG_CC  = clang-5.0
-CLANG_CXX = clang++-5.0
-SCAN_BUILD = scan-build-5.0
+CLANG_CC  = clang
+CLANG_CXX = clang++
+SCAN_BUILD = scan-build
 
 ifeq ($(TOOLCHAIN),clang)
   CXX := ${CLANG_CXX}
