@@ -1,0 +1,264 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Finding bar changes events - Lilyplayer's documentation</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="_FontAwesome/css/font-awesome.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+
+    </head>
+    <body class="light">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme + ' js';
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <ol class="chapter"><li class="affix"><a href="intro.html">Introduction</a></li><li><a href="finding_when_notes_are_played.html"><strong aria-hidden="true">1.</strong> Finding when notes are played</a></li><li><ol class="section"><li><a href="issue_with_tied_notes.html"><strong aria-hidden="true">1.1.</strong> Tied notes</a></li><li><a href="issue_with_grace_notes.html"><strong aria-hidden="true">1.2.</strong> Grace notes</a></li><li><a href="issue_with_repeats.html"><strong aria-hidden="true">1.3.</strong> Repeats</a></li><li><a href="issue_with_overlapping_notes.html"><strong aria-hidden="true">1.4.</strong> Fixing overlapping notes</a></li><li><a href="issue_with_repeated_notes.html"><strong aria-hidden="true">1.5.</strong> Separating repeated notes</a></li></ol></li><li><a href="computing_the_cursor_position.html"><strong aria-hidden="true">2.</strong> Finding where the cursor should be</a></li><li><ol class="section"><li><a href="matching_a_note_to_where_it_appears.html"><strong aria-hidden="true">2.1.</strong> Finding where notes appear on the music sheet</a></li><li><a href="finding_systems_top_and_bottom.html"><strong aria-hidden="true">2.2.</strong> Finding the top and bottom of systems</a></li><li><a href="getting_the_cursor_wrapping_all_notes_belonging_to_a_chord.html"><strong aria-hidden="true">2.3.</strong> Cursor for notes in a chord</a></li></ol></li><li><a href="finding_bar_changes.html" class="active"><strong aria-hidden="true">3.</strong> Finding bar changes events</a></li><li><a href="finding_turn_page_changes.html"><strong aria-hidden="true">4.</strong> Finding turn page events</a></li><li><a href="finding_on_which_stave_a_note_is.html"><strong aria-hidden="true">5.</strong> Left/right hand separation</a></li><li><a href="finding_the_staff_instrument_name.html"><strong aria-hidden="true">6.</strong> Getting the staff's instrument name</a></li><li><a href="file_format.html"><strong aria-hidden="true">7.</strong> File format</a></li><li><a href="possible_improvements.html"><strong aria-hidden="true">8.</strong> Possible improvements</a></li></ol>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                        </div>
+
+                        <h1 class="menu-title">Lilyplayer's documentation</h1> 
+
+                        <div class="right-buttons">
+                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <a class="header" href="finding_bar_changes.html#finding-bar-changes-events" id="finding-bar-changes-events"><h1>Finding bar changes events</h1></a>
+<p>One of the required feature for the program was to be able to play only one part of the music, ... because
+people (at least beginners) learn a song one part at a time. A natural way to break a song into pieces is
+at measure boundary. Therefore the lilyplayer at to provide a way to play the music from some measure up to
+some other. this was visible in the <a href="./intro_assets/lilyplayer-demo.webm">introductory video</a> at second 21.</p>
+<p>To find out when a measure starts and ends, I used the <code>currentBarNumber</code> from lilypond on the event-listener.
+On the event-listener, when getting notified of a note head, we retrieve the bar number and set it as part of
+its id.</p>
+<p>The code is as follow:</p>
+<pre><code>
+#(define (on-note-head engraver grob source-engraver)
+   (let* ((context  (ly:translator-context source-engraver))
+
+      ... code to get the event ,,,
+
+      (current-bar-number (ly:context-property context 'currentBarNumber))
+      (id ... former value t=with origin, start time, duration etc.))
+
+      (id-with-bar-number (ly:format &quot;#bar-number=~a~a&quot;
+                          current-bar-number
+                          id)))
+
+     (ly:grob-set-property! grob 'id id-with-bar-number)
+))
+
+\layout {
+  \override NoteHead.stencil = #(lambda (grob)
+                  (let* ((note (ly:note-head::print grob))
+                     (former-id (ly:grob-property-data grob 'id)))
+                     ... code to add the width and height of the note bounding box ...
+                     (ly:grob-set-property! grob 'id former-id)
+                    note))
+
+  \context {
+    \Voice
+
+    ...
+
+    \consists #(make-engraver
+        (acknowledgers
+         ((note-head-interface engraver grob source-engraver)
+          (on-note-head engraver grob source-engraver))))
+  }
+}
+</code></pre>
+<p>Now, this bar number will only be written as part of the note id when running lilypond to get the svg
+file. Since we unfold the repeats to extract when notes are played, using the bar number as reported with
+unfolded repeat will lead to different values than what the user would see on the music sheet which contains
+repeats.</p>
+<p>That way, it is possible to know to which measure belongs a note. Detecting measure number change is as simple
+as checking two consecutively played notes and checking whether their measure number are the same or note.</p>
+<p>To then find out when a measure <code>x</code> starts, one just has to find the first played note with bar number <code>x</code>.</p>
+<p>Providing the user with the ability to play only from measure say 4 to 10 requires a bit more thought, in
+case there are repeats. For example, if measure 7 ends with a repeat returning to measure 2 and that this
+repeat is meant to be hit twice before moving to measure 8, what should the software play?</p>
+<ul>
+<li>measure 4 to 8 then 3 to 8 then 3 to 8 again then 9 and 10?</li>
+<li>measure 4 to 8 then 3 to 8 then 9 and 10?</li>
+<li>measure 4 to 8 then 9 and 10?</li>
+</ul>
+<p>Here the choice should probably be left to the user. Sadly lilyplayer doesn't let the user choose and decides
+to play the longest piece.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="getting_the_cursor_wrapping_all_notes_belonging_to_a_chord.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="finding_turn_page_changes.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a href="getting_the_cursor_wrapping_all_notes_belonging_to_a_chord.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a href="finding_turn_page_changes.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+
+        
+        <script src="searchindex.js" type="text/javascript" charset="utf-8"></script>
+        
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+    </body>
+</html>

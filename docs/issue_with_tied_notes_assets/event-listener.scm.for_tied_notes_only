@@ -1,0 +1,152 @@
+\version "2.16.0"
+
+\pointAndClickOff
+
+%%%% Helper functions
+
+%% Now the filename for the note file can be controlled by command line using the following syntax:
+%% lilypond -e"(ly:add-option 'note-file-output #f  \"Output for the note file. Default is filename with .notes extension instead of .ly\")" -e"(ly:set-option 'note-file-output \"/path/to/output/note/file\")"
+
+#(define global-variable-filename #f)
+#(define (notes-filename)
+   (if (not global-variable-filename)
+       (let ((option-name (ly:get-option 'note-file-output)))
+	 (set! global-variable-filename
+	       (if option-name
+		   option-name
+		   (string-concatenate
+		    (list
+		     (substring (object->string (command-line))
+				;; filename without .ly part
+				(+ (string-rindex (object->string (command-line)) #\sp) 2)
+				(- (string-length (object->string (command-line))) 5))
+		     ".notes"))))))
+   global-variable-filename)
+
+
+#(define (moment->frac moment)
+    (/ (ly:moment-main-numerator moment)
+       (ly:moment-main-denominator moment)))
+
+#(define (moment->frac-nanoseconds moment)
+   (exact->inexact
+    ;; lilypond moments are stored in seconds unit so multiply by 10^9
+    ;; to go to nanoseconds
+    (* 1000 1000 1000
+       (moment->frac moment))))
+
+#(define (remove.00000000 moment)
+   (let* ((str (ly:format "~a" moment))
+	  (point-pos (string-index str #\.))
+	  (length-to-cut (- (string-length str) point-pos)))
+     (string-drop-right str length-to-cut)))
+
+
+%% default tempo used by lilypond.
+%% to find this number, just create a music sheet without setting the tempo
+%% and look at which tempo got inserted in the midi file.
+#(define time-per-quarter-note (/ 60 60))
+#(define last-tempo-moment-change 0)
+#(define last-tempo-realtime-change 0)
+
+#(define (moment->real-time moment)
+   (let* ((diff-from-last-tempo-change (- (moment->frac moment)
+					  last-tempo-moment-change))
+	  (nb-quarter-notes (* 4 diff-from-last-tempo-change)))
+     (+ last-tempo-realtime-change (* time-per-quarter-note nb-quarter-notes))))
+
+#(define (moment->real-time-nanoseconds moment)
+    ;; lilypond moments are stored in econds unit so multiplay by 10^9
+    ;; to go to nanoseconds
+    (* 1000 1000 1000 (moment->real-time moment)))
+
+#(define (print-line-to-file text filename)
+   (let* ((p (open-file filename "a")))
+     ;; for regtest comparison
+     (display (string-append text "\n") p)
+     (close p)))
+
+#(define was-note-option-checked? #f)
+#(define should-produce-note-file? #t)
+
+#(define (output-to-notes-file text)
+   (if (not was-note-option-checked?)
+       (begin
+	 (let ((option (ly:get-option 'disable-notes-output)))
+	   (set! should-produce-note-file?
+		 (not option)))
+	 (set! was-note-option-checked? #t)))
+   (if should-produce-note-file?
+       (print-line-to-file text (notes-filename))))
+
+%%% main functions
+
+#(define (format-tempo engraver event)
+  (let* ((metronome-count (ly:event-property event 'metronome-count))
+	 (tempo-unit (moment->frac (ly:duration-length (ly:event-property
+							      event
+							      'tempo-unit))))
+	 (tempo (/ metronome-count tempo-unit))
+	 (context  (ly:translator-context engraver))
+	 (moment (ly:context-current-moment context)))
+    (set! last-tempo-realtime-change (moment->real-time moment))
+    (set! last-tempo-moment-change (moment->frac moment))
+    (set! time-per-quarter-note (/ 60 (* metronome-count 4 tempo-unit )))))
+
+
+#(define (is-tie-articulation? articulation)
+  (equal? (ly:prob-property articulation 'name) 'TieEvent))
+
+
+
+#(define (on-note-head engraver grob source-engraver)
+   (let* ((context  (ly:translator-context source-engraver))
+	  (event (event-cause grob))
+	  (pitch  (+ 60 (ly:pitch-semitones (ly:event-property event 'pitch))))
+	  (event-duration (ly:event-property event 'duration))
+	  (duration-string (ly:duration->string event-duration))
+	  (duration (remove.00000000  (moment->frac-nanoseconds (ly:duration-length event-duration))))
+	  (music (ly:event-property event 'music-cause))
+	  (articulations (ly:music-property music 'articulations))
+	  (has-tie-attached (any (lambda (x) (is-tie-articulation? x)) articulations))
+	  (moment (ly:context-current-moment context))
+	  (start-moment moment)
+	  (stop-moment (ly:make-moment
+			(+ (moment->frac start-moment)
+			   (moment->frac (ly:duration-length event-duration)))))
+
+	  (id (ly:format "#pitch=~a#has-tie-attached=~a#duration-string=~a#duration=~a"
+			 pitch
+			 (if has-tie-attached
+			     "yes"
+			     "no")
+			 duration-string
+			 duration))
+)
+
+	(output-to-notes-file
+	 (format #f "note start-time: ~d stop-time: ~d id: ~a"
+		 (round (moment->real-time-nanoseconds start-moment))
+		 (round (moment->real-time-nanoseconds stop-moment))
+		 id))
+))
+
+
+%%%% The actual engraver definition: We just install some listeners so we
+%%%% are notified about all notes and rests. We don't create any grobs or
+%%%% change any settings.
+
+\layout {
+
+  \context {
+    \Voice
+    \consists #(make-engraver
+		(listeners
+		 (tempo-change-event . format-tempo)))
+
+    \consists #(make-engraver
+		(acknowledgers
+		 ((note-head-interface engraver grob source-engraver)
+		  (on-note-head engraver grob source-engraver))))
+  }
+}

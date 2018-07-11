@@ -1,0 +1,6 @@
+note start-time: 0 stop-time: 600000000 id: #pitch=67#has-tie-attached=yes#duration-string=4#duration=250000000
+note start-time: 0 stop-time: 600000000 id: #pitch=69#has-tie-attached=yes#duration-string=4#duration=250000000
+note start-time: 0 stop-time: 600000000 id: #pitch=76#has-tie-attached=yes#duration-string=4#duration=250000000
+note start-time: 600000000 stop-time: 1200000000 id: #pitch=67#has-tie-attached=no#duration-string=4#duration=250000000
+note start-time: 600000000 stop-time: 1200000000 id: #pitch=69#has-tie-attached=no#duration-string=4#duration=250000000
+note start-time: 600000000 stop-time: 1200000000 id: #pitch=76#has-tie-attached=no#duration-string=4#duration=250000000

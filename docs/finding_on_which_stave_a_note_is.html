@@ -1,0 +1,265 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Left/right hand separation - Lilyplayer's documentation</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="_FontAwesome/css/font-awesome.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+
+    </head>
+    <body class="light">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme + ' js';
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <ol class="chapter"><li class="affix"><a href="intro.html">Introduction</a></li><li><a href="finding_when_notes_are_played.html"><strong aria-hidden="true">1.</strong> Finding when notes are played</a></li><li><ol class="section"><li><a href="issue_with_tied_notes.html"><strong aria-hidden="true">1.1.</strong> Tied notes</a></li><li><a href="issue_with_grace_notes.html"><strong aria-hidden="true">1.2.</strong> Grace notes</a></li><li><a href="issue_with_repeats.html"><strong aria-hidden="true">1.3.</strong> Repeats</a></li><li><a href="issue_with_overlapping_notes.html"><strong aria-hidden="true">1.4.</strong> Fixing overlapping notes</a></li><li><a href="issue_with_repeated_notes.html"><strong aria-hidden="true">1.5.</strong> Separating repeated notes</a></li></ol></li><li><a href="computing_the_cursor_position.html"><strong aria-hidden="true">2.</strong> Finding where the cursor should be</a></li><li><ol class="section"><li><a href="matching_a_note_to_where_it_appears.html"><strong aria-hidden="true">2.1.</strong> Finding where notes appear on the music sheet</a></li><li><a href="finding_systems_top_and_bottom.html"><strong aria-hidden="true">2.2.</strong> Finding the top and bottom of systems</a></li><li><a href="getting_the_cursor_wrapping_all_notes_belonging_to_a_chord.html"><strong aria-hidden="true">2.3.</strong> Cursor for notes in a chord</a></li></ol></li><li><a href="finding_bar_changes.html"><strong aria-hidden="true">3.</strong> Finding bar changes events</a></li><li><a href="finding_turn_page_changes.html"><strong aria-hidden="true">4.</strong> Finding turn page events</a></li><li><a href="finding_on_which_stave_a_note_is.html" class="active"><strong aria-hidden="true">5.</strong> Left/right hand separation</a></li><li><a href="finding_the_staff_instrument_name.html"><strong aria-hidden="true">6.</strong> Getting the staff's instrument name</a></li><li><a href="file_format.html"><strong aria-hidden="true">7.</strong> File format</a></li><li><a href="possible_improvements.html"><strong aria-hidden="true">8.</strong> Possible improvements</a></li></ol>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                        </div>
+
+                        <h1 class="menu-title">Lilyplayer's documentation</h1> 
+
+                        <div class="right-buttons">
+                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <a class="header" href="finding_on_which_stave_a_note_is.html#finding-on-which-staff-a-note-is" id="finding-on-which-staff-a-note-is"><h1>Finding on which staff a note is</h1></a>
+<p>One of the required feature was to be able to play left and right hand separately.
+Therefore the software needs to know which part of the music sheet is meant to be
+played on the left and which is meant to be played on the right hand.</p>
+<p>I believe it is commonly accepted that for piano music sheets, the bottom staff
+(that usually starts with a bass clef) and the top staff (usually with a treble clef)
+are meant to be played respectively with left and right hand.</p>
+<p>Therefore to achieve the goal of discriminating notes from being played left or right, one idea would simply
+be to try to use the debug skylines again. Using these, it would be possible to graphically find out on which
+staff a note is drawn, and consequently if it is the first or second staff of the system, and therefore if it
+should be played with the left or right hand.</p>
+<p>See for example the following piece of music.</p>
+<p><img src="./finding_on_which_stave_a_note_is_assets/cross_staves.svg" alt="Skylines can be used to tell on which staff a note is" /></p>
+<p>However, a different solution was used here.</p>
+<p>From the source file, the notes are written in the staff they are. Therefore it is possible starting from a
+note to find out in which staff it belongs, only based on the text file. This is faster and simpler than
+extracting the same information from the svg files.</p>
+<p>Extracting the staff-number is done using the event-listener and the following snippet:</p>
+<pre><code>
+#(define (get-staff-number key)
+   (let* ((res (assoc key context-to-staff)))
+    (if res
+      (cdr res) ;; found
+      (begin  ;; not found, add it to list
+    (let ((res next-staff-num))
+      (set! context-to-staff (cons (cons key res) context-to-staff))
+      (set! next-staff-num (+ 1 next-staff-num))
+      res)))))
+
+
+#(define (on-note-head engraver grob source-engraver)
+   (let* ((context  (ly:translator-context source-engraver))
+      ...
+      (root-context (object-address (ly:context-property-where-defined context 'instrumentName)))
+      (staff-number (get-staff-number root-context))
+      ...
+      )
+))
+
+\layout {
+
+  \context {
+    \Voice
+
+    \consists #(make-engraver
+        (acknowledgers
+         ((note-head-interface engraver grob source-engraver)
+          (on-note-head engraver grob source-engraver))))
+  }
+}
+
+</code></pre>
+<p>The staff number is then exported in the notes file alongside the id of the note.</p>
+<p>The <code>get-staff-number</code> function simply assigns an incrementing number to each key it root-context it receives,
+starting from 0. That way, the first staff to be encountered will be labeled 0, the next one 1 and so forth.</p>
+<p>Each note having the same the same staff number are meant to be played by the same hand.
+It then becomes possible to display the keyboard and using different colours, to show
+which hands plays what.</p>
+<p>This is what the keyboard at the bottom of the <a href="./intro_assets/lilyplayer-demo.webm" title="demo">introductory video shows</a>:</p>
+<ul>
+<li>red coloured keys are pressed by the left hand</li>
+<li>blue coloured keys are pressed by the right one</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="finding_turn_page_changes.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="finding_the_staff_instrument_name.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a href="finding_turn_page_changes.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a href="finding_the_staff_instrument_name.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+
+        
+        <script src="searchindex.js" type="text/javascript" charset="utf-8"></script>
+        
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+    </body>
+</html>

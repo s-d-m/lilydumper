@@ -1,0 +1,262 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Repeats - Lilyplayer's documentation</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="_FontAwesome/css/font-awesome.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+
+    </head>
+    <body class="light">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme + ' js';
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <ol class="chapter"><li class="affix"><a href="intro.html">Introduction</a></li><li><a href="finding_when_notes_are_played.html"><strong aria-hidden="true">1.</strong> Finding when notes are played</a></li><li><ol class="section"><li><a href="issue_with_tied_notes.html"><strong aria-hidden="true">1.1.</strong> Tied notes</a></li><li><a href="issue_with_grace_notes.html"><strong aria-hidden="true">1.2.</strong> Grace notes</a></li><li><a href="issue_with_repeats.html" class="active"><strong aria-hidden="true">1.3.</strong> Repeats</a></li><li><a href="issue_with_overlapping_notes.html"><strong aria-hidden="true">1.4.</strong> Fixing overlapping notes</a></li><li><a href="issue_with_repeated_notes.html"><strong aria-hidden="true">1.5.</strong> Separating repeated notes</a></li></ol></li><li><a href="computing_the_cursor_position.html"><strong aria-hidden="true">2.</strong> Finding where the cursor should be</a></li><li><ol class="section"><li><a href="matching_a_note_to_where_it_appears.html"><strong aria-hidden="true">2.1.</strong> Finding where notes appear on the music sheet</a></li><li><a href="finding_systems_top_and_bottom.html"><strong aria-hidden="true">2.2.</strong> Finding the top and bottom of systems</a></li><li><a href="getting_the_cursor_wrapping_all_notes_belonging_to_a_chord.html"><strong aria-hidden="true">2.3.</strong> Cursor for notes in a chord</a></li></ol></li><li><a href="finding_bar_changes.html"><strong aria-hidden="true">3.</strong> Finding bar changes events</a></li><li><a href="finding_turn_page_changes.html"><strong aria-hidden="true">4.</strong> Finding turn page events</a></li><li><a href="finding_on_which_stave_a_note_is.html"><strong aria-hidden="true">5.</strong> Left/right hand separation</a></li><li><a href="finding_the_staff_instrument_name.html"><strong aria-hidden="true">6.</strong> Getting the staff's instrument name</a></li><li><a href="file_format.html"><strong aria-hidden="true">7.</strong> File format</a></li><li><a href="possible_improvements.html"><strong aria-hidden="true">8.</strong> Possible improvements</a></li></ol>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                        </div>
+
+                        <h1 class="menu-title">Lilyplayer's documentation</h1> 
+
+                        <div class="right-buttons">
+                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <a class="header" href="issue_with_repeats.html#repeats" id="repeats"><h1>Repeats</h1></a>
+<p>The idea of using the event listeners to extract when notes are played shows its limits quite well in the handling of repeats.
+The event listeners reports events as it sees them in the lilypond's input file. For example on the following music sheet</p>
+<p><a href="./issue_with_repeats_assets/simple_repeat.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_repeats_assets/simple_repeat.svg" alt="simple music sheet with repeat" /></a></p>
+<p>the <code>la</code> should be played twice. However the generated events are</p>
+<pre><code>0.00000000	tempo	400.00000000
+0.00000000	note	69	4	0.25000000	point-and-click 6 37
+</code></pre>
+<p>when using the default event-listener provided by lilypond. That is the exact same events as generated</p>
+<p><a href="./issue_with_repeats_assets/no_repeat.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_repeats_assets/no_repeat.svg" alt="simple music sheet without any repeat" /></a></p>
+<p>This issue here is due to the fact that the default event-listener doesn't pay attention to repeat events.
+I tried modifying it in several ways so that it would also report on repeat events.
+However I could not get what was repeated which is quite important to say the least.</p>
+<p>if we have the following music sheet,</p>
+<pre><code>\repeat volta 2 { la' sol' }
+</code></pre>
+<p>We need to extract that this is equivalent to <code>la' sol' la' sol'</code>.
+With my several attempts based only on the event-listener, I was getting the following events.:</p>
+<pre><code>t=0                  play la'   duration quarter-time
+t=quarter-time       play sol'  duration quarter-time
+t=2 * quarter-time   display-repeat-bar
+</code></pre>
+<p>This is not good enough, as the same output was produced for this different music:</p>
+<pre><code>la' \repeat volta 2 { sol' }
+</code></pre>
+<p>which is equivalent to <code>la' sol' sol'</code>.</p>
+<p>Here the solution was to unfold all repeats first.</p>
+<p>Lilypond handle the following kind of repeats as described in its <a href="http://lilypond.org/doc/v2.19/Documentation/notation/repeats">documentation</a>:</p>
+<ul>
+<li>volta</li>
+<li>unfold</li>
+<li>percent</li>
+<li>tremolo</li>
+</ul>
+<p>Below is a table showing the effect of each repeat type on the event-listener output</p>
+<table><thead><tr><th> music sheet </th><th> source </th><th>  generated events </th></tr></thead><tbody>
+<tr><td> <a href="./issue_with_repeats_assets/volta_repeat.svg" title="lilypond source for this simple example"><img src="./issue_with_repeats_assets/volta_repeat.svg" alt="volta repeat" /></a> </td><td> \repeat volta 2 { la' } </td><td> <object type="text" data="./issue_with_repeats_assets/volta_repeat-unnamed-staff.notes"></object> </td></tr>
+<tr><td> <a href="./issue_with_repeats_assets/unfold_repeat.svg" title="lilypond source for this simple example"><img src="./issue_with_repeats_assets/unfold_repeat.svg" alt="unfold repeat" /></a> </td><td> \repeat unfold 2 { la' } </td><td> <object type="text" data="./issue_with_repeats_assets/unfold_repeat-unnamed-staff.notes"></object> </td></tr>
+<tr><td> <a href="./issue_with_repeats_assets/percent_repeat.svg" title="lilypond source for this simple example"><img src="./issue_with_repeats_assets/percent_repeat.svg" alt="percent repeat" /></a> </td><td> \repeat percent 2 { la' } </td><td> <object type="text" data="./issue_with_repeats_assets/percent_repeat-unnamed-staff.notes"></object> </td></tr>
+<tr><td> <a href="./issue_with_repeats_assets/tremolo_repeat.svg" title="lilypond source for this simple example"><img src="./issue_with_repeats_assets/tremolo_repeat.svg" alt="tremolo repeat" /></a> </td><td> \repeat tremolo 2 { la' } </td><td> <object type="text" data="./issue_with_repeats_assets/tremolo_repeat-unnamed-staff.notes"></object> </td></tr>
+</tbody></table>
+<p><code>Percent</code> and <code>tremolo</code> repeats are still something I can't really understand even after reading <a href="http://lilypond.org/doc/v2.19/Documentation/notation/short-repeats">the documentation on short repeats</a>.
+Therefore I just ignore them. However, when focusing on <code>volta</code> and <code>unfold</code> repeat, we see on the generated events that unfolded repeats
+produce the correct events about notes being played and when. Therefore when encoutering a <code>volta</code> repeat, one can simply change it to
+an <code>unfold</code>ed one to get the right music events. This leads to another issue though. It changes the generated output. One goal of the
+project was to work on real music sheets, just like the ones a pianist would use. Not a simplified equivalent one. This issue will
+be treated later on, in the part about <a href="./matching_a_note_to_where_it_appears.md">matching a note to where it appears on the music sheet</a>.</p>
+<p>For now, to solve the current issue due to repeats, let's just replace all <code>volta</code> repeats by <code>unfold</code> repeats.
+There are several ways to do so. Since lilypond's input file are simply text files, one way would be to
+programmatically edit the text to replace <code>volta</code> by <code>unfold</code> everywhere it appears, and then start processing
+the music sheet. Another way would be to modify lilypond so that every time it encounters a <code>volta</code> repeat it
+would treat it just like an <code>unfold</code> one. I went for the second solution as it is the most stable one as
+modifying the source would lead to other issues later on.</p>
+<p>Reading lilypond's source code, I found <a href="https://git.savannah.gnu.org/gitweb/?p=lilypond.git;a=blob;f=scm/music-functions.scm;h=7d70c9bbd5652b75a0ac71b27f07bda42e399fe4;hb=a358ea26328939acdcfb0f08f307bb1c3b076915#l345">the place where it decide how to treat a repeat</a>.
+simply changing <code>VoltaRepeatedMusic</code> by <code>UnfoldedRepeatedMusic</code>. Modifying lilypond implies recompiling
+it, which also implies having the right compile-time dependencies and other inconveniences. Fortunately,
+the file requiring the modification is actually interpreted, hence simply modifying and re-running lilypond
+is enough. And to avoid file-system related issues, the modification is made on the fly when lilypond opens
+that file. This is done by using a library that overwrites the system's <code>open</code> and <code>fopen</code> function and is set
+via <code>LD_PRELOAD</code> environment variable.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="issue_with_grace_notes.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="issue_with_overlapping_notes.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a href="issue_with_grace_notes.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a href="issue_with_overlapping_notes.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+
+        
+        <script src="searchindex.js" type="text/javascript" charset="utf-8"></script>
+        
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+    </body>
+</html>

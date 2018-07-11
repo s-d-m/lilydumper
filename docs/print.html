@@ -1,0 +1,944 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Lilyplayer's documentation</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="_FontAwesome/css/font-awesome.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+
+    </head>
+    <body class="light">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme + ' js';
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <ol class="chapter"><li class="affix"><a href="intro.html">Introduction</a></li><li><a href="finding_when_notes_are_played.html"><strong aria-hidden="true">1.</strong> Finding when notes are played</a></li><li><ol class="section"><li><a href="issue_with_tied_notes.html"><strong aria-hidden="true">1.1.</strong> Tied notes</a></li><li><a href="issue_with_grace_notes.html"><strong aria-hidden="true">1.2.</strong> Grace notes</a></li><li><a href="issue_with_repeats.html"><strong aria-hidden="true">1.3.</strong> Repeats</a></li><li><a href="issue_with_overlapping_notes.html"><strong aria-hidden="true">1.4.</strong> Fixing overlapping notes</a></li><li><a href="issue_with_repeated_notes.html"><strong aria-hidden="true">1.5.</strong> Separating repeated notes</a></li></ol></li><li><a href="computing_the_cursor_position.html"><strong aria-hidden="true">2.</strong> Finding where the cursor should be</a></li><li><ol class="section"><li><a href="matching_a_note_to_where_it_appears.html"><strong aria-hidden="true">2.1.</strong> Finding where notes appear on the music sheet</a></li><li><a href="finding_systems_top_and_bottom.html"><strong aria-hidden="true">2.2.</strong> Finding the top and bottom of systems</a></li><li><a href="getting_the_cursor_wrapping_all_notes_belonging_to_a_chord.html"><strong aria-hidden="true">2.3.</strong> Cursor for notes in a chord</a></li></ol></li><li><a href="finding_bar_changes.html"><strong aria-hidden="true">3.</strong> Finding bar changes events</a></li><li><a href="finding_turn_page_changes.html"><strong aria-hidden="true">4.</strong> Finding turn page events</a></li><li><a href="finding_on_which_stave_a_note_is.html"><strong aria-hidden="true">5.</strong> Left/right hand separation</a></li><li><a href="finding_the_staff_instrument_name.html"><strong aria-hidden="true">6.</strong> Getting the staff's instrument name</a></li><li><a href="file_format.html"><strong aria-hidden="true">7.</strong> File format</a></li><li><a href="possible_improvements.html"><strong aria-hidden="true">8.</strong> Possible improvements</a></li></ol>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                        </div>
+
+                        <h1 class="menu-title">Lilyplayer's documentation</h1> 
+
+                        <div class="right-buttons">
+                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <a class="header" href="print.html#lilyplayer" id="lilyplayer"><h1>Lilyplayer</h1></a>
+<p>Lilyplayer plays piano music sheets.</p>
+<p>For a very quick overview of what it does, watch the following video:</p>
+<p><a href="./intro_assets/lilyplayer-demo.webm" title="demo"><img src="./intro_assets/lilyplayer-fake-video-screenshot.png" alt="Demo" /></a></p>
+<p>The initial goal of the project was broader than simply that. At first, it was meant to be a full-featured
+piano learning app.</p>
+<p>For this project, I wanted to have the following features:</p>
+<ul>
+<li>
+<p>Real music sheets</p>
+<p>Instead of boxes coming down the screen like <a href="http://synthesiagame.com">synthesia</a>, the application must
+display a real music sheet.  The goal being to help learning piano, not to be a competitive game.</p>
+</li>
+<li>
+<p>Users must be able to use their own music sheets</p>
+<p>The application must not prevent the user from using any music sheet he wants. If the user bought a copy
+of some music sheet, he should be able to use it in the app. Therefore, the process of using a personal music
+sheet must be documented.</p>
+</li>
+<li>
+<p>Only one quality tolerated for the music sheets, the very best one.</p>
+<p>No one like to read music sheets scanned in so poor quality they appear pixelated on the screen. Also, the
+music sheet must look great on all screens, regarless of their dpi.</p>
+</li>
+<li>
+<p>Practice only a subpart of the music sheet</p>
+<p>No one learns a full music sheet right away. People practice on smaller parts at a time, and the app
+should let people do just that.</p>
+</li>
+<li>
+<p>Ability to play left and right hand separately</p>
+<p>It is often useful to practice the left and right hand part of a music separately. The app should not go
+into people's way of learning.</p>
+</li>
+</ul>
+<p>Based on these requirements, it is no surprise that I decided to base my solution on top of
+<a href="http://lilypond.org">lilypond</a>. In their own words:</p>
+<pre><code class="language-quote">LilyPond is a music engraving program, devoted to producing the highest-quality sheet music
+possible. It brings the aesthetics of traditionally engraved music to computer printouts.
+
+</code></pre>
+<p>Lilypond's goal is to engrave music sheets. It takes a music description in a text format as input and
+generates a beautiful pdf as output.  For this project this is simply not enough. To play music sheet, as
+showcased in the video above, more information needs to be retrieved.</p>
+<p>The rest of the document describes the challenges that appeared during the project, and how I
+overtook them (or not).</p>
+<a class="header" href="print.html#extracting-when-a-note-is-played-and-for-how-long" id="extracting-when-a-note-is-played-and-for-how-long"><h1>Extracting when a note is played, and for how long</h1></a>
+<p>One of the challenge was to find out when a note is played, and for how long.</p>
+<p>For example, on the following simple piece of music,</p>
+<p><a href="./finding_when_notes_are_played_assets/simplest.ly" title="lilypond source for this simple example"><img src="./finding_when_notes_are_played_assets/simplest.svg" alt="simple music sheet" /></a></p>
+<p>the program must understand that:</p>
+<ol>
+<li>at the very beginning of the song, that is at \( t=0s \), a pianist must press the <code>la</code> key (aka <code>a</code>).</li>
+<li>at \( t=0.6s \), a pianist must release the <code>la</code> key and simultaneously push the <code>sol</code> key down (<code>g</code>)</li>
+<li>at \( t=1.2s \), a pianist must release the <code>sol</code> key.</li>
+</ol>
+<p>To extract these pieces of information I used two features provided by <a href="http://lilypond.org">Lilypond</a>: the
+<code>include-settings</code> parameter, and the event listener.</p>
+<p><code>include-settings</code> let the user include a file to set some global settings. That file is included before the
+score is processed.  <a href="http://lilypond.org/doc/v2.18/Documentation/notation/saving-music-events-to-a-file">The event
+listener</a> saves music
+events encountered during the music processing.</p>
+<p>For this simple music sheet
+<a href="./finding_notes_played_general_idea_assets/simplest.ly" title="lilypond source for this simple example"><img src="./finding_notes_played_general_idea_assets/simplest.svg" alt="simple music sheet" /></a>, the generated music events are:</p>
+<pre><code>0.00000000	tempo	400.00000000
+0.00000000	note	69	4	0.25000000	point-and-click 4 36
+0.25000000	note	67	4	0.25000000	point-and-click 9 360.00000000	tempo	400.00000000
+0.00000000	note	69	4	0.25000000	point-and-click 4 36
+0.25000000	note	67	4	0.25000000	point-and-click 9 36
+</code></pre>
+<p>That is with the default event-listener. Lilypond provides a way for the user to change that so more informations can be extracted.</p>
+<p>Out of this, we get that the tempo is 400. This 400 is almost the tempo we wrote. This 400 comes from the fact
+that we defined a tempo based on <em>quarter</em> note.</p>
+<p>The next line says that at \( t = 0 \) the key 69 (computer code for <code>la</code>) is played for a quarter note.
+And a quarter note after the beginning, the note 67 (key code for <code>sol</code>) is also played for a quarter note.</p>
+<p>There are some basic maths involved to get from these tempo and quarter timing into time a computer can use to
+understand when to start playing a note, and when to stop.</p>
+<p>One important thing to keep in mind though, is that the tempo can change during the music. These new tempos
+need to be taken into account when computing the time a note is played released.</p>
+<a class="header" href="print.html#issue-tied-notes" id="issue-tied-notes"><h1>Issue: tied notes</h1></a>
+<p>The issue with tied notes it that they are ... tied.
+Let's look at the following example to understand what the issue actually is:</p>
+<p><a href="./issue_with_tied_notes_assets/simplest_with_tied_notes.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_tied_notes_assets/simplest_with_tied_notes.svg" alt="simple music sheet with tied notes" /></a></p>
+<p>This music sheet means that the <code>la</code> key must be pressed only once, and for a total of 1.2s (two quarter time)
+However, when simply using the default event listener, the output we get is as follow:</p>
+<pre><code>0.00000000	tempo	400.00000000
+0.00000000	note	69	4	0.25000000	point-and-click 4 36
+0.00000000	tie
+0.25000000	note	69	4	0.25000000	point-and-click 11 36
+</code></pre>
+<p>The event listener generates lines per ... event, and on the music sheet there are two notes, hence two lines.
+Instead of saying there should only be one key pressed, it says the key should be pressed twice, which is wrong.</p>
+<p>My first approach to tackle this issue was to use the midi file. <a href="http://lilypond.org">Lilypond</a> can generate
+a midi file alongside the music sheet. As a rough estimate approximation, a midi file is akin to an mp3 file
+but for instrument music only.  Since lilypond generates midi file that correctly describes how the music is played, it
+would be possible to know if a key is played longer than what is described in the events file, and thus if it
+is tied to the next key with the same pitch.  This lead me to develop
+<a href="https://github.com/s-d-m/pianoterm">pianoterm</a>. However some issues with this approach quickly appeared. When
+playing triolet for example, there is a slight difference in the timings outputed in the events file and
+the one in the midi files due to some rounding in the midi file. This could be easily fixed by correlating the
+timings, however this approach looked a bit too britle hence I looked for something else.</p>
+<p>On the generated events above, we can see there is a <code>tie</code> event. We could use this as it means the previous
+note has a tie attached, but sadly this is not precise enough. For example, the following two equivalents
+music sheets provides the following two different events:</p>
+<table><thead><tr><th> music sheet </th><th> lilypond source </th><th> generated events </th></tr></thead><tbody>
+<tr><td> <a href="./issue_with_tied_notes_assets/tied_notes_chord_1.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_tied_notes_assets/tied_notes_chord_1.svg" alt="tied_notes_chord_1" /></a> </td><td> &lt;la' sol'&gt;4~ &lt;la' sol'&gt; </td><td>  <object type="text" data="./issue_with_tied_notes_assets/tied_notes_chord_1-unnamed-staff.notes"></object> </td></tr>
+<tr><td> <a href="./issue_with_tied_notes_assets/tied_notes_chord_2.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_tied_notes_assets/tied_notes_chord_2.svg" alt="tied_notes_chord_2" /></a> </td><td> &lt;sol' la'&gt;4~ &lt;sol' la'&gt; </td><td>  <object type="text" data="./issue_with_tied_notes_assets/tied_notes_chord_2-unnamed-staff.notes"></object> </td></tr>
+</tbody></table>
+<p>On the first first music sheet, looking at the generated events only, it looks like the tie applies to the <code>sol</code> key,
+whereas on the second one it looks like it applies to the <code>la</code> key. Truth is, both the <code>sol</code> and <code>la</code> key have a tie
+attached.</p>
+<p>For an even more contrived example, the two following distinct music sheets give the same tie events (as
+seen per the event-listener)</p>
+<table><thead><tr><th> music sheet </th><th> Source </th><th> generated events </th></tr></thead><tbody>
+<tr><td> <a href="./issue_with_tied_notes_assets/tied_notes_with_same_tie_events1.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_tied_notes_assets/tied_notes_with_same_tie_events1.svg" alt="tied notes_with_same_tie_events1" /></a> </td><td> &lt;sol' la'~ mi''&gt;4~  &lt;sol' la' mi''&gt;4 </td><td> <object type="text" data="./issue_with_tied_notes_assets/tied_notes_with_same_tie_events1-unnamed-staff.notes"></object> </td></tr>
+<tr><td> <a href="./issue_with_tied_notes_assets/tied_notes_with_same_tie_events2.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_tied_notes_assets/tied_notes_with_same_tie_events2.svg" alt="tied notes_with_same_tie_events2" /></a> </td><td> &lt;sol' la' mi''&gt;4~ la' </td><td> <object type="text" data="./issue_with_tied_notes_assets/tied_notes_with_same_tie_events2-unnamed-staff.notes"></object> </td></tr>
+</tbody></table>
+<p>One solution to overcome this issue would be to get on each line corresponding to a note, something saying if
+yes or no there is a tie attached to that note.</p>
+<p>Since Lilypond provides the option to let the user include file for global settings, I used it to extract more data
+from the event-listener than the default one.</p>
+<p>That is, I created a file named <code>event-listener.scm</code> with <a href="./issue_with_tied_notes_assets/event-listener.scm.for_tied_notes_only">this content</a> and then called lilypond using <code>lilypond -dinclude-settings=event-listener.scm &lt;music-sheet.ly&gt;</code>.</p>
+<p>The following table shows the new event-listener's output:</p>
+<table><thead><tr><th> music sheet </th><th> source </th><th>  generated events </th></tr></thead><tbody>
+<tr><td> <a href="./issue_with_tied_notes_assets/tied_notes_chord_1.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_tied_notes_assets/tied_notes_chord_1.svg" alt="tied_notes_chord_1" /></a> </td><td> &lt;la' sol'&gt;4~ &lt;la' sol'&gt; </td><td>  <object type="text" data="./issue_with_tied_notes_assets/tied_notes_chord_1_tie_event_on_note"></object> </td></tr>
+<tr><td> <a href="./issue_with_tied_notes_assets/tied_notes_chord_2.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_tied_notes_assets/tied_notes_chord_2.svg" alt="tied_notes_chord_2" /></a> </td><td> &lt;sol' la'&gt;4~ &lt;sol' la'&gt; </td><td>  <object type="text" data="./issue_with_tied_notes_assets/tied_notes_chord_2_tie_event_on_note"></object> </td></tr>
+</tbody></table>
+<p>Sadly, on these generated events, it says no notes have a tie attached. On a positive side we can say that at least
+we got some consistency here. Two different inputs which are logically equivalent now generates the same output,</p>
+<p>One way to workaround the issue, is to rewrite the music sheet to explicitly say that each note on the chord
+has a tie attached instead of saying the whole chord has a tie attached. Below show the difference in writing
+the input, and the generated output.</p>
+<table><thead><tr><th> music sheet </th><th> source </th><th>  generated events </th></tr></thead><tbody>
+<tr><td> <a href="./issue_with_tied_notes_assets/separately_tied_notes_chord.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_tied_notes_assets/separately_tied_notes_chord.svg" alt="separately_tied_notes_chord" /></a> </td><td> &lt;la'~ sol'~&gt;4 &lt;la' sol'&gt; </td><td>  <object type="text" data="./issue_with_tied_notes_assets/separately_tied_notes_chord_tie_event_on_note"></object> </td></tr>
+<tr><td> <a href="./issue_with_tied_notes_assets/separately_tied_notes_chord2.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_tied_notes_assets/separately_tied_notes_chord2.svg" alt="separately_tied_notes_chord2" /></a> </td><td> &lt;sol' la'~ mi''&gt;4 la' </td><td>  <object type="text" data="./issue_with_tied_notes_assets/separately_tied_notes_chord2_tie_event_on_note"></object> </td></tr>
+<tr><td> <a href="./issue_with_tied_notes_assets/separately_tied_notes_chord3.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_tied_notes_assets/separately_tied_notes_chord3.svg" alt="separately_tied_notes_chord3" /></a> </td><td> &lt;sol'~ la'~ mi''~&gt;4   &lt;sol' la' mi''&gt;4 </td><td>  <object type="text" data="./issue_with_tied_notes_assets/separately_tied_notes_chord3_tie_event_on_note"></object> </td></tr>
+</tbody></table>
+<p>Now we properly get for each note if there is a tie attached to it. This solution is not satisfactory
+as it requires modifying by hand the input music sheet, but sadly I could not find anything better yet.</p>
+<a class="header" href="print.html#issue-grace-notes" id="issue-grace-notes"><h1>Issue: grace notes</h1></a>
+<pre><code class="language-quote">Grace notes are musical ornaments, printed in a smaller font,
+that take up no additional logical time in a measure.
+</code></pre>
+<p>The issue with grace notes is that as the quote above says, says take <em>no</em> additional logical time in a measure.</p>
+<p>Let's take an example. On the following images</p>
+<p><a href="./issue_with_grace_notes_assets/simple_grace_notes.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_grace_notes_assets/simple_grace_notes.svg" alt="simple grace note" /></a></p>
+<p>This means that:</p>
+<ol>
+<li>at the very beginning of the song, that is at \( t=0s \), a pianist must press the <code>la</code> key (aka <code>a</code>).</li>
+<li>at \( t=0.6s \), he must release the <code>la</code> key and immediately press it again</li>
+<li>at \( t=1.2s \), he must release the <code>la</code> key.</li>
+<li>and somewhen after pressing the <code>la</code> key the first and second, he must quickly press and release the <code>sol</code> key.</li>
+</ol>
+<p>However the pressing and release time for the grace key (here <code>sol</code>) are not well defined.</p>
+<p>Now let's look at the generated events:</p>
+<table><thead><tr><th> music sheet </th><th> lilypond source </th><th> generated events </th></tr></thead><tbody>
+<tr><td> <a href="./issue_with_grace_notes_assets/simple_grace_notes.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_grace_notes_assets/simple_grace_notes.svg" alt="simple grace note" /></a> </td><td>     la' \grace{sol'} la' </td><td>  <object type="text" data="issue_with_grace_notes_assets/simple_grace_notes-unnamed-staff.notes"></object> </td></tr>
+</tbody></table>
+<p>Here we can easily see that the grace note has a starting time set to <code>0.25000000-0.25000000</code>. This means the grace note must have finished by the end of the first quarter note.</p>
+<p>On the slightly more complicated sheet below, which contains two successive grace notes,</p>
+<table><thead><tr><th> music sheet </th><th> lilypond source </th><th> generated events </th></tr></thead><tbody>
+<tr><td> <a href="./issue_with_grace_notes_assets/two_grace_notes.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_grace_notes_assets/two_grace_notes.svg" alt="two grace notes" /></a> </td><td>     la' \grace{sol' sol'} la' </td><td>  <object type="text" data="issue_with_grace_notes_assets/two_grace_notes-unnamed-staff.notes"></object> </td></tr>
+</tbody></table>
+<p>we can see they have a starting time of respectively <code>0.25000000-0.50000000</code> and <code>0.25000000-0.25000000</code>.
+The part before the dash is the time they have to finish. The part after can be used to know order them.</p>
+<p>To decide when to play a grace note, and for how long, the algorithm used is quite simple, it will:</p>
+<ol>
+<li>Try to fit all successive grace note fairly distributed between the former and next &quot;normal&quot; notes, and use
+all the time in between these two notes</li>
+<li>prevent grace note from being played longer than (29 / 128) * (60 / 100) seconds to match the midi file
+produced by lylipond. If the former and next normal note are separated by a longer duration such that this
+maximum duration limit is hit, then grace notes are played at the end of the interval. That is, they are
+played right before the following next normal note.</li>
+</ol>
+<a class="header" href="print.html#repeats" id="repeats"><h1>Repeats</h1></a>
+<p>The idea of using the event listeners to extract when notes are played shows its limits quite well in the handling of repeats.
+The event listeners reports events as it sees them in the lilypond's input file. For example on the following music sheet</p>
+<p><a href="./issue_with_repeats_assets/simple_repeat.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_repeats_assets/simple_repeat.svg" alt="simple music sheet with repeat" /></a></p>
+<p>the <code>la</code> should be played twice. However the generated events are</p>
+<pre><code>0.00000000	tempo	400.00000000
+0.00000000	note	69	4	0.25000000	point-and-click 6 37
+</code></pre>
+<p>when using the default event-listener provided by lilypond. That is the exact same events as generated</p>
+<p><a href="./issue_with_repeats_assets/no_repeat.ly" title="lilypond source for this simple example with tied notes"><img src="./issue_with_repeats_assets/no_repeat.svg" alt="simple music sheet without any repeat" /></a></p>
+<p>This issue here is due to the fact that the default event-listener doesn't pay attention to repeat events.
+I tried modifying it in several ways so that it would also report on repeat events.
+However I could not get what was repeated which is quite important to say the least.</p>
+<p>if we have the following music sheet,</p>
+<pre><code>\repeat volta 2 { la' sol' }
+</code></pre>
+<p>We need to extract that this is equivalent to <code>la' sol' la' sol'</code>.
+With my several attempts based only on the event-listener, I was getting the following events.:</p>
+<pre><code>t=0                  play la'   duration quarter-time
+t=quarter-time       play sol'  duration quarter-time
+t=2 * quarter-time   display-repeat-bar
+</code></pre>
+<p>This is not good enough, as the same output was produced for this different music:</p>
+<pre><code>la' \repeat volta 2 { sol' }
+</code></pre>
+<p>which is equivalent to <code>la' sol' sol'</code>.</p>
+<p>Here the solution was to unfold all repeats first.</p>
+<p>Lilypond handle the following kind of repeats as described in its <a href="http://lilypond.org/doc/v2.19/Documentation/notation/repeats">documentation</a>:</p>
+<ul>
+<li>volta</li>
+<li>unfold</li>
+<li>percent</li>
+<li>tremolo</li>
+</ul>
+<p>Below is a table showing the effect of each repeat type on the event-listener output</p>
+<table><thead><tr><th> music sheet </th><th> source </th><th>  generated events </th></tr></thead><tbody>
+<tr><td> <a href="./issue_with_repeats_assets/volta_repeat.svg" title="lilypond source for this simple example"><img src="./issue_with_repeats_assets/volta_repeat.svg" alt="volta repeat" /></a> </td><td> \repeat volta 2 { la' } </td><td> <object type="text" data="./issue_with_repeats_assets/volta_repeat-unnamed-staff.notes"></object> </td></tr>
+<tr><td> <a href="./issue_with_repeats_assets/unfold_repeat.svg" title="lilypond source for this simple example"><img src="./issue_with_repeats_assets/unfold_repeat.svg" alt="unfold repeat" /></a> </td><td> \repeat unfold 2 { la' } </td><td> <object type="text" data="./issue_with_repeats_assets/unfold_repeat-unnamed-staff.notes"></object> </td></tr>
+<tr><td> <a href="./issue_with_repeats_assets/percent_repeat.svg" title="lilypond source for this simple example"><img src="./issue_with_repeats_assets/percent_repeat.svg" alt="percent repeat" /></a> </td><td> \repeat percent 2 { la' } </td><td> <object type="text" data="./issue_with_repeats_assets/percent_repeat-unnamed-staff.notes"></object> </td></tr>
+<tr><td> <a href="./issue_with_repeats_assets/tremolo_repeat.svg" title="lilypond source for this simple example"><img src="./issue_with_repeats_assets/tremolo_repeat.svg" alt="tremolo repeat" /></a> </td><td> \repeat tremolo 2 { la' } </td><td> <object type="text" data="./issue_with_repeats_assets/tremolo_repeat-unnamed-staff.notes"></object> </td></tr>
+</tbody></table>
+<p><code>Percent</code> and <code>tremolo</code> repeats are still something I can't really understand even after reading <a href="http://lilypond.org/doc/v2.19/Documentation/notation/short-repeats">the documentation on short repeats</a>.
+Therefore I just ignore them. However, when focusing on <code>volta</code> and <code>unfold</code> repeat, we see on the generated events that unfolded repeats
+produce the correct events about notes being played and when. Therefore when encoutering a <code>volta</code> repeat, one can simply change it to
+an <code>unfold</code>ed one to get the right music events. This leads to another issue though. It changes the generated output. One goal of the
+project was to work on real music sheets, just like the ones a pianist would use. Not a simplified equivalent one. This issue will
+be treated later on, in the part about <a href="./matching_a_note_to_where_it_appears.md">matching a note to where it appears on the music sheet</a>.</p>
+<p>For now, to solve the current issue due to repeats, let's just replace all <code>volta</code> repeats by <code>unfold</code> repeats.
+There are several ways to do so. Since lilypond's input file are simply text files, one way would be to
+programmatically edit the text to replace <code>volta</code> by <code>unfold</code> everywhere it appears, and then start processing
+the music sheet. Another way would be to modify lilypond so that every time it encounters a <code>volta</code> repeat it
+would treat it just like an <code>unfold</code> one. I went for the second solution as it is the most stable one as
+modifying the source would lead to other issues later on.</p>
+<p>Reading lilypond's source code, I found <a href="https://git.savannah.gnu.org/gitweb/?p=lilypond.git;a=blob;f=scm/music-functions.scm;h=7d70c9bbd5652b75a0ac71b27f07bda42e399fe4;hb=a358ea26328939acdcfb0f08f307bb1c3b076915#l345">the place where it decide how to treat a repeat</a>.
+simply changing <code>VoltaRepeatedMusic</code> by <code>UnfoldedRepeatedMusic</code>. Modifying lilypond implies recompiling
+it, which also implies having the right compile-time dependencies and other inconveniences. Fortunately,
+the file requiring the modification is actually interpreted, hence simply modifying and re-running lilypond
+is enough. And to avoid file-system related issues, the modification is made on the fly when lilypond opens
+that file. This is done by using a library that overwrites the system's <code>open</code> and <code>fopen</code> function and is set
+via <code>LD_PRELOAD</code> environment variable.</p>
+<a class="header" href="print.html#fixing-overlapping-notes" id="fixing-overlapping-notes"><h1>Fixing overlapping notes</h1></a>
+<p>When a key is pressed, it has to be released before one can press it again. While this seems completly obvious, let's not forget
+that music sheet notation where made for humans, not computers. And as a consequence, processing music sheet requires some care.</p>
+<p>For example, on the following music sheet:</p>
+<p><a href="./issue_with_overlapping_notes_assets/simple_overlapping_notes.ly" title="lilypond source for this simple example"><img src="./issue_with_overlapping_notes_assets/simple_overlapping_notes.svg" alt="simple music sheet with overlaping keys" /></a></p>
+<p>the first <code>la</code> key is meant to be pressed when starting the music, and released at the exact same time the
+user should press the <code>sol</code> key. In between tough, there is the grace <code>la</code> key which should be played after
+the &quot;big&quot; <code>la</code> and before the <code>sol</code> key are pressed. That is, the user should press <code>la</code> while it is already pressed. Any
+human will understand that to press the <code>la</code> the second time, you have to release it first and will
+instinctively do it. Therefore the program will look for these situations where a key is meant to be pressed
+while it was already pressed. When this happens, the first press key will be changed so that it will be
+released when the second one is meant to be pressed.</p>
+<a class="header" href="print.html#separating-repeated-notes" id="separating-repeated-notes"><h1>Separating repeated notes</h1></a>
+<p>The following music sheet:</p>
+<p><a href="./issue_with_repeated_notes_assets/simple_repeat.ly" title="lilypond source for this simple example"><img src="./issue_with_repeated_notes_assets/simple_repeat.svg" alt="one note repeated twice" /></a></p>
+<p>means that:</p>
+<ol>
+<li>at the very beginning of the song, that is at \( t=0s \), a pianist must press the <code>la</code> key.</li>
+<li>at \( t=0.6s \), he must release the <code>la</code> key and immediately press it again</li>
+<li>at \( t=1.2s \), he must release the <code>la</code> key.</li>
+</ol>
+<p>Releasing a key and pressing it again <em>at the exact same time</em> is something that is literraly impossible to do
+for a human being. However, for a computer this lead to the situation where a sound is emitted but it doesn't look
+like the key was pressed again.</p>
+<p>Let's look at the following video, and let's pay extra attention to the <code>la</code> key displayed on the keyboard at the bottom.
+It looks like it is pressed at the beginning and released at the end only, while in the middle of the video we can
+distinctly hear the <code>la</code> note being played again.</p>
+<p><a href="./issue_with_repeated_notes_assets/repeated_notes_without_spacing.webm" title="The key on the keyboard looks like it is pressed only once"><img src="./issue_with_repeated_notes_assets/fake_screenshot_repeated_notes.png" alt="The key on the keyboard looks like it is pressed only once" /></a></p>
+<p>When looking at the keyboard only, it looks like the <code>la</code> key is played once and held as if it was a white note, not a quarter one.</p>
+<p>To overcome this issue, the program applies a similar strategies as the one used to fix &quot;overlapping&quot; notes. It will detect when
+a note is said to be released and pressed at the exact same time, and it will then introduce a small temporal gap. This mimick
+human's behaviour. The first note will be released slightly earlier. Its duration will be shorter by either 1/4 of its duration,
+or 75 milli seconds, whichever is smaller. These values where chosen completely arbitrarily though. The result is the following
+video where one can clearly spot when is second <code>la</code> played only by looking at the keyboard.</p>
+<p><a href="./issue_with_repeated_notes_assets/repeated_notes_with_small_spacing.webm" title="Adding a small spacing let one see the key being pressed again"><img src="./issue_with_repeated_notes_assets/fake_screenshot_repeated_notes.png" alt="One can see the key being pressed again" /></a> |</p>
+<a class="header" href="print.html#finding-where-the-cursor-position" id="finding-where-the-cursor-position"><h1>Finding where the cursor position</h1></a>
+<p>So far, we got to extract which notes are played when and for how long (except for the caveat with tied notes).
+This means based at that point, we can get to play the music, as in send some sound in the computer's speaker
+to please someone's ears.</p>
+<p>However the goal of the project was also to follow the music sheet. Therefore the program needs to somehow find out
+how the notes are laid out, so it can highlight the ones being played currently.</p>
+<p>This section explains how we achieved that.</p>
+<a class="header" href="print.html#matching-notes-to-where-they-appear-on-the-music-sheet" id="matching-notes-to-where-they-appear-on-the-music-sheet"><h1>Matching notes to where they appear on the music sheet.</h1></a>
+<p>Lilypond provides to a &quot;point-and-click&quot; feature. It is meant to facilitate writing music editors. For example, the
+<a href="http://frescobaldi.org/">Frescobaldi</a> software provides a music sheet view and a text editor view as can be seen
+on the following screenshot:</p>
+<p><img src="./matching_a_note_to_where_it_appears_assets/frescobaldi1-nl.png" alt="Frescobaldi screenshot" /></p>
+<p>when the user click on a note on the music sheet, the software automatically moves the cursor on the left side
+to the corresponding place in the source file.</p>
+<p>Therefore there is a way from matching a note on the music sheet to where the note was (line and column numbers)
+in the input file. Now, when listening to events, the event listener outputed a listing lke the following</p>
+<pre><code>0.00000000	tempo	400.00000000
+0.00000000	note	69	4	0.25000000	point-and-click 4 36
+0.25000000	note	67	4	0.25000000	point-and-click 9 360.00000000	tempo	400.00000000
+0.00000000	note	69	4	0.25000000	point-and-click 4 36
+0.25000000	note	67	4	0.25000000	point-and-click 9 36
+</code></pre>
+<p>As can be seen, some lines contain <code>point and click</code> followed by two numbers. These are respectively the line
+column number in the source file. And these lines are what was used to find out when to play a note. As a consequence,
+this <code>point and click</code> can be used to correlate the place in the music sheet a note is, such that when a note
+is to be played, it can also be graphically highlighted.</p>
+<p>Now the idea is thus to extract all the &quot;point and click&quot; and their bounding boxes in all pages. Lilypond produces
+pdf files by default, however parsing pdf files to extract this data proved to require significant efforts. Instead
+of working with pdf files, I used another output format provided by lilypond: svg. Svg files are a special &quot;kind&quot;
+of xml files and therefore can easily be analysed with a text editor or worked on with any XML parser.</p>
+<p>To get lilypond to output svg files, one had to pass the <code>-dbackend=svg</code> option to lilypond. This will generate
+one file per page, and to ensure lilypond generates these precious point-and-click elements, one has to also pass
+the <code>-dpoint-and-click</code> option.</p>
+<p>The result when doing so is an svg file containing cross link. For a note, the svg file will contain for example</p>
+<pre><code class="language-svg">&lt;a style=&quot;color:inherit;&quot; xlink:href=&quot;textedit:///tmp/simple_overlapping_notes.ly:36:17:18&quot;&gt;
+&lt;path transform=&quot;translate(39.4689, 10.3826) scale(0.0028, -0.0028)&quot; d=&quot;M211 141c61 0 117 -33 117 -100c0 -71 -52 -121 -99 -149c-34 -20 -73 -33 -112 -33c-61 0 -117 33 -117 100c0 71 52 121 99 149c34 20 73 33 112 33z&quot; fill=&quot;currentColor&quot;/&gt;
+&lt;/a&gt;
+</code></pre>
+<p>From this, we can extract that the note that is written at line 36 from character 17 to 18 in the file
+<code>/tmp/simple_overlapping_notes.ly</code> stays at position <code>39.4689, 10.3826</code> in the svg file. And to
+compute the bounding box, we need to properly decode the content of the <code>d</code> field in the <code>path</code> element.
+That last part requires significant effort. So instead, I went for a different method, albeit similar in
+design. Lilypond provides ways to modify properties of graphical objects. When using the event-listener
+it is possible to automatically modify the note head for all notes as they appear on the music sheet.
+However we are not interested in modifying how the notes look like on the music sheet. What we want is to
+extract the bounding boxes of notes in the music sheet. By abusing the <code>id</code> properties of notes, we can
+achieve such a thing. The code in the event-listener looks as follow:</p>
+<pre><code class="language-scm">#(define (on-note-head engraver grob source-engraver)
+   (let* ((context  (ly:translator-context source-engraver))
+      (event (event-cause grob))
+       ...
+    (ly:grob-set-property! grob 'id origin)
+))
+
+
+%%%% The actual engraver definition: We just install some listeners so we
+%%%% are notified about all notes and rests. We don't create any grobs or
+%%%% change any settings.
+
+\layout {
+  \override NoteHead.stencil = #(lambda (grob)
+                  (let* ((note (ly:note-head::print grob))
+                     (former-id (ly:grob-property-data grob 'id))
+                     (x-interval (ly:stencil-extent note X))
+                     (x-width (interval-length x-interval))
+                     (y-interval (ly:stencil-extent note Y))
+                     (y-height (interval-length y-interval))
+                     (new-values (format #f &quot;#x-width=~1,4f#y-height=~1,4f&quot; x-width y-height))
+                     (new-id (string-append new-values former-id)))
+                    (ly:grob-set-property! grob 'id new-id)
+                    note))
+
+  \context {
+    \Voice
+
+    \consists #(make-engraver
+        (acknowledgers
+         ((note-head-interface engraver grob source-engraver)
+          (on-note-head engraver grob source-engraver))))
+  }
+}
+</code></pre>
+<p>This code adds the origin of a note (the position in the source file) and also the x-width and y-height
+of the note in svg into the note id. When running Lilypond with this, we now get something like</p>
+<pre><code class="language-svg">&lt;g id=&quot;#x-width=.9284#y-height=.7971#origin=simple_overlapping_notes.ly:36:17:20#...&quot;&gt;
+&lt;path transform=&quot;translate(39.4689, 10.3826) scale(0.0028, -0.0028)&quot; d=&quot;M211 141c61 0 117 -33 117 -100c0 -71 -52 -121 -99 -149c-34 -20 -73 -33 -112 -33c-61 0 -117 33 -117 100c0 71 52 121 99 149c34 20 73 33 112 33z&quot; fill=&quot;currentColor&quot;/&gt;
+&lt;/g&gt;
+</code></pre>
+<p>We can now extract that there is a note at position <code>39.4689, 10.3826</code> which spans for <code>0.9284, 0.7971</code> and that originates
+from <code>simple_overlapping_notes.ly:36:17</code>. The position is actually the center of the note on the y axis, and the leftmost
+position on the x axis. With this knowledge, computing the bounding box limits comes quite easy</p>
+<p>Extracting all the <code>g</code> elements with an <code>id</code> field, and doing so for all svg files, we can now get where notes are displayed, and
+identify them. And since that id is the same one as written in the note files (the output of the event listener), it is then
+possible to match notes being played to where they are displayed.</p>
+<p>Now there is an issue with unfold repeats here. If the user has some unfolded repeats in his source file, one note will appear
+several time in the music sheet, but have only one distinct id (i.e. line and column number) in the source file. For these
+cases, the software can't do the mapping and will therefore print an error message. A user can simply copy/paste the repeated
+part as many times as required to provide the same graphical output while having one source note matching one note in the
+music sheet. The same issue arises when a user uses variables and refer to them several times in the lilypond file.</p>
+<a class="header" href="print.html#finding-the-top-and-bottom-of-systems" id="finding-the-top-and-bottom-of-systems"><h1>Finding the top and bottom of systems</h1></a>
+<p>In order to provide for a smooth transition of the cursor that looks linear, the software has to know the limits of the current
+system (a system is the set of staves played together). Compare the following two cursor progression below:</p>
+<table><thead><tr><th align="center"> cursor only around notes </th><th align="center"> cursor going from top to bottom of the system </th></tr></thead><tbody>
+<tr><td align="center"> <img src="./finding_systems_top_and_bottom_assets/simple_bad_cursor.gif" alt="cursor only wraps the notes" /> </td><td align="center"> <img src="./finding_systems_top_and_bottom_assets/simple_good_cursor.gif" alt="cursor goes from top to bottom" /> </td></tr>
+</tbody></table>
+<p>To find the top and bottom of a system, I used a debug option from lilypond: skylines.
+When passing the option <code>-ddebug-skylines</code> to lilypond, it generates some visual clues in the output
+which are normally used for debugging. On the following image, we can see some colored lines on top and
+bottom of the staves.</p>
+<p><img src="./finding_systems_top_and_bottom_assets/simple_for_skylines.svg" alt="simple example showing skylines" /></p>
+<p>There are two purple-ish lines, one on top of each staff, and two turquoise ones at the bottom. There are
+also two other lines which can't be seen as they are drawn below the top purple bottom turquoise ones.</p>
+<p>The top line that is not visible is red, and the bottom one is green. These are the top and bottom and
+bottom line of the system (which comprise only two staves in this example).</p>
+<p>When opening the generated svg file, we can see the following:</p>
+<pre><code class="language-svg">&lt;g color=&quot;rgb(0.0%, 25500.0%, 0.0%)&quot;&gt;
+&lt;line transform=&quot;translate(5.6906, 3.8453)&quot; stroke-linejoin=&quot;round&quot; stroke-linecap=&quot;round&quot; stroke-width=&quot;0.1000&quot; stroke=&quot;currentColor&quot; x1=&quot;42.8096&quot; y1=&quot;8.0873&quot; x2=&quot;42.8096&quot; y2=&quot;8.0873&quot;/&gt;
+...
+&lt;line transform=&quot;translate(5.6906, 3.8453)&quot; stroke-linejoin=&quot;round&quot; stroke-linecap=&quot;round&quot; stroke-width=&quot;0.1000&quot; stroke=&quot;currentColor&quot; x1=&quot;42.8096&quot; y1=&quot;17.0373&quot; x2=&quot;42.8096&quot; y2=&quot;8.0873&quot;/&gt;
+...
+&lt;line transform=&quot;translate(5.6906, 3.8453)&quot; stroke-linejoin=&quot;round&quot; stroke-linecap=&quot;round&quot; stroke-width=&quot;0.1000&quot; stroke=&quot;currentColor&quot; x1=&quot;42.8096&quot; y1=&quot;17.0373&quot; x2=&quot;42.8096&quot; y2=&quot;17.0373&quot;/&gt;
+...
+&lt;/g&gt;
+</code></pre>
+<p>Each <code>line</code> element inside a <code>g</code> group is a small segment of the <code>g</code> line. Using the translate and the <code>x1</code>,
+<code>y1</code>, <code>x2</code>, <code>y2</code> coordinates, we can reconstruct all the lines segment and thus the whole line. Using these
+coordinates it is then possible to compute the top most and bottom most segment, giving us the top and bottom
+of a line. The color in <code>g</code> element is then used to decide if the line is following the top or bottom of a
+staff, or the top of bottom of the system. Since we are interested here to fing the limits of a system, the
+lines that are of interest for us are the red ones (top system, color &quot;rgb(25500.0%, 0.0%, 0.0%)&quot;) and green
+ones (bottom system, color &quot;rgb(0.0%, 25500.0%, 0.0%)&quot;)</p>
+<p>Using these we can now extract all the top and bottom limits of the systems appearing in a music sheet. This is
+then later used as the top and bottom of the cursor as can be seen in the following example:</p>
+<p><img src="./finding_systems_top_and_bottom_assets/constant_top_and_bottom.gif" alt="top and bottom are now constant" /></p>
+<p>Since the goal of the project is to use real music sheets, the colored lines have to be removed. This is done
+simply by rerunning lilypond without the debug option. However, since running lilypond takes some time, it
+would very likely be faster to remove the colored lines out of the the svg files than re-running lilypond.
+I haven't implemented this optimisation yet.</p>
+<a class="header" href="print.html#cursor-for-notes-in-a-chord" id="cursor-for-notes-in-a-chord"><h1>Cursor for notes in a chord</h1></a>
+<p>We saw how to find the top and bottom of a system, and how notes from the source file were linked to the music sheet.
+From that, getting the cursor for a chord is quite trivial: from the note file generated by the event listener, we
+deduce which notes are played at which time. All notes of a chord are by definition played at the same time. Therefore,
+notes being played at the same time are grouped together. From the note file, we extract the note id as the line and
+file number from their spot in the source file. From there, we find where these notes are on the music sheets.
+The cursor will then have as its left bound, the left-most limit of all notes in the chord. Similar for the right limit.
+To find the top and bottom limit, we then need to find in which system they are, which is trivially done by comparing
+coordinates.</p>
+<p>It can happen that the bottom of a system stays below than the top of the next system, which means in some cases, a note
+can look like it may belong to two different systems.</p>
+<p>Below is an example showing when these can possibly happen.</p>
+<p><img src="./getting_the_cursor_wrapping_all_notes_belonging_to_a_chord_assets/overlapping_systems.svg" alt="highlight of system overlap" /></p>
+<p>The greyed area in the middle shows the overlap between the bottom of the top system and the top of the bottom system.
+It illustrates that looking only to top and bottom system coordinates are sometimes not enough to determine to which
+system a note belongs. However, for these notes, it is clear that using the full systems' skylines can be used to
+accurately determine which system is the right one.</p>
+<p>At this point, when playing the music, we can now also show the cursor ... and automatically scroll the page so that
+the cursor is always visible near the middle of the screen.</p>
+<a class="header" href="print.html#finding-bar-changes-events" id="finding-bar-changes-events"><h1>Finding bar changes events</h1></a>
+<p>One of the required feature for the program was to be able to play only one part of the music, ... because
+people (at least beginners) learn a song one part at a time. A natural way to break a song into pieces is
+at measure boundary. Therefore the lilyplayer at to provide a way to play the music from some measure up to
+some other. this was visible in the <a href="./intro_assets/lilyplayer-demo.webm">introductory video</a> at second 21.</p>
+<p>To find out when a measure starts and ends, I used the <code>currentBarNumber</code> from lilypond on the event-listener.
+On the event-listener, when getting notified of a note head, we retrieve the bar number and set it as part of
+its id.</p>
+<p>The code is as follow:</p>
+<pre><code>
+#(define (on-note-head engraver grob source-engraver)
+   (let* ((context  (ly:translator-context source-engraver))
+
+      ... code to get the event ,,,
+
+      (current-bar-number (ly:context-property context 'currentBarNumber))
+      (id ... former value t=with origin, start time, duration etc.))
+
+      (id-with-bar-number (ly:format &quot;#bar-number=~a~a&quot;
+                          current-bar-number
+                          id)))
+
+     (ly:grob-set-property! grob 'id id-with-bar-number)
+))
+
+\layout {
+  \override NoteHead.stencil = #(lambda (grob)
+                  (let* ((note (ly:note-head::print grob))
+                     (former-id (ly:grob-property-data grob 'id)))
+                     ... code to add the width and height of the note bounding box ...
+                     (ly:grob-set-property! grob 'id former-id)
+                    note))
+
+  \context {
+    \Voice
+
+    ...
+
+    \consists #(make-engraver
+        (acknowledgers
+         ((note-head-interface engraver grob source-engraver)
+          (on-note-head engraver grob source-engraver))))
+  }
+}
+</code></pre>
+<p>Now, this bar number will only be written as part of the note id when running lilypond to get the svg
+file. Since we unfold the repeats to extract when notes are played, using the bar number as reported with
+unfolded repeat will lead to different values than what the user would see on the music sheet which contains
+repeats.</p>
+<p>That way, it is possible to know to which measure belongs a note. Detecting measure number change is as simple
+as checking two consecutively played notes and checking whether their measure number are the same or note.</p>
+<p>To then find out when a measure <code>x</code> starts, one just has to find the first played note with bar number <code>x</code>.</p>
+<p>Providing the user with the ability to play only from measure say 4 to 10 requires a bit more thought, in
+case there are repeats. For example, if measure 7 ends with a repeat returning to measure 2 and that this
+repeat is meant to be hit twice before moving to measure 8, what should the software play?</p>
+<ul>
+<li>measure 4 to 8 then 3 to 8 then 3 to 8 again then 9 and 10?</li>
+<li>measure 4 to 8 then 3 to 8 then 9 and 10?</li>
+<li>measure 4 to 8 then 9 and 10?</li>
+</ul>
+<p>Here the choice should probably be left to the user. Sadly lilyplayer doesn't let the user choose and decides
+to play the longest piece.</p>
+<a class="header" href="print.html#finding-turn-page-events" id="finding-turn-page-events"><h1>Finding turn page events</h1></a>
+<p>When playing the music it is important to know when to turn the page, otherwise the cursor will be shown at the
+right place but on the wrong page. One solution here could be to always say on which page should a cursor be printed.
+However that would be wasteful as the page doesn't change often. Therefore instead of always setting the page to the
+current one, the page will only be selected when there is a turn page event.</p>
+<p>Detecting a turn page is simple. When playing the music, if two consecutive cursor are on two different pages, there
+must be a turn-page event inserted. The new page is the one of the second cursor. Note that the page of the second
+cursor is not necessarily the one coming after the page of the first cursor. For example, in case of a repeated part
+that starts at the bottom of a page and finishes at the top of the next one. There would be a turn page event going
+from page 1 to 2, and when hitting the repeat bar the first time, it will go back to page 1.</p>
+<a class="header" href="print.html#finding-on-which-staff-a-note-is" id="finding-on-which-staff-a-note-is"><h1>Finding on which staff a note is</h1></a>
+<p>One of the required feature was to be able to play left and right hand separately.
+Therefore the software needs to know which part of the music sheet is meant to be
+played on the left and which is meant to be played on the right hand.</p>
+<p>I believe it is commonly accepted that for piano music sheets, the bottom staff
+(that usually starts with a bass clef) and the top staff (usually with a treble clef)
+are meant to be played respectively with left and right hand.</p>
+<p>Therefore to achieve the goal of discriminating notes from being played left or right, one idea would simply
+be to try to use the debug skylines again. Using these, it would be possible to graphically find out on which
+staff a note is drawn, and consequently if it is the first or second staff of the system, and therefore if it
+should be played with the left or right hand.</p>
+<p>See for example the following piece of music.</p>
+<p><img src="./finding_on_which_stave_a_note_is_assets/cross_staves.svg" alt="Skylines can be used to tell on which staff a note is" /></p>
+<p>However, a different solution was used here.</p>
+<p>From the source file, the notes are written in the staff they are. Therefore it is possible starting from a
+note to find out in which staff it belongs, only based on the text file. This is faster and simpler than
+extracting the same information from the svg files.</p>
+<p>Extracting the staff-number is done using the event-listener and the following snippet:</p>
+<pre><code>
+#(define (get-staff-number key)
+   (let* ((res (assoc key context-to-staff)))
+    (if res
+      (cdr res) ;; found
+      (begin  ;; not found, add it to list
+    (let ((res next-staff-num))
+      (set! context-to-staff (cons (cons key res) context-to-staff))
+      (set! next-staff-num (+ 1 next-staff-num))
+      res)))))
+
+
+#(define (on-note-head engraver grob source-engraver)
+   (let* ((context  (ly:translator-context source-engraver))
+      ...
+      (root-context (object-address (ly:context-property-where-defined context 'instrumentName)))
+      (staff-number (get-staff-number root-context))
+      ...
+      )
+))
+
+\layout {
+
+  \context {
+    \Voice
+
+    \consists #(make-engraver
+        (acknowledgers
+         ((note-head-interface engraver grob source-engraver)
+          (on-note-head engraver grob source-engraver))))
+  }
+}
+
+</code></pre>
+<p>The staff number is then exported in the notes file alongside the id of the note.</p>
+<p>The <code>get-staff-number</code> function simply assigns an incrementing number to each key it root-context it receives,
+starting from 0. That way, the first staff to be encountered will be labeled 0, the next one 1 and so forth.</p>
+<p>Each note having the same the same staff number are meant to be played by the same hand.
+It then becomes possible to display the keyboard and using different colours, to show
+which hands plays what.</p>
+<p>This is what the keyboard at the bottom of the <a href="./intro_assets/lilyplayer-demo.webm" title="demo">introductory video shows</a>:</p>
+<ul>
+<li>red coloured keys are pressed by the left hand</li>
+<li>blue coloured keys are pressed by the right one</li>
+</ul>
+<a class="header" href="print.html#getting-the-staffs-instrument-name" id="getting-the-staffs-instrument-name"><h1>Getting the staff's instrument name</h1></a>
+<p>In order to let the user play only left or right hand, I wanted to provide a small window on which the user
+could simply select the part he wanted. I had in mind to provide a similar user interface as the one from
+<a href="http://etudeapp.com/tour/">Etude</a>. The following image was more or less what I wanted to provide:</p>
+<p><img src="./finding_the_staff_instrument_name_assets/select_part_Eutde_window.png" alt="Image from Etude showing the hand selection window" /></p>
+<p>With lilypond, it is possible to name the staves. For example, on the following example, the first stave is named
+&quot;Pit&quot; and the second one &quot;Herr&quot;</p>
+<p><img src="./finding_the_staff_instrument_name_assets/simple_with_staff_names.svg" alt="Showing names for staves" /></p>
+<p>I wanted to reuse these names (thus extract them from the music sheet) in the select part window. Note: I didn't implemented
+the &quot;select part&quot; option in the player.</p>
+<p>To do so, I simply got them from the event listener. We already saw how we got the staff number, when receiving a note head event.
+Lilypond also provides a function <code>get-instrument-name</code> which can be called at the same place. That way, it is possible to know
+which name (if any) correspond to a specific staff number, and therefore provide the functionality of letting the user select
+a part of music by the instrument name.</p>
+<p>The code look as follow:</p>
+<pre><code>#(define (save-staff-number-instrument-name staff-number context)
+     (output-to-table-file (ly:format &quot;~a ~a&quot;
+                      staff-number
+                      (get-instrument-name context))))
+
+#(define (on-note-head engraver grob source-engraver)
+   (let* ((context  (ly:translator-context source-engraver))
+
+      (root-context (object-address (ly:context-property-where-defined context 'instrumentName)))
+      (staff-number (get-staff-number root-context))
+
+      (save-staff-number-instrument-name staff-number context)
+    ...
+)))
+
+\layout {
+  \context {
+    \Voice
+
+    \consists #(make-engraver
+        (acknowledgers
+         ((note-head-interface engraver grob source-engraver)
+          (on-note-head engraver grob source-engraver))))
+  }
+}
+</code></pre>
+<p>In hindsight, this part was probably useless, because no ones ever set the names of these staves in a music sheet.</p>
+<a class="header" href="print.html#file-format" id="file-format"><h1>File format</h1></a>
+<p>The whole process described up to here takes time. To give you an idea, it takes about 20 seconds to analyse
+the music sheet &quot;Für Elise&quot; from Beethoven. Surely, having to wait 20 seconds every time one wants to listen
+to that song is simply not acceptable. Also, since this computation gives always the same result, one can
+simply compute the whole thing once, and then save the result somewhere to later reuse.</p>
+<p>This chapter describe the file format used, so that applications reading these files can be built.
+The program that creates this file is named lilydumper, and the one that plays it is named lilyplayer.</p>
+<p>The file format is made of the following:</p>
+<ul>
+<li>a header</li>
+<li>the mapping staff number, instrument name</li>
+<li>a list of events</li>
+<li>the svg files</li>
+</ul>
+<p>And nothing else. There should be no data after the last svg file, and reader program should not accept files
+with more data at the end.</p>
+<a class="header" href="print.html#the-header" id="the-header"><h2>The header</h2></a>
+<p>The first four bytes of the file are a magic number and must match <code>LPYP</code> in ascii. That is a lilydumper file
+must start by <code>0x4c 0x50 0x59 0x50</code>.
+The next byte is a version number. It was meant to provide backward compatibility in case new of new features
+that would end up in the file format. For now it is basically <code>0x00</code>. Any other value is unknown.</p>
+<a class="header" href="print.html#mapping-staff-number-instrument-name" id="mapping-staff-number-instrument-name"><h2>Mapping staff number, instrument name</h2></a>
+<p>Immediately follwoing the header, comes the instrument names mapping as described in <a href="./finding_the_staff_instrument_name.md">its own
+chapter</a>.  First there is one byte that tells how many instrument
+names there is to come. This will likely be <code>0x02</code> because a piano sheet music has most of the times two
+staves. Then comes the names of each staff written as utf-8 null-terminated string. The first string is the
+name of the staff number 0, the second one is for the staff number 1 and so forth.</p>
+<p>An example here could be: <code>0x02 0x50 0x69 0x61 0x6e 0x6f 0x00 0x50 0x69 0x610x6e 0x6f 0x00</code>. The first <code>0x02</code>
+means there are two names coming which are <code>Piano</code> (0x50 0x69 0x61 0x6e 0x6f 0x00) and <code>Piano</code> again.</p>
+<a class="header" href="print.html#the-events" id="the-events"><h2>The events</h2></a>
+<p>Events occuring at the same time are grouped together, forming a group of events.  The events section of the
+file starts by the number of group of events. This number is stored in 8 bytes as a big endian value. Then there
+are that number of group of events appearing right after.</p>
+<p>Group of events are written out sequentially, in chronological order.</p>
+<p>Each group of events is written as follow:</p>
+<ol>
+<li>time of occurrence in nanoseconds from the start of the song (8bytes big endian)</li>
+<li>number of events occurring at that time (1byte)</li>
+<li>followed by each event occuring at that time.</li>
+</ol>
+<p>There are five different types of event so far. Each of them has a specified output format. The way they are
+written is described below:</p>
+<ol>
+<li>id of event (1byte)</li>
+<li>event-specific data</li>
+</ol>
+<p>Below is the table of event-id</p>
+<table><thead><tr><th> event         </th><th> value </th></tr></thead><tbody>
+<tr><td> press key      </td><td>     0 </td></tr>
+<tr><td> release key    </td><td>     1 </td></tr>
+<tr><td> set bar number </td><td>     2 </td></tr>
+<tr><td> set cursor     </td><td>     3 </td></tr>
+<tr><td> set svg file   </td><td>     4 </td></tr>
+</tbody></table>
+<p>The event-specific data is:</p>
+<p><strong>for press key event</strong></p>
+<ol>
+<li>pitch to play (1 byte)</li>
+<li>staff number  (1 byte)  (staff number on which the note appears on the music sheet)</li>
+</ol>
+<p><strong>for release key event</strong></p>
+<ol>
+<li>pitch to release (one byte)</li>
+</ol>
+<p><strong>for set bar number</strong></p>
+<ol>
+<li>the new bar/measure number (2 bytes, Big endian) (this is the current measure in the music sheet)</li>
+</ol>
+<p><strong>for set cursor</strong></p>
+<ol>
+<li>the left coordinate of the cursor box (4bytes BE)</li>
+<li>the right coordinate (4bytes BE)</li>
+<li>the top coordinate (4bytes BE)</li>
+<li>the bottom coordinate (4bytes BE)</li>
+</ol>
+<p>These coordinate are stored in the file as integer but must be divided by 10.000 to use. For example, a set cursor
+event with the following values in the file</p>
+<table><thead><tr><th> postition </th><th> value </th></tr></thead><tbody>
+<tr><td> left </td><td> 520608 </td></tr>
+<tr><td> right </td><td> 750000 </td></tr>
+<tr><td> top </td><td> 1234567 </td></tr>
+<tr><td> bottom </td><td> 2345678 </td></tr>
+</tbody></table>
+<p>means the reader program must use create the following rectange as svg:</p>
+<pre><code class="language-svg">&lt;rect x=&quot;52.0608&quot; y=&quot;123.4567&quot; width=&quot;22.9392&quot; height=&quot;111.1111/&gt;
+</code></pre>
+<p>Also note that point(0.0) means top left corner and point(5, 10) is 5 units on the right and 10 below.
+Therefore, the right value of the cursor box is always bigger than the left value. Same goes for the
+bottom value which is also always bigger than the top value.</p>
+<p><strong>for set svg file</strong></p>
+<ol>
+<li>the number of the svg file to be displayed now (2bytes BE)</li>
+</ol>
+<p>Note that the svg files are 0-indexed. A value of 0 means the first page. 1 means the second page and so on.</p>
+<a class="header" href="print.html#the-svgs-section" id="the-svgs-section"><h2>The svgs section</h2></a>
+<p>This section is made of:</p>
+<ol>
+<li>the number of svg files the music contains. (two bytes, big endian)</li>
+<li>For each of the svg file:</li>
+<li>four bytes (big endian) telling the size in bytes of the svg file.</li>
+<li>the content of that svg file.</li>
+</ol>
+<p>The svg files are stored in the list in order of appearance. Therefore the first one if the file
+is the first page (page number zero for the turn-page event).</p>
+<blockquote>
+<p>This chapter could be summed up as &quot;If I had to do it again, I would simply use Cap'n Proto&quot;.</p>
+</blockquote>
+<a class="header" href="print.html#possible-improvements" id="possible-improvements"><h1>Possible improvements</h1></a>
+<p>Like most software, there is always something more that can be done. Below is such a list for
+lilydumper/lilyplayer.</p>
+<a class="header" href="print.html#avoid-changing-the-grob-ids-in-the-music-sheet" id="avoid-changing-the-grob-ids-in-the-music-sheet"><h2>avoid changing the grob ids in the music sheet</h2></a>
+<p>In the part about how to find out where notes are, we saw that the event-listeners sets the grob id that will appear
+in the svg files to add the x-width and y-height to it, so it can later be retrieved from the svg file.
+This is actually unnecessary as these can simply be written to the notes file. And then using the point and click option,
+it is possible to retrieve where the note is in the svg by looking for <code>a</code> elemts with an <code>xlink:href</code> attribute
+(instead of looking for <code>g</code> element with an <code>id</code> attribute). This should be priority number one on the ameliorations to
+implement as it makes for simpler and more reliable code. In fact changing the <code>id</code> of the grob is either not possible
+anymore on newer versions of lilypond, or works differently, so that lilydumper is broken when using latest lilypond.</p>
+<a class="header" href="print.html#optimise-the-svgs-to-avoid-wasting-space" id="optimise-the-svgs-to-avoid-wasting-space"><h2>optimise the svgs to avoid wasting space</h2></a>
+<p>The svgs files generated by lilypond are quite big. An svg optimiser like <a href="https://github.com/svg/svgo">svgo</a>
+showed that svg files could sometimes be reduced in size by a factor of 4 without noticeable changes. This
+would make the file smaller and rendering the pages faster.</p>
+<a class="header" href="print.html#anonymise-the-svg-files" id="anonymise-the-svg-files"><h2>anonymise the svg files</h2></a>
+<p>The svg files used in the lilydumper output are taken straight out from lilypond. If one day lilypond starts
+including markers in the output, or if the input file would do such a thing, this marker would then leak into
+the file. Therefore using a tool to only keep the relevant part of the svg that impacts the visible output
+would be of interest.</p>
+<a class="header" href="print.html#remove-the-skylines-automatically-and-grob-ids" id="remove-the-skylines-automatically-and-grob-ids"><h2>remove the skylines automatically and grob ids</h2></a>
+<p>We saw that lilydumper had to run lilypond thrice:</p>
+<ul>
+<li>once to find out when to play each note</li>
+<li>once to find out where the notes were on the music sheet</li>
+<li>once to get the clean music sheet</li>
+</ul>
+<p>Running lilypond takes time and it is possible to get clean music sheets out the ones used to extract the notes
+placements automatically. That would avoid the need of running lilypond the third time.</p>
+<a class="header" href="print.html#crescendo--decrescendo--forte--pianissimo-" id="crescendo--decrescendo--forte--pianissimo-"><h2>crescendo / decrescendo / forte / pianissimo ...</h2></a>
+<p>Right now, lilydumper ignore crescendo / decrescendo ... events. As a consequence, all notes are played with the same
+intensity. This could be nice to add.</p>
+<a class="header" href="print.html#run-the-several-runs-of-lilypond-in-parallel" id="run-the-several-runs-of-lilypond-in-parallel"><h2>run the several runs of lilypond in parallel</h2></a>
+<p>Running lilypond takes time, as alaready said. And these runs are sequential. However with multicore
+processor, there can be some gain in running them in parallel.</p>
+<a class="header" href="print.html#extract-the-several-data-in-parallel" id="extract-the-several-data-in-parallel"><h2>extract the several data in parallel</h2></a>
+<p>When extracting data, for example notes from the music sheets, each page are processed sequentially. Since the data
+extraction from one page does not impact the other ones, they could be done in paralle. However this processing time
+is small in comparison of the time it takes to run lilypond, hence there might not be so much gain here.</p>
+<a class="header" href="print.html#auto-include-the-source-file-into-the-output" id="auto-include-the-source-file-into-the-output"><h2>auto include the source file into the output</h2></a>
+<p>It could be nice to have the source file automatically included in the generated file, so it becomes possible
+to &quot;edit&quot; the file.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                window.print();
+            })
+        </script>
+        
+
+        
+
+        
+        <script src="searchindex.js" type="text/javascript" charset="utf-8"></script>
+        
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+    </body>
+</html>

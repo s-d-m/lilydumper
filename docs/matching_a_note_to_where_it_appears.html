@@ -1,0 +1,294 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Finding where notes appear on the music sheet - Lilyplayer's documentation</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="_FontAwesome/css/font-awesome.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+
+    </head>
+    <body class="light">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme + ' js';
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <ol class="chapter"><li class="affix"><a href="intro.html">Introduction</a></li><li><a href="finding_when_notes_are_played.html"><strong aria-hidden="true">1.</strong> Finding when notes are played</a></li><li><ol class="section"><li><a href="issue_with_tied_notes.html"><strong aria-hidden="true">1.1.</strong> Tied notes</a></li><li><a href="issue_with_grace_notes.html"><strong aria-hidden="true">1.2.</strong> Grace notes</a></li><li><a href="issue_with_repeats.html"><strong aria-hidden="true">1.3.</strong> Repeats</a></li><li><a href="issue_with_overlapping_notes.html"><strong aria-hidden="true">1.4.</strong> Fixing overlapping notes</a></li><li><a href="issue_with_repeated_notes.html"><strong aria-hidden="true">1.5.</strong> Separating repeated notes</a></li></ol></li><li><a href="computing_the_cursor_position.html"><strong aria-hidden="true">2.</strong> Finding where the cursor should be</a></li><li><ol class="section"><li><a href="matching_a_note_to_where_it_appears.html" class="active"><strong aria-hidden="true">2.1.</strong> Finding where notes appear on the music sheet</a></li><li><a href="finding_systems_top_and_bottom.html"><strong aria-hidden="true">2.2.</strong> Finding the top and bottom of systems</a></li><li><a href="getting_the_cursor_wrapping_all_notes_belonging_to_a_chord.html"><strong aria-hidden="true">2.3.</strong> Cursor for notes in a chord</a></li></ol></li><li><a href="finding_bar_changes.html"><strong aria-hidden="true">3.</strong> Finding bar changes events</a></li><li><a href="finding_turn_page_changes.html"><strong aria-hidden="true">4.</strong> Finding turn page events</a></li><li><a href="finding_on_which_stave_a_note_is.html"><strong aria-hidden="true">5.</strong> Left/right hand separation</a></li><li><a href="finding_the_staff_instrument_name.html"><strong aria-hidden="true">6.</strong> Getting the staff's instrument name</a></li><li><a href="file_format.html"><strong aria-hidden="true">7.</strong> File format</a></li><li><a href="possible_improvements.html"><strong aria-hidden="true">8.</strong> Possible improvements</a></li></ol>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                        </div>
+
+                        <h1 class="menu-title">Lilyplayer's documentation</h1> 
+
+                        <div class="right-buttons">
+                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <a class="header" href="matching_a_note_to_where_it_appears.html#matching-notes-to-where-they-appear-on-the-music-sheet" id="matching-notes-to-where-they-appear-on-the-music-sheet"><h1>Matching notes to where they appear on the music sheet.</h1></a>
+<p>Lilypond provides to a &quot;point-and-click&quot; feature. It is meant to facilitate writing music editors. For example, the
+<a href="http://frescobaldi.org/">Frescobaldi</a> software provides a music sheet view and a text editor view as can be seen
+on the following screenshot:</p>
+<p><img src="./matching_a_note_to_where_it_appears_assets/frescobaldi1-nl.png" alt="Frescobaldi screenshot" /></p>
+<p>when the user click on a note on the music sheet, the software automatically moves the cursor on the left side
+to the corresponding place in the source file.</p>
+<p>Therefore there is a way from matching a note on the music sheet to where the note was (line and column numbers)
+in the input file. Now, when listening to events, the event listener outputed a listing lke the following</p>
+<pre><code>0.00000000	tempo	400.00000000
+0.00000000	note	69	4	0.25000000	point-and-click 4 36
+0.25000000	note	67	4	0.25000000	point-and-click 9 360.00000000	tempo	400.00000000
+0.00000000	note	69	4	0.25000000	point-and-click 4 36
+0.25000000	note	67	4	0.25000000	point-and-click 9 36
+</code></pre>
+<p>As can be seen, some lines contain <code>point and click</code> followed by two numbers. These are respectively the line
+column number in the source file. And these lines are what was used to find out when to play a note. As a consequence,
+this <code>point and click</code> can be used to correlate the place in the music sheet a note is, such that when a note
+is to be played, it can also be graphically highlighted.</p>
+<p>Now the idea is thus to extract all the &quot;point and click&quot; and their bounding boxes in all pages. Lilypond produces
+pdf files by default, however parsing pdf files to extract this data proved to require significant efforts. Instead
+of working with pdf files, I used another output format provided by lilypond: svg. Svg files are a special &quot;kind&quot;
+of xml files and therefore can easily be analysed with a text editor or worked on with any XML parser.</p>
+<p>To get lilypond to output svg files, one had to pass the <code>-dbackend=svg</code> option to lilypond. This will generate
+one file per page, and to ensure lilypond generates these precious point-and-click elements, one has to also pass
+the <code>-dpoint-and-click</code> option.</p>
+<p>The result when doing so is an svg file containing cross link. For a note, the svg file will contain for example</p>
+<pre><code class="language-svg">&lt;a style=&quot;color:inherit;&quot; xlink:href=&quot;textedit:///tmp/simple_overlapping_notes.ly:36:17:18&quot;&gt;
+&lt;path transform=&quot;translate(39.4689, 10.3826) scale(0.0028, -0.0028)&quot; d=&quot;M211 141c61 0 117 -33 117 -100c0 -71 -52 -121 -99 -149c-34 -20 -73 -33 -112 -33c-61 0 -117 33 -117 100c0 71 52 121 99 149c34 20 73 33 112 33z&quot; fill=&quot;currentColor&quot;/&gt;
+&lt;/a&gt;
+</code></pre>
+<p>From this, we can extract that the note that is written at line 36 from character 17 to 18 in the file
+<code>/tmp/simple_overlapping_notes.ly</code> stays at position <code>39.4689, 10.3826</code> in the svg file. And to
+compute the bounding box, we need to properly decode the content of the <code>d</code> field in the <code>path</code> element.
+That last part requires significant effort. So instead, I went for a different method, albeit similar in
+design. Lilypond provides ways to modify properties of graphical objects. When using the event-listener
+it is possible to automatically modify the note head for all notes as they appear on the music sheet.
+However we are not interested in modifying how the notes look like on the music sheet. What we want is to
+extract the bounding boxes of notes in the music sheet. By abusing the <code>id</code> properties of notes, we can
+achieve such a thing. The code in the event-listener looks as follow:</p>
+<pre><code class="language-scm">#(define (on-note-head engraver grob source-engraver)
+   (let* ((context  (ly:translator-context source-engraver))
+      (event (event-cause grob))
+       ...
+    (ly:grob-set-property! grob 'id origin)
+))
+
+
+%%%% The actual engraver definition: We just install some listeners so we
+%%%% are notified about all notes and rests. We don't create any grobs or
+%%%% change any settings.
+
+\layout {
+  \override NoteHead.stencil = #(lambda (grob)
+                  (let* ((note (ly:note-head::print grob))
+                     (former-id (ly:grob-property-data grob 'id))
+                     (x-interval (ly:stencil-extent note X))
+                     (x-width (interval-length x-interval))
+                     (y-interval (ly:stencil-extent note Y))
+                     (y-height (interval-length y-interval))
+                     (new-values (format #f &quot;#x-width=~1,4f#y-height=~1,4f&quot; x-width y-height))
+                     (new-id (string-append new-values former-id)))
+                    (ly:grob-set-property! grob 'id new-id)
+                    note))
+
+  \context {
+    \Voice
+
+    \consists #(make-engraver
+        (acknowledgers
+         ((note-head-interface engraver grob source-engraver)
+          (on-note-head engraver grob source-engraver))))
+  }
+}
+</code></pre>
+<p>This code adds the origin of a note (the position in the source file) and also the x-width and y-height
+of the note in svg into the note id. When running Lilypond with this, we now get something like</p>
+<pre><code class="language-svg">&lt;g id=&quot;#x-width=.9284#y-height=.7971#origin=simple_overlapping_notes.ly:36:17:20#...&quot;&gt;
+&lt;path transform=&quot;translate(39.4689, 10.3826) scale(0.0028, -0.0028)&quot; d=&quot;M211 141c61 0 117 -33 117 -100c0 -71 -52 -121 -99 -149c-34 -20 -73 -33 -112 -33c-61 0 -117 33 -117 100c0 71 52 121 99 149c34 20 73 33 112 33z&quot; fill=&quot;currentColor&quot;/&gt;
+&lt;/g&gt;
+</code></pre>
+<p>We can now extract that there is a note at position <code>39.4689, 10.3826</code> which spans for <code>0.9284, 0.7971</code> and that originates
+from <code>simple_overlapping_notes.ly:36:17</code>. The position is actually the center of the note on the y axis, and the leftmost
+position on the x axis. With this knowledge, computing the bounding box limits comes quite easy</p>
+<p>Extracting all the <code>g</code> elements with an <code>id</code> field, and doing so for all svg files, we can now get where notes are displayed, and
+identify them. And since that id is the same one as written in the note files (the output of the event listener), it is then
+possible to match notes being played to where they are displayed.</p>
+<p>Now there is an issue with unfold repeats here. If the user has some unfolded repeats in his source file, one note will appear
+several time in the music sheet, but have only one distinct id (i.e. line and column number) in the source file. For these
+cases, the software can't do the mapping and will therefore print an error message. A user can simply copy/paste the repeated
+part as many times as required to provide the same graphical output while having one source note matching one note in the
+music sheet. The same issue arises when a user uses variables and refer to them several times in the lilypond file.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="computing_the_cursor_position.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="finding_systems_top_and_bottom.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a href="computing_the_cursor_position.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a href="finding_systems_top_and_bottom.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+
+        
+        <script src="searchindex.js" type="text/javascript" charset="utf-8"></script>
+        
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+    </body>
+</html>
