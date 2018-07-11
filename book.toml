@@ -1,0 +1,12 @@
+[book]
+authors = ["Samuel DA MOTA"]
+multilingual = false
+src = "documentation_source"
+title = "Lilyplayer's documentation"
+create-missing = false
+
+[build]
+build-dir = "docs"
+
+[output.html]
+mathjax-support = true

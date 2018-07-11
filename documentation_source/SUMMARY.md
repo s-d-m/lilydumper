@@ -1,0 +1,20 @@
+# Summary
+
+[Introduction](./intro.md)
+
+- [Finding when notes are played](./finding_when_notes_are_played.md)
+  - [Tied notes](./issue_with_tied_notes.md)
+  - [Grace notes](./issue_with_grace_notes.md)
+  - [Repeats](./issue_with_repeats.md)
+  - [Fixing overlapping notes](./issue_with_overlapping_notes.md)
+  - [Separating repeated notes](./issue_with_repeated_notes.md)
+- [Finding where the cursor should be](./computing_the_cursor_position.md)
+  - [Finding where notes appear on the music sheet](./matching_a_note_to_where_it_appears.md)
+  - [Finding the top and bottom of systems](./finding_systems_top_and_bottom.md)
+  - [Cursor for notes in a chord](./getting_the_cursor_wrapping_all_notes_belonging_to_a_chord.md)
+- [Finding bar changes events](./finding_bar_changes.md)
+- [Finding turn page events](./finding_turn_page_changes.md)
+- [Left/right hand separation](./finding_on_which_stave_a_note_is.md)
+- [Getting the staff's instrument name](./finding_the_staff_instrument_name.md)
+- [File format](./file_format.md)
+- [Possible improvements](./possible_improvements.md)
