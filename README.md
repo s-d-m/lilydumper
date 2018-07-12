@@ -2,6 +2,7 @@ Lilydumper
 ==========
 
 This program takes a piano music sheet as lilypond file as input, and generates a new file suitable to use with lilyplayer.
+If you just want to use some premade music sheets, you can grab some [here](https://github.com/s-d-m/precompiled_music_sheets_for_lilyplayer).
 
 Build dependencies
 ----------------
