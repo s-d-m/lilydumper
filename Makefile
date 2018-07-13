@@ -1,4 +1,4 @@
-all: lilydumper documentation
+all: lilydumper
 
 scan-build lilydumper:
 	${MAKE} -C ./src "$@"
