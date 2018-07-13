@@ -380,7 +380,7 @@ ifeq ($(32_BITS),1)
 endif
 
 
-all: ${OPEN_PRELOADER_LIB} ${TARGET}
+all lilydumper: ${OPEN_PRELOADER_LIB} ${TARGET}
 
 ${TARGET}: ${OBJS} ${OPEN_PRELOADER_LIB} command_executor.o
 	-mkdir -p ${TARGET_DIR}
