@@ -11,4 +11,7 @@ clean:
 	${MAKE} -C ./src "$@"
 	rm -rf docs
 
-.PHONY: all scan-build lilydumper doc book documentation clean
+appimage: lilydumper
+	./make-appimage.sh
+
+.PHONY: all scan-build lilydumper doc book documentation clean appimage
