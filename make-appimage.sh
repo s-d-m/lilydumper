@@ -59,7 +59,7 @@ Type=Application
 Name=${this_app_name}
 Exec=AppRun %F
 Icon=default
-Comment=plays music sheets
+Comment=generate music_sheets usable by lilyplayer
 Terminal=false
 EOF
 
