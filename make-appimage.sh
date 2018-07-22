@@ -46,6 +46,27 @@ function get_linuxdeployqt() {
     fi
 }
 
+function add_workaround_to_increase_compat()
+{
+
+    local readonly linuxqtdeploy="$1"
+
+    # Manually invoke appimagetool so that libstdc++ gets bundled and the modified AppRun stays intact
+    pushd "${squash_fs_root_tmp_dir}"
+    "$linuxqtdeploy" --appimage-extract
+    popd
+
+    cp -- "${tmp_dir}/usr/share/applications/${this_app_name}.desktop"  "${tmp_dir}/"
+    cp -- "${tmp_dir}/usr/share/applications/hicolor/256x256/apps/${this_app_name}.png"  "${tmp_dir}/"
+    cp -- '/usr/lib/x86_64-linux-gnu/libstdc++.so.6' "${tmp_dir}/usr/lib"
+    cp -- '/usr/lib/x86_64-linux-gnu/libpugixml.so.1' "${tmp_dir}/usr/lib"
+    patchelf --set-rpath '$ORIGIN/../lib' "${tmp_dir}/usr/bin/lilydumper"
+
+    pushd "${tmp_dir}"
+    PATH="$(readlink -f "${squash_fs_root_tmp_dir}/squashfs-root/usr/bin"):${PATH}" "${squash_fs_root_tmp_dir}/squashfs-root/usr/bin/appimagetool" -g "${tmp_dir}/" "${tmp_dir}/${this_app_name}-x86_64.AppImage"
+    popd
+}
+
 function make_appimage()
 {
     make -C "${this_dir}"
@@ -64,12 +85,21 @@ function make_appimage()
     if [ ! -e "${this_dir}/${this_app_name}-x86_64.AppImage" ] ; then
 	printf >&2 'Failed to create %s\n' "${this_app_name}-x86_64.AppImage"
 	exit 2
+    # else
+    # 	mv -- "${this_dir}/${this_app_name}-x86_64.AppImage" "${this_dir}/bin/${this_app_name}-${version}_without_workaround_for_old_systems_x86_64.AppImage"
+    fi
+
+    ARCH=x86_64 add_workaround_to_increase_compat "$linuxqtdeploy"
+
+    if [ ! -e "${tmp_dir}/${this_app_name}-x86_64.AppImage" ] ; then
+	printf >&2 'Failed to add the workaround for older systems\n'
+	exit 2
     fi
 
     local readonly dst_appimage="${this_dir}/bin/${this_app_name}-${version}-x86_64.AppImage"
-
-    cp -- "${this_dir}/${this_app_name}-x86_64.AppImage" "${dst_appimage}"
-    mv -- "${this_dir}/${this_app_name}-x86_64.AppImage" "${this_dir}/bin/${this_app_name}-x86_64.AppImage"
+    rm -f -- "${this_dir}/${this_app_name}-x86_64.AppImage"
+    cp -- "${tmp_dir}/${this_app_name}-x86_64.AppImage" "${dst_appimage}"
+    cp -- "${tmp_dir}/${this_app_name}-x86_64.AppImage" "${this_dir}/bin/${this_app_name}-x86_64.AppImage"
 
     printf 'Following libraries are required on the system to run the appimage:\n'
     find "${tmp_dir}" -executable -type f -exec ldd '{}' ';' | grep " => /usr" | cut -d " " -f 2-3 | sort | uniq

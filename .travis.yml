@@ -8,9 +8,13 @@ before_install:
   - sudo apt-get update -qq
 
 install:
-  - sudo apt-get -y install g++-6 gcc-6 libpugixml-dev
+  - sudo apt-get -y install g++-6 gcc-6 libpugixml-dev gawk wget tar
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 90
+  - mkdir -p /tmp/dummy_for_patchelf/
+  - wget 'https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.bz2' -O /tmp/dummy_for_patchelf/patchelf.tar.bz2
+  - cd /tmp/dummy_for_patchelf/ && tar xf /tmp/dummy_for_patchelf/patchelf.tar.bz2 && cd -
+  - cd /tmp/dummy_for_patchelf/patchelf-0.9 && ./configure --prefix=/usr && make && sudo make install && cd -
 
 script:
   - make BUILD=release appimage
