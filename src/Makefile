@@ -38,6 +38,9 @@ PROFILING_OUTPUT = profiling_output.txt
 
 TOOLCHAIN=gcc
 
+CXX=g++
+CC=gcc
+
 CLANG_CC  = clang
 CLANG_CXX = clang++
 SCAN_BUILD = scan-build
