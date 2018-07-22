@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=lilydumper
+Exec=lilydumper
+Icon=lilydumper
+Comment=generates music sheets suitable to use with lilyplayer
+Terminal=true

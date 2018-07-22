@@ -38,6 +38,9 @@ PROFILING_OUTPUT = profiling_output.txt
 
 TOOLCHAIN=gcc
 
+CXX=g++
+CC=gcc
+
 CLANG_CC  = clang
 CLANG_CXX = clang++
 SCAN_BUILD = scan-build
@@ -334,7 +337,10 @@ endif
 	-z now\
 	-z relro \
 	-z nodlopen \
-	-z nodump
+	-z nodump \
+	-fuse-ld=gold \
+	-static-libasan -static-libubsan
+
 endif
 
 BUILD ?= debug
