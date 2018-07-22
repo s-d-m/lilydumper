@@ -46,37 +46,6 @@ function get_linuxdeployqt() {
     fi
 }
 
-function add_workaround_to_increase_compat()
-{
-
-    local readonly linuxqtdeploy="$1"
-
-    # Workaround to increase compatibility with older systems; see
-    # https://github.com/darealshinji/AppImageKit-checkrt for details
-
-    mkdir -p "${tmp_dir}/usr/optional/"
-    wget -c 'https://github.com/darealshinji/AppImageKit-checkrt/releases/download/continuous/exec-x86_64.so' -O "${tmp_dir}/usr/optional/exec.so"
-    mkdir -p "${tmp_dir}/usr/optional/libstdc++"
-    cp '/usr/lib/x86_64-linux-gnu/libstdc++.so.6' "${tmp_dir}/usr/optional/libstdc++"
-
-    ( rm -f -- "${tmp_dir}/AppRun"
-      wget -c 'https://github.com/darealshinji/AppImageKit-checkrt/releases/download/continuous/AppRun-patched-x86_64' -O "${tmp_dir}/AppRun"
-      chmod a+x "${tmp_dir}/AppRun"
-    )
-
-  # Manually invoke appimagetool so that libstdc++ gets bundled and the modified AppRun stays intact
-    pushd "${squash_fs_root_tmp_dir}"
-    "$linuxqtdeploy" --appimage-extract
-    popd
-
-    cp -- "${tmp_dir}/usr/share/applications/${this_app_name}.desktop"  "${tmp_dir}/"
-    cp -- "${tmp_dir}/usr/share/applications/hicolor/256x256/apps/${this_app_name}.png"  "${tmp_dir}/"
-
-    pushd "${tmp_dir}"
-    PATH="$(readlink -f "${squash_fs_root_tmp_dir}/squashfs-root/usr/bin"):${PATH}" "${squash_fs_root_tmp_dir}/squashfs-root/usr/bin/appimagetool" -g "${tmp_dir}/" "${tmp_dir}/${this_app_name}-x86_64.AppImage"
-    popd
-}
-
 function make_appimage()
 {
     make -C "${this_dir}"
@@ -91,26 +60,16 @@ function make_appimage()
     unset LD_LIBRARY_PATH
 
 
-    ARCH=x86_64 "${linuxqtdeploy}" "${tmp_dir}/usr/share/applications/${this_app_name}.desktop" -appimage -bundle-non-qt-libs
+    ARCH=x86_64 "${linuxqtdeploy}" "${tmp_dir}/usr/share/applications/${this_app_name}.desktop" -verbose=2 -appimage -bundle-non-qt-libs
     if [ ! -e "${this_dir}/${this_app_name}-x86_64.AppImage" ] ; then
 	printf >&2 'Failed to create %s\n' "${this_app_name}-x86_64.AppImage"
-	exit 2
-    # else
-    # 	mv -- "${this_dir}/${this_app_name}-x86_64.AppImage" "${this_dir}/bin/${this_app_name}-${version}_without_workaround_for_old_systems_x86_64.AppImage"
-    fi
-
-    add_workaround_to_increase_compat "$linuxqtdeploy"
-
-    if [ ! -e "${tmp_dir}/${this_app_name}-x86_64.AppImage" ] ; then
-	printf >&2 'Failed to add the workaround for older systems\n'
 	exit 2
     fi
 
     local readonly dst_appimage="${this_dir}/bin/${this_app_name}-${version}-x86_64.AppImage"
 
-    rm -f -- "${this_dir}/${this_app_name}-x86_64.AppImage"
-    cp -- "${tmp_dir}/${this_app_name}-x86_64.AppImage" "${dst_appimage}"
-    cp -- "${tmp_dir}/${this_app_name}-x86_64.AppImage" "${this_dir}/bin/${this_app_name}-x86_64.AppImage"
+    cp -- "${this_dir}/${this_app_name}-x86_64.AppImage" "${dst_appimage}"
+    mv -- "${this_dir}/${this_app_name}-x86_64.AppImage" "${this_dir}/bin/${this_app_name}-x86_64.AppImage"
 
     printf 'Following libraries are required on the system to run the appimage:\n'
     find "${tmp_dir}" -executable -type f -exec ldd '{}' ';' | grep " => /usr" | cut -d " " -f 2-3 | sort | uniq
