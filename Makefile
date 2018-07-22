@@ -11,6 +11,9 @@ clean:
 	${MAKE} -C ./src "$@"
 	rm -rf docs
 
+install:
+	./make-install.sh "${DESTDIR}"
+
 appimage: lilydumper
 	./make-appimage.sh
 

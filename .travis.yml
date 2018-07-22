@@ -1,0 +1,27 @@
+language: cpp
+compiler: gcc
+sudo: require
+dist: trusty
+
+before_install:
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-get update -qq
+
+install:
+  - sudo apt-get -y install g++-6 gcc-6 libpugixml-dev
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 90
+
+script:
+  - git submodule update --init --recursive
+  - make BUILD=release appimage
+
+after_success:
+  - # curl --upload-file lilydumper*.AppImage https://transfer.sh/lilydumper-git.$(git rev-parse --short HEAD)-x86_64.AppImage
+  - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
+  - bash upload.sh ./bin/lilydumper-*-x86_64.AppImage
+
+branches:
+  except:
+    - # Do not build tags that we create when we upload to GitHub Releases
+    - /^(?i:continuous)/
