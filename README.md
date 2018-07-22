@@ -5,6 +5,8 @@ This program takes a piano music sheet as lilypond file as input, and generates 
 If you just want to use some premade music sheets, you can grab some [here](https://github.com/s-d-m/precompiled_music_sheets_for_lilyplayer).
 You can then later play the music sheet using [lilyplayer](https://github.com/s-d-m/lilyplayer)
 
+For a ready to use appimage, you can grab one [on the release page](https://github.com/s-d-m/lilydumper/releases)
+
 Documentation is available at [https://s-d-m.github.io/lilydumper/](https://s-d-m.github.io/lilydumper/)
 
 Build dependencies
