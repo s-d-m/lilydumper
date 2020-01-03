@@ -357,13 +357,13 @@ std::vector<skyline_t> get_bottom_systems_skyline(const pugi::xml_document& svg_
 static inline
 std::vector<skyline_t> get_top_staves_skyline(const pugi::xml_document& svg_file)
 {
-  return get_skylines(svg_file, "//g[(@color=\"rgb(25500.0000%, 0.0000%, 25500.0000%)\") or (@color=\"rgb(25500.0%, 0.0%, 25500.0%)\")]");
+  return get_skylines(svg_file, "//g[(@color=\"rgb(25500.0000%, 0.0000%, 25500.0000%)\") or (@color=\"rgb(25500.0%, 0.0%, 25500.0%)\") or (@color=\"rgb(100.0000%, 0.0000%, 100.0000%)\")]");
 }
 
 static inline
 std::vector<skyline_t> get_bottom_staves_skyline(const pugi::xml_document& svg_file)
 {
-  return get_skylines(svg_file, "//g[(@color=\"rgb(0.0000%, 25500.0000%, 25500.0000%)\") or (@color=\"rgb(0.0%, 25500.0%, 25500.0%)\")]");
+  return get_skylines(svg_file, "//g[(@color=\"rgb(0.0000%, 25500.0000%, 25500.0000%)\") or (@color=\"rgb(0.0%, 25500.0%, 25500.0%)\") or (@color=\"rgb(0.0000%, 100.0000%, 100.0000%)\")]");
 }
 
 static
