@@ -175,6 +175,7 @@ else
 # for g++ 4.9
   CXX_WARN_FLAGS_FOR_GCC_4.9 ?= \
 	-Werror \
+	-Wno-deprecated-declarations \
 	-Wno-pedantic \
 	-Wpointer-arith \
 	-Wall \
